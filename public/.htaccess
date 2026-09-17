@@ -1,0 +1,67 @@
+# KKA - Inspektorat Rokan Hilir
+# .htaccess untuk URL rewrite, keamanan dasar, kompresi & cache (cPanel/LiteSpeed).
+
+Options -Indexes
+DirectoryIndex index.php
+
+# Sembunyikan file sensitif
+<FilesMatch "^\.(env|gitignore|htaccess)$">
+    Require all denied
+</FilesMatch>
+
+# Aktifkan rewrite
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Jangan rewrite file/folder yang memang ada
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Arahkan semua request lain ke index.php
+    RewriteRule ^ index.php [L,QSA]
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# ==================================================================
+# OPTIMASI: Kompresi (gzip) — mengecilkan HTML/CSS/JS agar transfer
+# lebih cepat sehingga proses PHP/web cepat selesai & bebas kembali.
+# ==================================================================
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml
+    AddOutputFilterByType DEFLATE application/javascript application/x-javascript text/javascript
+    AddOutputFilterByType DEFLATE application/json application/xml
+    AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# ==================================================================
+# OPTIMASI: Cache aset statis di browser — CSS/JS/gambar/font tidak
+# perlu diunduh ulang tiap pindah halaman / tombol back.
+# ==================================================================
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css                 "access plus 30 days"
+    ExpiresByType application/javascript   "access plus 30 days"
+    ExpiresByType text/javascript          "access plus 30 days"
+    ExpiresByType image/png                "access plus 30 days"
+    ExpiresByType image/jpeg               "access plus 30 days"
+    ExpiresByType image/gif                "access plus 30 days"
+    ExpiresByType image/x-icon             "access plus 60 days"
+    ExpiresByType image/svg+xml            "access plus 30 days"
+    ExpiresByType image/webp               "access plus 30 days"
+    ExpiresByType application/font-woff2   "access plus 60 days"
+    ExpiresByType font/woff2               "access plus 60 days"
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Beri cache-control eksplisit untuk file aset (folder assets/)
+    <FilesMatch "\.(css|js|png|jpe?g|gif|ico|svg|webp|woff2?)$">
+        Header set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+</IfModule>
