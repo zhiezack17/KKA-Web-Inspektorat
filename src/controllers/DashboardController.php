@@ -23,6 +23,13 @@ class DashboardController {
             'pajak_belum_setor'=> (float) DB::scalar("SELECT COALESCE(SUM(nominal_ppn + nominal_pph),0) FROM kka_rincian WHERE status_pajak = 'BELUM_SETOR'"),
         ];
         $stats['selisih'] = max(0, $stats['dikwitansi'] - $stats['realisasi']);
+        $stats['spt_sample_id'] = (int) DB::scalar("SELECT id FROM kka_spt ORDER BY id DESC LIMIT 1");
+        $lhpSample = DB::row("SELECT desa_id, tahun_anggaran FROM kka_temuan WHERE status = 'FINAL_LHP' LIMIT 1");
+        if (!$lhpSample) {
+            $lhpSample = DB::row("SELECT desa_id, tahun_anggaran FROM kka_sesi ORDER BY id DESC LIMIT 1");
+        }
+        $stats['sample_desa_id'] = $lhpSample['desa_id'] ?? 69;
+        $stats['sample_tahun'] = $lhpSample['tahun_anggaran'] ?? (int)date('Y');
 
         // Pipeline Alur Pengawasan (Pra-Audit s/d LHP)
         $pipeline = [
