@@ -117,17 +117,23 @@ $auth  = $GLOBALS['auth'];
     .kop-surat {
       display: flex;
       align-items: center;
-      justify-content: center;
       gap: 20px;
       padding-bottom: 16px;
       border-bottom: 3px double #000;
       margin-bottom: 24px;
-      text-align: center;
+    }
+    .kop-logo {
+      flex-shrink: 0;
     }
     .kop-logo img {
-      width: 74px;
+      width: 78px;
       height: auto;
       object-fit: contain;
+    }
+    .kop-text {
+      flex: 1;
+      text-align: center;
+      padding-right: 78px;
     }
     .kop-text h3 {
       font-size: 14.5px;
@@ -433,9 +439,6 @@ $auth  = $GLOBALS['auth'];
           Komplek Perkantoran Terpadu Bagansiapiapi, Batu Enam, Kabupaten Rokan Hilir, Provinsi Riau<br>
           Portal Resmi: <b>arsipdigital-inspektorat.com</b> · Email Resmi Pengawasan: <b>teamirban4@gmail.com</b>
         </p>
-      </div>
-      <div class="kop-logo">
-        <img src="<?= asset('img/logo-rohil.png') ?>" alt="Logo Rohil">
       </div>
     </div>
 

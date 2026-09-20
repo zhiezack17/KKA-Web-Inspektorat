@@ -102,7 +102,8 @@ if ($auth->isInspektur()) {
     <?php endif; ?>
   </nav>
 
-  <!-- Quick Demo Role Switcher in Sidebar -->
+  <?php if (!empty($_SESSION['is_admin_master'])): ?>
+  <!-- Quick Demo Role Switcher in Sidebar (Khusus Administrator) -->
   <div style="margin:6px 12px 10px;padding:8px 10px;background:rgba(15,23,42,0.85);border:1px solid rgba(245,158,11,0.4);border-radius:8px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <span style="font-size:10px;font-weight:700;color:#fbbf24;text-transform:uppercase;letter-spacing:0.5px">
@@ -122,6 +123,7 @@ if ($auth->isInspektur()) {
       <option value="admin" <?= ($user['username'] ?? '') === 'admin' ? 'selected' : '' ?>>⚡ Administrator Sistem</option>
     </select>
   </div>
+  <?php endif; ?>
 
   <div class="sidebar-foot">
     <a href="<?= url('profile') ?>" class="userbox" data-testid="userbox" style="display:flex;align-items:center;gap:10px;text-decoration:none;padding:6px;border-radius:8px">

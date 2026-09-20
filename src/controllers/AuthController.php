@@ -17,7 +17,13 @@ class AuthController {
             if ($identifier === '' || $pwd === '') {
                 flash('error', 'NIP / Username / Email dan password wajib diisi.');
             } elseif ($this->auth->attempt($identifier, $pwd)) {
-                flash('success', 'Selamat datang, ' . $this->auth->user()['nama'] . '!');
+                $loggedInUser = $this->auth->user();
+                if (($loggedInUser['role'] ?? '') === 'admin') {
+                    $_SESSION['is_admin_master'] = true;
+                } else {
+                    unset($_SESSION['is_admin_master']);
+                }
+                flash('success', 'Selamat datang, ' . $loggedInUser['nama'] . '!');
                 redirect('dashboard');
             } else {
                 flash('error', 'NIP / Username / Email atau password salah, atau akun dinonaktifkan.');
@@ -27,6 +33,7 @@ class AuthController {
     }
 
     public function logout(): void {
+        unset($_SESSION['is_admin_master']);
         $this->auth->logout();
         flash('success', 'Anda telah keluar.');
         redirect('login');
@@ -34,6 +41,16 @@ class AuthController {
 
     public function switchUser(): void {
         $this->auth->require();
+        $curUser = $this->auth->user();
+        if (($curUser['role'] ?? '') === 'admin') {
+            $_SESSION['is_admin_master'] = true;
+        }
+        if (empty($_SESSION['is_admin_master'])) {
+            flash('error', 'Akses ditolak: Fitur simulasi 1-klik hanya dapat digunakan melalui akun Administrator.');
+            $redirect = $_SERVER['HTTP_REFERER'] ?? url('dashboard');
+            header('Location: ' . $redirect);
+            exit;
+        }
         $target = trim((string)input('user', ''));
         if ($target !== '') {
             $u = DB::one("SELECT id, nama, role, jabatan FROM kka_users WHERE username = ? AND is_active = 1", [$target]);
