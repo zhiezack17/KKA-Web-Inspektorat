@@ -67,14 +67,15 @@ partial('sidebar');
               <th class="num">Realisasi Uji</th>
               <th class="num">Selisih Belanja</th>
               <th style="text-align:center">Temuan (KTP)</th>
+              <th style="text-align:center">Status Pengesahan</th>
               <th style="text-align:center">Google Drive</th>
-              <th style="min-width:185px;text-align:center;padding-right:20px">Aksi LHP</th>
+              <th style="min-width:210px;text-align:center;padding-right:20px">Aksi LHP</th>
             </tr>
           </thead>
           <tbody>
             <?php if (empty($daftarLhp)): ?>
               <tr>
-                <td colspan="9" style="text-align:center;padding:40px;color:var(--slate-500)">
+                <td colspan="10" style="text-align:center;padding:40px;color:var(--slate-500)">
                   <i class="fa-solid fa-folder-open" style="font-size:36px;color:#cbd5e1;margin-bottom:10px;display:block"></i>
                   Belum ada sesi audit atau penugasan SPT untuk tahun anggaran <?= $tahun ?>.
                 </td>
@@ -115,6 +116,28 @@ partial('sidebar');
                   <?php endif; ?>
                 </td>
                 <td style="text-align:center">
+                  <?php if (($d['status_lhp'] ?? '') === 'DISAHKAN_INSPEKTUR'): ?>
+                    <span class="badge" style="background:#dcfce7;color:#15803d;font-weight:700;font-size:11px;border:1px solid #86efac" title="Disahkan oleh <?= e($d['disahkan_oleh_nama'] ?? 'Inspektur') ?>">
+                      <i class="fa-solid fa-stamp"></i> Sah Inspektur
+                    </span>
+                    <div style="font-size:10px;color:#166534;margin-top:2px">
+                      <?= !empty($d['tgl_disahkan_inspektur']) ? date('d/m/Y', strtotime($d['tgl_disahkan_inspektur'])) : '' ?>
+                    </div>
+                  <?php elseif (($d['status_lhp'] ?? '') === 'TELAAH_IRBAN'): ?>
+                    <span class="badge" style="background:#eff6ff;color:#1d4ed8;font-weight:700;font-size:11px;border:1px solid #bfdbfe">
+                      <i class="fa-solid fa-user-tie"></i> Telaah Irban
+                    </span>
+                  <?php elseif (($d['status_lhp'] ?? '') === 'REVIU_DALNIS'): ?>
+                    <span class="badge" style="background:#fef3c7;color:#92400e;font-weight:700;font-size:11px;border:1px solid #fde68a">
+                      <i class="fa-solid fa-glasses"></i> Reviu Dalnis
+                    </span>
+                  <?php else: ?>
+                    <span class="badge" style="background:#f1f5f9;color:#64748b;font-weight:600;font-size:11px">
+                      <i class="fa-solid fa-pen"></i> Draf Konsep
+                    </span>
+                  <?php endif; ?>
+                </td>
+                <td style="text-align:center">
                   <?php if (!empty($d['gdrive_lhp_link'])): ?>
                     <a href="<?= e($d['gdrive_lhp_link']) ?>" target="_blank" class="badge badge-info" style="text-decoration:none;font-weight:700" title="Buka berkas PDF resmi di Google Drive teamirban4@gmail.com">
                       <i class="fa-brands fa-google-drive"></i> PDF Drive
@@ -127,12 +150,23 @@ partial('sidebar');
                 </td>
                 <td style="text-align:center;white-space:nowrap;padding-right:20px">
                   <div style="display:inline-flex;gap:6px">
-                    <a href="<?= url('lhp/show?desa_id=' . $d['desa_id'] . '&tahun=' . $tahun) ?>" class="btn btn-outline btn-sm" style="border-color:#059669;color:#059669;padding:5px 10px" title="Buka Pratinjau Naskah LHP">
+                    <a href="<?= url('lhp/show?desa_id=' . $d['desa_id'] . '&tahun=' . $tahun) ?>" class="btn btn-outline btn-sm" style="border-color:#059669;color:#059669;padding:5px 9px" title="Buka Pratinjau Naskah LHP">
                       <i class="fa-solid fa-eye"></i> Pratinjau
                     </a>
-                    <a href="<?= url('print/lhp?desa_id=' . $d['desa_id'] . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-primary btn-sm" style="padding:5px 10px" title="Cetak Resmi LHP (Format Bookman Rohil)">
-                      <i class="fa-solid fa-print"></i> Cetak
+                    <a href="<?= url('routing-slip/show?desa_id=' . $d['desa_id'] . '&tahun=' . $tahun) ?>" class="btn btn-outline btn-sm" style="border-color:#d97706;color:#b45309;padding:5px 9px" title="Buka Lembar Kendali Mutu Routing Slip">
+                      <i class="fa-solid fa-folder-open"></i> Kendali
                     </a>
+                    <?php if (!$auth->isInspektur()): ?>
+                      <?php if (($d['status_lhp'] ?? '') === 'DISAHKAN_INSPEKTUR'): ?>
+                        <a href="<?= url('print/lhp?desa_id=' . $d['desa_id'] . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-primary btn-sm" style="background:#059669;border-color:#059669;padding:5px 9px;font-weight:700" title="Cetak Naskah LHP Fisik (Siap TTD Basah & Cap Dinas)">
+                          <i class="fa-solid fa-print"></i> Cetak
+                        </a>
+                      <?php else: ?>
+                        <a href="<?= url('print/lhp?desa_id=' . $d['desa_id'] . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-outline btn-sm" style="border-color:#cbd5e1;color:#64748b;padding:5px 9px" title="Cetak Draf Naskah (Belum Disahkan)">
+                          <i class="fa-solid fa-print"></i> Cetak
+                        </a>
+                      <?php endif; ?>
+                    <?php endif; ?>
                   </div>
                 </td>
               </tr>

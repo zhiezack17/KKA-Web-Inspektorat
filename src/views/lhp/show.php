@@ -3,6 +3,11 @@ partial('head', ['title' => 'Pratinjau Konsep LHP Kepenghuluan ' . $desa['nama']
 partial('sidebar');
 ?>
 
+<?php
+$auth = $GLOBALS['auth'];
+$narasi = $data['narasi'] ?? ($narasi ?? []);
+$stLhp = $narasi['status_lhp'] ?? 'DRAFT';
+?>
 <main class="main">
   <?php partial('topbar'); ?>
 
@@ -17,16 +22,45 @@ partial('sidebar');
         </h2>
         <p>Audit Dengan Tujuan Tertentu (ADTT) atas Pengelolaan Keuangan Kepenghuluan <?= e($desa['nama']) ?>, Kec. <?= e($desa['kecamatan_nama']) ?> TA <?= $tahun ?>.</p>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <a href="<?= url('lhp?tahun=' . $tahun) ?>" class="btn btn-outline">
           <i class="fa-solid fa-arrow-left"></i> Kembali ke Daftar LHP
+        </a>
+        <a href="<?= url('routing-slip/show?desa_id=' . $desa['id'] . '&tahun=' . $tahun) ?>" class="btn btn-outline" style="color:#d97706;border-color:#d97706;font-weight:700">
+          <i class="fa-solid fa-folder-open"></i> Lembar Kendali (Routing Slip)
         </a>
         <a href="<?= url('lhp/edit?desa_id=' . $desa['id'] . '&tahun=' . $tahun) ?>" class="btn btn-outline" style="color:#0284c7;border-color:#0284c7;font-weight:700">
           <i class="fa-solid fa-pen-to-square"></i> Edit Narasi LHP (Bab I - IV)
         </a>
-        <a href="<?= url('print/lhp?desa_id=' . $desa['id'] . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-primary" style="background:#059669;border-color:#059669">
-          <i class="fa-solid fa-print"></i> Cetak / Ekspor PDF Naskah LHP
-        </a>
+
+        <?php if ($auth->isInspektur() || $auth->isAdmin()): ?>
+          <?php if ($stLhp !== 'DISAHKAN_INSPEKTUR'): ?>
+            <form method="POST" action="<?= url('lhp/sahkan') ?>" style="display:inline;margin:0" onsubmit="return confirm('Apakah Bapak Inspektur yakin akan MENGESAHKAN Laporan Hasil Pengawasan (LHP) Kepenghuluan <?= e($desa['nama']) ?> ini secara resmi?');">
+              <?= csrf_field() ?>
+              <input type="hidden" name="desa_id" value="<?= $desa['id'] ?>">
+              <input type="hidden" name="tahun_anggaran" value="<?= $tahun ?>">
+              <button type="submit" class="btn btn-primary" style="background:#b45309;border-color:#b45309;font-weight:700;box-shadow:0 2px 6px rgba(180,83,9,0.3)">
+                <i class="fa-solid fa-stamp"></i> Sahkan Laporan (LHP) Ini
+              </button>
+            </form>
+          <?php else: ?>
+            <span class="badge" style="background:#dcfce7;color:#15803d;font-weight:700;font-size:12.5px;padding:7px 12px;border:1px solid #86efac;display:inline-flex;align-items:center;gap:6px">
+              <i class="fa-solid fa-circle-check"></i> Telah Disahkan Inspektur
+            </span>
+          <?php endif; ?>
+        <?php endif; ?>
+
+        <?php if (!$auth->isInspektur()): ?>
+          <?php if ($stLhp === 'DISAHKAN_INSPEKTUR'): ?>
+            <a href="<?= url('print/lhp?desa_id=' . $desa['id'] . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-primary" style="background:#059669;border-color:#059669;font-weight:700">
+              <i class="fa-solid fa-print"></i> Cetak LHP Fisik (Siap TTD Basah)
+            </a>
+          <?php else: ?>
+            <a href="<?= url('print/lhp?desa_id=' . $desa['id'] . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-outline" style="border-color:#cbd5e1;color:#64748b">
+              <i class="fa-solid fa-print"></i> Cetak Draf Naskah
+            </a>
+          <?php endif; ?>
+        <?php endif; ?>
 
         <?php
           $gdriveLhp = DB::one("
@@ -50,8 +84,28 @@ partial('sidebar');
             <span>Simpan ke Google Drive</span>
           </a>
         <?php endif; ?>
-      </div>
     </div>
+
+    <?php if ($stLhp === 'DISAHKAN_INSPEKTUR'): ?>
+      <div class="card" style="background:linear-gradient(135deg, #ecfdf5, #f0fdf4);border:1px solid #86efac;border-left:5px solid #059669;padding:14px 18px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;box-shadow:0 2px 6px rgba(5,150,105,0.06)">
+        <div style="display:flex;align-items:center;gap:12px;color:#166534">
+          <div style="width:40px;height:40px;border-radius:50%;background:#a7f3d0;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="fa-solid fa-stamp" style="font-size:20px;color:#047857"></i>
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:800;color:#065f46">LHP TELAH RESMI DISAHKAN OLEH INSPEKTUR DAERAH</div>
+            <div style="font-size:12.5px;margin-top:2px;color:#047857">
+              Disahkan pada <b><?= !empty($narasi['tgl_disahkan_inspektur']) ? tgl_id($narasi['tgl_disahkan_inspektur']) : '' ?></b> pukul <b><?= !empty($narasi['tgl_disahkan_inspektur']) ? date('H:i', strtotime($narasi['tgl_disahkan_inspektur'])) : '' ?> WIB</b> oleh <b><?= e($narasi['disahkan_oleh_nama'] ?? $inspektur['nama']) ?></b>. Dokumen fisik siap dicetak untuk tanda tangan basah dan cap dinas.
+            </div>
+          </div>
+        </div>
+        <?php if (!$auth->isInspektur()): ?>
+          <a href="<?= url('print/lhp?desa_id=' . $desa['id'] . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-sm" style="background:#059669;color:#fff;border:none;font-weight:700;box-shadow:0 2px 4px rgba(5,150,105,0.25)">
+            <i class="fa-solid fa-print"></i> Cetak Naskah Bersih
+          </a>
+        <?php endif; ?>
+      </div>
+    <?php endif; ?>
 
     <?php if ($gdriveLhp): ?>
       <div class="card" style="background:#f0fdf4;border:1px solid #86efac;padding:12px 18px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center">

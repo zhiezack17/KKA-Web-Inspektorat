@@ -36,6 +36,9 @@ class LhpController {
                 (SELECT COUNT(*) FROM kka_temuan t WHERE t.desa_id = d.id AND t.tahun_anggaran = ?) AS total_temuan,
                 (SELECT COALESCE(SUM(t.nominal), 0) FROM kka_temuan t WHERE t.desa_id = d.id AND t.tahun_anggaran = ?) AS nominal_temuan,
                 (SELECT COUNT(*) FROM kka_lhp_narasi n WHERE n.desa_id = d.id AND n.tahun_anggaran = ?) AS is_custom_narasi,
+                COALESCE((SELECT n.status_lhp FROM kka_lhp_narasi n WHERE n.desa_id = d.id AND n.tahun_anggaran = ? LIMIT 1), 'DRAFT') AS status_lhp,
+                (SELECT n.tgl_disahkan_inspektur FROM kka_lhp_narasi n WHERE n.desa_id = d.id AND n.tahun_anggaran = ? LIMIT 1) AS tgl_disahkan_inspektur,
+                (SELECT n.disahkan_oleh_nama FROM kka_lhp_narasi n WHERE n.desa_id = d.id AND n.tahun_anggaran = ? LIMIT 1) AS disahkan_oleh_nama,
                 (SELECT web_view_link FROM kka_gdrive_sync g WHERE g.tipe_dokumen = 'LHP_FINAL' AND g.desa_id = d.id AND g.tahun_anggaran = ? ORDER BY id DESC LIMIT 1) AS gdrive_lhp_link,
                 (SELECT synced_at FROM kka_gdrive_sync g WHERE g.tipe_dokumen = 'LHP_FINAL' AND g.desa_id = d.id AND g.tahun_anggaran = ? ORDER BY id DESC LIMIT 1) AS gdrive_lhp_synced_at
             FROM kka_desa d
@@ -45,7 +48,7 @@ class LhpController {
             GROUP BY d.id, d.nama, k.nama, spt.id, spt.no_spt, spt.tgl_spt, spt.status, spt.wakil_pj_nama, spt.dalnis_nama, spt.ketua_tim_nama
             HAVING total_sesi > 0 OR spt_id IS NOT NULL
             ORDER BY k.nama ASC, d.nama ASC
-        ", [$tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun]);
+        ", [$tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun]);
 
         view('lhp/index', compact('daftarLhp', 'tahun'));
     }
@@ -180,7 +183,7 @@ class LhpController {
             'desa', 'spt', 'notaDinas', 'tahun', 'anggotaList', 'sesiList',
             'rekapBidang', 'rekapPajak', 'daftarTemuan', 'totalPagu',
             'totalRealisasi', 'totalKuitansi', 'totalSelisih', 'totalNominalTemuan',
-            'inspektur', 'narasiFinal'
+            'inspektur', 'narasiFinal', 'narasi'
         );
     }
 
@@ -263,6 +266,88 @@ class LhpController {
         }
 
         flash('success', 'Narasi dan kalimat naskah LHP Kepenghuluan ' . $desaId . ' berhasil diperbarui.');
+        redirect('lhp/show?desa_id=' . $desaId . '&tahun=' . $tahun);
+    }
+
+    /**
+     * Pengesahan LHP 1-Klik oleh Inspektur Daerah
+     */
+    public function sahkan(): void {
+        only_post();
+        csrf_check();
+
+        if (!$this->auth->isInspektur() && !$this->auth->isAdmin()) {
+            http_response_code(403);
+            exit('Hanya Inspektur Daerah atau Administrator yang berwenang mengesahkan LHP.');
+        }
+
+        $desaId = (int) input('desa_id');
+        $tahun  = (int) input('tahun_anggaran', date('Y'));
+        $u      = $this->auth->user();
+        $now    = date('Y-m-d H:i:s');
+
+        $existing = DB::one("SELECT id FROM kka_lhp_narasi WHERE desa_id = ? AND tahun_anggaran = ?", [$desaId, $tahun]);
+        if ($existing) {
+            DB::update('kka_lhp_narasi', [
+                'status_lhp'              => 'DISAHKAN_INSPEKTUR',
+                'tgl_disahkan_inspektur'  => $now,
+                'disahkan_oleh_nama'      => $u['nama'],
+                'updated_by'              => $u['id'] ?? null,
+            ], ['id' => $existing['id']]);
+        } else {
+            DB::insert('kka_lhp_narasi', [
+                'desa_id'                 => $desaId,
+                'tahun_anggaran'          => $tahun,
+                'status_lhp'              => 'DISAHKAN_INSPEKTUR',
+                'tgl_disahkan_inspektur'  => $now,
+                'disahkan_oleh_nama'      => $u['nama'],
+                'updated_by'              => $u['id'] ?? null,
+            ]);
+        }
+
+        $desaNama = DB::val("SELECT nama FROM kka_desa WHERE id = ?", [$desaId]) ?: 'Desa';
+        flash('success', 'Laporan Hasil Pengawasan (LHP) Kepenghuluan ' . $desaNama . ' TA ' . $tahun . ' telah resmi DISAHKAN oleh Inspektur Daerah pada ' . tgl_id($now) . ' pukul ' . date('H:i', strtotime($now)) . ' WIB. Notifikasi telah dikirimkan ke meja Ketua Tim untuk pencetakan naskah fisik.');
+        redirect('lhp/show?desa_id=' . $desaId . '&tahun=' . $tahun);
+    }
+
+    /**
+     * Ajukan LHP ke Jenjang Berikutnya (Ketua Tim -> Dalnis -> Irban -> Inspektur)
+     */
+    public function ajukan(): void {
+        only_post();
+        csrf_check();
+
+        $desaId = (int) input('desa_id');
+        $tahun  = (int) input('tahun_anggaran', date('Y'));
+        $tahap  = (string) input('tahap');
+        $u      = $this->auth->user();
+
+        $statusMap = [
+            'dalnis'    => 'REVIU_DALNIS',
+            'irban'     => 'TELAAH_IRBAN',
+        ];
+        $targetStatus = $statusMap[$tahap] ?? 'REVIU_DALNIS';
+
+        $existing = DB::one("SELECT id FROM kka_lhp_narasi WHERE desa_id = ? AND tahun_anggaran = ?", [$desaId, $tahun]);
+        if ($existing) {
+            DB::update('kka_lhp_narasi', [
+                'status_lhp' => $targetStatus,
+                'updated_by' => $u['id'] ?? null,
+            ], ['id' => $existing['id']]);
+        } else {
+            DB::insert('kka_lhp_narasi', [
+                'desa_id'        => $desaId,
+                'tahun_anggaran' => $tahun,
+                'status_lhp'     => $targetStatus,
+                'updated_by'     => $u['id'] ?? null,
+            ]);
+        }
+
+        $labelMap = [
+            'dalnis' => 'Pengendali Teknis (Dalnis)',
+            'irban'  => 'Inspektur Pembantu (Irban)',
+        ];
+        flash('success', 'Naskah LHP & Routing Slip berhasil diajukan ke ' . ($labelMap[$tahap] ?? 'tahap berikutnya') . '.');
         redirect('lhp/show?desa_id=' . $desaId . '&tahun=' . $tahun);
     }
 

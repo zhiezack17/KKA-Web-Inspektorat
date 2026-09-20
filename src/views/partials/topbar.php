@@ -49,6 +49,7 @@ $canSwitchRole = !empty($_SESSION['is_admin_master']);
           <option value="amdattofa" <?= $curUname === 'amdattofa' ? 'selected' : '' ?>>👤 Ketua Tim (Amdat Tofa, SH)</option>
           <option value="budicahyadi" <?= $curUname === 'budicahyadi' ? 'selected' : '' ?>>👤 Ketua Tim (Budi Cahyadi)</option>
           <option value="fakhrurrazi" <?= $curUname === 'fakhrurrazi' ? 'selected' : '' ?>>👤 Anggota (Fakhrurrazi)</option>
+          <option value="operator_tl" <?= $curUname === 'operator_tl' ? 'selected' : '' ?>>👤 Bag. Tindak Lanjut (TLHP)</option>
           <option value="admin" <?= $curUname === 'admin' ? 'selected' : '' ?>>⚡ Administrator</option>
         </select>
       </div>

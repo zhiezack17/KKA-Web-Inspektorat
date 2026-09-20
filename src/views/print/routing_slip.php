@@ -4,7 +4,7 @@
  * Inspektorat Kabupaten Rokan Hilir
  * Disesuaikan dengan Formulir Kendali Mutu LHP.
  */
-$namaInspektur = 'H. SARMAN SYAHRONI, ST., M.IP';
+$namaInspektur = 'H. SARMAN SYAHRONI, ST., M.IP., CGCAE';
 $nipInspektur  = '19760810 200312 1 004';
 $jabatanInspektur = 'Inspektur Daerah Kabupaten Rokan Hilir';
 

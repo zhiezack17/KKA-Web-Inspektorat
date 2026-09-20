@@ -38,6 +38,7 @@ if ($auth->isInspektur()) {
       <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
     </a>
 
+    <?php if (!$auth->isOperatorTl()): ?>
     <div class="nav-section">Pra-Audit &amp; Penugasan</div>
     <a href="<?= url('penugasan/nota-dinas') ?>" class="nav-item<?= nav_active('/penugasan/nota-dinas', $current) ?>" data-testid="nav-nota-dinas">
       <i class="fa-solid fa-envelope-open-text"></i><span>Nota Dinas (ND)</span>
@@ -51,8 +52,9 @@ if ($auth->isInspektur()) {
     <a href="<?= url('penugasan/pka') ?>" class="nav-item<?= nav_active('/penugasan/pka', $current) ?>" data-testid="nav-pka">
       <i class="fa-solid fa-list-check"></i><span>Matriks PKA</span>
     </a>
+    <?php endif; ?>
 
-    <?php if (!$auth->isOperatorSpt() || $auth->isAdmin()): ?>
+    <?php if ((!$auth->isOperatorSpt() && !$auth->isOperatorTl()) || $auth->isAdmin()): ?>
     <div class="nav-section">Pelaksanaan Audit (KKA ADTT)</div>
     <a href="<?= url('sesi') ?>" class="nav-item<?= nav_active('/sesi', $current) ?>" data-testid="nav-sesi">
       <i class="fa-solid fa-clipboard-list"></i><span>Kertas Kerja (KKA)</span>
@@ -66,18 +68,25 @@ if ($auth->isInspektur()) {
     <a href="<?= url('master') ?>" class="nav-item<?= nav_active('/master', $current) ?>" data-testid="nav-master">
       <i class="fa-solid fa-folder-tree"></i><span>Master KKA Fisik</span>
     </a>
+    <?php endif; ?>
 
     <div class="nav-section">Hasil Pengawasan &amp; Laporan</div>
+    <?php if (!$auth->isOperatorTl() && (!$auth->isOperatorSpt() || $auth->isAdmin())): ?>
     <a href="<?= url('temuan') ?>" class="nav-item<?= nav_active('/temuan', $current) ?>" data-testid="nav-temuan">
       <i class="fa-solid fa-file-circle-exclamation" style="color:#fbbf24"></i><span>Konsep Temuan (KTP)</span>
     </a>
     <a href="<?= url('lhp') ?>" class="nav-item<?= nav_active('/lhp', $current) ?>" data-testid="nav-lhp">
       <i class="fa-solid fa-file-shield" style="color:#6ee7b7"></i><span>Laporan Hasil Audit (LHP)</span>
     </a>
+    <a href="<?= url('routing-slip') ?>" class="nav-item<?= nav_active('/routing-slip', $current) ?>" data-testid="nav-routing-slip">
+      <i class="fa-solid fa-folder-open" style="color:#f59e0b"></i><span>Routing Slip (Kendali Mutu)</span>
+    </a>
+    <?php endif; ?>
     <a href="<?= url('tlhp') ?>" class="nav-item<?= nav_active('/tlhp', $current) ?>" data-testid="nav-tlhp">
-      <i class="fa-solid fa-clock-rotate-left" style="color:#f59e0b"></i><span>Tindak Lanjut (TLHP 60 Hari)</span>
+      <i class="fa-solid fa-clock-rotate-left" style="color:#34d399"></i><span>Tindak Lanjut (TLHP 60 Hari)</span>
     </a>
 
+    <?php if (!$auth->isOperatorTl() && (!$auth->isOperatorSpt() || $auth->isAdmin())): ?>
     <div class="nav-section">Audit Ketaatan OPD</div>
     <a href="javascript:void(0)" onclick="alert('ℹ️ MODUL KKA AUDIT KETAATAN DINAS/OPD (SIAKAT)\n\nModul ini sedang disiapkan untuk integrasi kepatuhan dinas/OPD se-Kabupaten Rokan Hilir pada pembaruan tahap berikutnya.')" class="nav-item" style="opacity:0.85" title="Segera Hadir">
       <i class="fa-solid fa-scale-balanced" style="color:#60a5fa"></i><span>KKA Ketaatan OPD</span>
@@ -120,6 +129,7 @@ if ($auth->isInspektur()) {
       <option value="amdattofa" <?= ($user['username'] ?? '') === 'amdattofa' ? 'selected' : '' ?>>👤 Ketua Tim (Amdat Tofa, SH)</option>
       <option value="budicahyadi" <?= ($user['username'] ?? '') === 'budicahyadi' ? 'selected' : '' ?>>👤 Ketua Tim (Budi Cahyadi)</option>
       <option value="fakhrurrazi" <?= ($user['username'] ?? '') === 'fakhrurrazi' ? 'selected' : '' ?>>👤 Anggota (Fakhrurrazi)</option>
+      <option value="operator_tl" <?= ($user['username'] ?? '') === 'operator_tl' ? 'selected' : '' ?>>👤 Bag. Tindak Lanjut (TLHP)</option>
       <option value="admin" <?= ($user['username'] ?? '') === 'admin' ? 'selected' : '' ?>>⚡ Administrator Sistem</option>
     </select>
   </div>

@@ -54,6 +54,10 @@
           <a href="<?= url('penugasan/spt') ?>" class="btn btn-primary" style="background:#059669;border:none;font-weight:700;box-shadow:0 2px 4px rgba(5,150,105,0.25)">
             <i class="fa-solid fa-file-signature"></i> Antrean Surat Tugas (SPT)
           </a>
+        <?php elseif ($auth->isOperatorTl()): ?>
+          <a href="<?= url('tlhp') ?>" class="btn btn-primary" style="background:#059669;border:none;font-weight:700;box-shadow:0 2px 4px rgba(5,150,105,0.25)">
+            <i class="fa-solid fa-clock-rotate-left"></i> Monitoring Tindak Lanjut (TLHP)
+          </a>
         <?php else: ?>
           <a href="<?= url('penugasan/nota-dinas/create') ?>" class="btn btn-outline" style="border-color:#2563eb;color:#2563eb;font-weight:700">
             <i class="fa-solid fa-envelope-open-text"></i> Usulkan Tim (ND)
@@ -61,11 +65,14 @@
           <a href="<?= url('sesi') ?>" class="btn btn-primary" style="font-weight:700">
             <i class="fa-solid fa-clipboard-list"></i> Kertas Kerja (KKA)
           </a>
+          <a href="<?= url('routing-slip') ?>" class="btn btn-outline" style="border-color:#d97706;color:#b45309;font-weight:700">
+            <i class="fa-solid fa-folder-open"></i> Routing Slip
+          </a>
         <?php endif; ?>
       </div>
     </div>
 
-    <!-- Alert Khusus Pimpinan (Inspektur & Operator) -->
+    <!-- Alert Khusus Pimpinan (Inspektur, Operator SPT, Bagian TL, & Tim Auditor) -->
     <?php if ($auth->isInspektur()): ?>
       <?php 
         $pendingNd = (int) DB::val("SELECT COUNT(*) FROM kka_nota_dinas WHERE status = 'DIAJUKAN_INSPEKTUR'");
@@ -111,6 +118,55 @@
             </div>
           </div>
           <a href="<?= url('penugasan/spt') ?>" class="btn btn-sm" style="background:#059669; color:#fff; border:none; font-weight:700; flex-shrink:0; box-shadow:0 2px 4px rgba(5,150,105,0.25);"><i class="fa-solid fa-stamp"></i> Buka Antrean Penerbitan</a>
+        </div>
+      <?php endif; ?>
+    <?php elseif ($auth->isOperatorTl()): ?>
+      <!-- Alert Khusus Bagian Tindak Lanjut (TLHP) -->
+      <div style="background:linear-gradient(135deg, #f0fdf4, #dcfce7); border:1px solid #86efac; border-left:5px solid #16a34a; border-radius:10px; padding:14px 18px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; gap:16px; box-shadow:0 2px 6px rgba(22,163,74,0.08);">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="width:42px; height:42px; border-radius:50%; background:#bbf7d0; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <i class="fa-solid fa-clock-rotate-left" style="font-size:18px; color:#15803d;"></i>
+          </div>
+          <div>
+            <div style="font-weight:700; color:#14532d; font-size:14px;">Ruang Kerja Bagian Tindak Lanjut (TLHP APIP):</div>
+            <div style="font-size:13px; color:#166534; margin-top:2px;">
+              Memantau batas waktu 60 hari kalender, penerimaan bukti STS Bank / kuitansi pengembalian kas dari Penghulu, dan verifikasi status penyelesaian kerugian desa.
+            </div>
+          </div>
+        </div>
+        <a href="<?= url('tlhp') ?>" class="btn btn-sm" style="background:#16a34a; color:#fff; border:none; font-weight:700; flex-shrink:0; box-shadow:0 2px 4px rgba(22,163,74,0.25);"><i class="fa-solid fa-eye"></i> Buka Monitoring TLHP</a>
+      </div>
+    <?php else: ?>
+      <!-- Alert Khusus Auditor / Ketua Tim jika ada LHP yang telah disahkan Inspektur -->
+      <?php 
+        $lhpSahTerbaru = DB::all("
+          SELECT n.*, d.nama AS desa_nama, k.nama AS kecamatan_nama 
+          FROM kka_lhp_narasi n 
+          JOIN kka_desa d ON d.id = n.desa_id 
+          JOIN kka_kecamatan k ON k.id = d.kecamatan_id 
+          WHERE n.status_lhp = 'DISAHKAN_INSPEKTUR' 
+          ORDER BY n.tgl_disahkan_inspektur DESC LIMIT 2
+        ");
+      ?>
+      <?php if (!empty($lhpSahTerbaru)): ?>
+        <div style="background:linear-gradient(135deg, #f0fdf4, #dcfce7); border:1px solid #86efac; border-left:5px solid #16a34a; border-radius:10px; padding:14px 18px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; gap:16px; box-shadow:0 2px 6px rgba(22,163,74,0.08);">
+          <div style="display:flex; align-items:center; gap:14px;">
+            <div style="width:42px; height:42px; border-radius:50%; background:#bbf7d0; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <i class="fa-solid fa-stamp" style="font-size:18px; color:#15803d;"></i>
+            </div>
+            <div>
+              <div style="font-weight:700; color:#14532d; font-size:14px;">Pemberitahuan Pengesahan LHP dari Inspektur:</div>
+              <div style="font-size:13px; color:#166534; margin-top:2px;">
+                <?php foreach ($lhpSahTerbaru as $ls): ?>
+                  <div>&bull; LHP Kepenghuluan <strong><?= e($ls['desa_nama']) ?></strong> (TA <?= (int)$ls['tahun_anggaran'] ?>) telah <strong>RESMI DISAHKAN</strong> Inspektur Daerah pada <?= date('d/m/Y', strtotime($ls['tgl_disahkan_inspektur'])) ?>. Naskah fisik siap dicetak untuk TTD basah &amp; cap dinas.</div>
+                <?php endforeach; ?>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; flex-shrink:0;">
+            <a href="<?= url('lhp') ?>" class="btn btn-sm" style="background:#16a34a; color:#fff; border:none; font-weight:700; box-shadow:0 2px 4px rgba(22,163,74,0.25);"><i class="fa-solid fa-print"></i> Cetak LHP Fisik</a>
+            <a href="<?= url('routing-slip') ?>" class="btn btn-sm" style="background:#d97706; color:#fff; border:none; font-weight:700; box-shadow:0 2px 4px rgba(217,119,6,0.25);"><i class="fa-solid fa-folder-open"></i> Routing Slip</a>
+          </div>
         </div>
       <?php endif; ?>
     <?php endif; ?>

@@ -215,7 +215,7 @@ $routes = [
 
     '/print/sesi'             => ['PrintController', 'sesi'],
     '/print/reviu'            => ['PrintController', 'reviu'],
-    '/print/routing-slip'     => ['PrintController', 'routingSlip'],
+    '/print/routing-slip'     => ['RoutingSlipController', 'print'],
     '/export/sesi'            => ['PrintController', 'exportExcel'],
     '/export/rekap'           => ['PrintController', 'exportRekap'],
 
@@ -265,7 +265,14 @@ $routes = [
     '/lhp/show'                       => ['LhpController', 'show'],
     '/lhp/edit'                       => ['LhpController', 'edit'],
     '/lhp/update'                     => ['LhpController', 'update'],
+    '/lhp/sahkan'                     => ['LhpController', 'sahkan'],
+    '/lhp/ajukan'                     => ['LhpController', 'ajukan'],
     '/print/lhp'                      => ['LhpController', 'print'],
+
+    // Modul Routing Slip Kendali Mutu (Model Simondes)
+    '/routing-slip'                   => ['RoutingSlipController', 'index'],
+    '/routing-slip/show'              => ['RoutingSlipController', 'show'],
+    '/routing-slip/update'            => ['RoutingSlipController', 'update'],
 
     // Modul Berita Acara Pemeriksaan Kas (Opname Kas Desa)
     '/opname-kas'                     => ['OpnameKasController', 'index'],

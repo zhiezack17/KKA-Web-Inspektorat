@@ -44,6 +44,12 @@ class Auth {
         $j = $this->user['jabatan'] ?? '';
         return $r === 'operator_spt' || stripos($j, 'Surat Perintah') !== false || stripos($j, 'Perencanaan') !== false;
     }
+    public function isOperatorTl(): bool {
+        $r = $this->user['role'] ?? '';
+        if ($r === 'admin') return false;
+        $j = $this->user['jabatan'] ?? '';
+        return $r === 'operator_tl' || stripos($j, 'Tindak Lanjut') !== false || stripos($j, 'TLHP') !== false;
+    }
     public function role(): string { return $this->user['role'] ?? 'auditor'; }
 
     public function attempt(string $identifier, string $password): bool {
