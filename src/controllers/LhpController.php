@@ -12,10 +12,15 @@ class LhpController {
     public function __construct(Auth $auth) {
         $this->auth = $auth;
         $auth->require();
+        if ($this->auth->isOperatorSpt()) {
+            flash('warning', 'Akses dibatasi: Peran Bagian Perencanaan (Operator SPT) tidak memiliki akses ke Laporan Hasil Pemeriksaan (LHP).');
+            redirect('penugasan/spt');
+        }
     }
 
     public function index(): void {
-        $tahun = (int) input('tahun', date('Y'));
+        $defaultYear = (int) DB::val("SELECT MAX(tahun_anggaran) FROM kka_temuan") ?: (int)date('Y');
+        $tahun = (int) input('tahun', $defaultYear);
 
         // Ambil desa-desa yang memiliki sesi audit atau SPT
         $daftarLhp = DB::all("
@@ -29,7 +34,10 @@ class LhpController {
                 COALESCE((SELECT SUM(r.realisasi) FROM kka_rincian r JOIN kka_sesi s2 ON s2.id = r.sesi_id WHERE s2.desa_id = d.id AND s2.tahun_anggaran = ?), 0) AS total_realisasi,
                 COALESCE((SELECT SUM(r.biaya_dikwitansi) FROM kka_rincian r JOIN kka_sesi s2 ON s2.id = r.sesi_id WHERE s2.desa_id = d.id AND s2.tahun_anggaran = ?), 0) AS total_kuitansi,
                 (SELECT COUNT(*) FROM kka_temuan t WHERE t.desa_id = d.id AND t.tahun_anggaran = ?) AS total_temuan,
-                (SELECT COALESCE(SUM(t.nominal), 0) FROM kka_temuan t WHERE t.desa_id = d.id AND t.tahun_anggaran = ?) AS nominal_temuan
+                (SELECT COALESCE(SUM(t.nominal), 0) FROM kka_temuan t WHERE t.desa_id = d.id AND t.tahun_anggaran = ?) AS nominal_temuan,
+                (SELECT COUNT(*) FROM kka_lhp_narasi n WHERE n.desa_id = d.id AND n.tahun_anggaran = ?) AS is_custom_narasi,
+                (SELECT web_view_link FROM kka_gdrive_sync g WHERE g.tipe_dokumen = 'LHP_FINAL' AND g.desa_id = d.id AND g.tahun_anggaran = ? ORDER BY id DESC LIMIT 1) AS gdrive_lhp_link,
+                (SELECT synced_at FROM kka_gdrive_sync g WHERE g.tipe_dokumen = 'LHP_FINAL' AND g.desa_id = d.id AND g.tahun_anggaran = ? ORDER BY id DESC LIMIT 1) AS gdrive_lhp_synced_at
             FROM kka_desa d
             JOIN kka_kecamatan k ON k.id = d.kecamatan_id
             LEFT JOIN kka_sesi s ON s.desa_id = d.id AND s.tahun_anggaran = ?
@@ -37,13 +45,13 @@ class LhpController {
             GROUP BY d.id, d.nama, k.nama, spt.id, spt.no_spt, spt.tgl_spt, spt.status, spt.wakil_pj_nama, spt.dalnis_nama, spt.ketua_tim_nama
             HAVING total_sesi > 0 OR spt_id IS NOT NULL
             ORDER BY k.nama ASC, d.nama ASC
-        ", [$tahun, $tahun, $tahun, $tahun, $tahun, $tahun]);
+        ", [$tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun]);
 
         view('lhp/index', compact('daftarLhp', 'tahun'));
     }
 
     /** Helper mengambil paket data lengkap untuk satu LHP Desa */
-    private function getLhpData(int $desaId, int $tahun): ?array {
+    public function getLhpData(int $desaId, int $tahun): ?array {
         $desa = DB::one("
             SELECT d.*, k.nama AS kecamatan_nama 
             FROM kka_desa d 
@@ -137,11 +145,42 @@ class LhpController {
             'jabatan' => 'Inspektur Daerah Kabupaten Rokan Hilir'
         ];
 
+        // Narasi Kustomisasi (Bab I s.d IV)
+        $narasi = DB::one("SELECT * FROM kka_lhp_narasi WHERE desa_id = ? AND tahun_anggaran = ?", [$desaId, $tahun]);
+
+        $defaultRingkasan = "Berdasarkan Surat Perintah Tugas Inspektur Daerah Kabupaten Rokan Hilir Nomor: " . ($spt['no_spt'] ?? '...........................') . " tanggal " . (!empty($spt['tgl_spt']) ? tgl_id($spt['tgl_spt']) : '..............') . ", Tim Pemeriksa telah melakukan Audit Dengan Tujuan Tertentu (ADTT) atas Pengelolaan Keuangan Kepenghuluan " . $desa['nama'] . " Kecamatan " . $desa['kecamatan_nama'] . " Tahun Anggaran " . $tahun . ".\n\nDari hasil pengujian terhadap bukti pertanggungjawaban (SPJ) dan verifikasi fisik di lapangan atas realisasi belanja sebesar " . rupiah($totalRealisasi) . ", Tim Pengawasan mengidentifikasi " . count($daftarTemuan) . " butir Pokok Temuan Pemeriksaan dengan total nilai ketidaksesuaian/indikasi kerugian kas desa sebesar " . rupiah($totalNominalTemuan) . ".";
+
+        $defaultDasar = "1. Program Kerja Pengawasan Tahunan (PKPT) Inspektorat Kabupaten Rokan Hilir Tahun " . $tahun . ";\n2. Surat Perintah Tugas Inspektur Daerah Kabupaten Rokan Hilir Nomor: " . ($spt['no_spt'] ?? '-') . " tanggal " . (!empty($spt['tgl_spt']) ? tgl_id($spt['tgl_spt']) : '-') . ";\n3. Peraturan Perundang-undangan mengenai Pengelolaan Keuangan Desa di Kabupaten Rokan Hilir.";
+
+        $defaultTujuan = $spt['tujuan'] ?? ("Memberikan keyakinan memadai atas ketaatan, efisiensi, dan efektivitas pengelolaan keuangan serta kepatuhan administrasi belanja Kepenghuluan " . $desa['nama'] . " Tahun Anggaran " . $tahun . ".");
+
+        $defaultRuangLingkup = "Pengujian aspek keuangan tertentu, kepatuhan perpajakan belanja desa, dan opname fisik pekerjaan pembangunan desa Tahun Anggaran " . $tahun . ".";
+
+        $defaultBatasan = "Pemeriksaan ini didasarkan pada dokumen pertanggungjawaban (SPJ) dan keterangan yang diserahkan oleh pihak auditi. Tanggung jawab kebenaran material dokumen sepenuhnya berada pada Pj. Penghulu dan Bendahara Pengeluaran.";
+
+        $defaultGambaranUmum = "Realisasi pengeluaran kas belanja APBDesa Kepenghuluan " . $desa['nama'] . " Tahun Anggaran " . $tahun . " yang dilakukan uji petik adalah sebagai berikut:";
+
+        $defaultKesimpulan = "Demikian Laporan Hasil Pengawasan (LHP) Audit Dengan Tujuan Tertentu (ADTT) atas Pengelolaan Keuangan Kepenghuluan " . $desa['nama'] . " Kecamatan " . $desa['kecamatan_nama'] . " ini disusun sebagai bahan evaluasi dan perbaikan tata kelola keuangan desa. Diharapkan Pj. Penghulu beserta jajaran segera menindaklanjuti rekomendasi yang termuat dalam laporan ini selambat-lambatnya 60 (enam puluh) hari kalender sejak laporan ini diterima.";
+
+        $defaultSaranPenutup = "1. Pj. Penghulu memerintahkan Bendahara Pengeluaran menyetorkan kembali ketekoran kas/kelebihan bayar ke Rekening Kas Desa;\n2. Pj. Penghulu dan Tim Pelaksana Kegiatan (TPK) menyelesaikan kelengkapan bukti administrasi dan pertanggungjawaban fisik pekerjaan sesuai ketentuan.";
+
+        $narasiFinal = [
+            'ringkasan_eksekutif' => $narasi['ringkasan_eksekutif'] ?? $defaultRingkasan,
+            'dasar_penugasan'     => $narasi['dasar_penugasan'] ?? $defaultDasar,
+            'tujuan_pengawasan'   => $narasi['tujuan_pengawasan'] ?? $defaultTujuan,
+            'ruang_lingkup'       => $narasi['ruang_lingkup'] ?? $defaultRuangLingkup,
+            'batasan_pengawasan'  => $narasi['batasan_pengawasan'] ?? $defaultBatasan,
+            'gambaran_umum'       => $narasi['gambaran_umum'] ?? $defaultGambaranUmum,
+            'kesimpulan'          => $narasi['kesimpulan'] ?? $defaultKesimpulan,
+            'saran_penutup'       => $narasi['saran_penutup'] ?? $defaultSaranPenutup,
+            'is_customized'       => !empty($narasi),
+        ];
+
         return compact(
             'desa', 'spt', 'notaDinas', 'tahun', 'anggotaList', 'sesiList',
             'rekapBidang', 'rekapPajak', 'daftarTemuan', 'totalPagu',
             'totalRealisasi', 'totalKuitansi', 'totalSelisih', 'totalNominalTemuan',
-            'inspektur'
+            'inspektur', 'narasiFinal'
         );
     }
 
@@ -156,6 +195,75 @@ class LhpController {
         }
 
         view('lhp/show', $data);
+    }
+
+    /**
+     * Form Kustomisasi Narasi LHP (Bab I s.d IV)
+     */
+    public function edit(): void {
+        $desaId = (int) input('desa_id');
+        $tahun  = (int) input('tahun', date('Y'));
+
+        $data = $this->getLhpData($desaId, $tahun);
+        if (!$data) {
+            flash('error', 'Data Kepenghuluan tidak ditemukan.');
+            redirect('lhp');
+        }
+
+        view('lhp/edit', $data);
+    }
+
+    /**
+     * Simpan Perubahan Narasi LHP
+     */
+    public function update(): void {
+        only_post();
+        csrf_check();
+
+        $desaId = (int) input('desa_id');
+        $tahun  = (int) input('tahun_anggaran', date('Y'));
+
+        $ringkasanEksekutif = trim((string) input('ringkasan_eksekutif'));
+        $dasarPenugasan     = trim((string) input('dasar_penugasan'));
+        $tujuanPengawasan   = trim((string) input('tujuan_pengawasan'));
+        $ruangLingkup       = trim((string) input('ruang_lingkup'));
+        $batasanPengawasan  = trim((string) input('batasan_pengawasan'));
+        $gambaranUmum       = trim((string) input('gambaran_umum'));
+        $kesimpulan         = trim((string) input('kesimpulan'));
+        $saranPenutup       = trim((string) input('saran_penutup'));
+        $userId = $this->auth->user()['id'] ?? null;
+
+        $existing = DB::one("SELECT id FROM kka_lhp_narasi WHERE desa_id = ? AND tahun_anggaran = ?", [$desaId, $tahun]);
+        if ($existing) {
+            DB::update('kka_lhp_narasi', [
+                'ringkasan_eksekutif' => $ringkasanEksekutif,
+                'dasar_penugasan'     => $dasarPenugasan,
+                'tujuan_pengawasan'   => $tujuanPengawasan,
+                'ruang_lingkup'       => $ruangLingkup,
+                'batasan_pengawasan'  => $batasanPengawasan,
+                'gambaran_umum'       => $gambaranUmum,
+                'kesimpulan'          => $kesimpulan,
+                'saran_penutup'       => $saranPenutup,
+                'updated_by'          => $userId,
+            ], ['id' => $existing['id']]);
+        } else {
+            DB::insert('kka_lhp_narasi', [
+                'desa_id'             => $desaId,
+                'tahun_anggaran'      => $tahun,
+                'ringkasan_eksekutif' => $ringkasanEksekutif,
+                'dasar_penugasan'     => $dasarPenugasan,
+                'tujuan_pengawasan'   => $tujuanPengawasan,
+                'ruang_lingkup'       => $ruangLingkup,
+                'batasan_pengawasan'  => $batasanPengawasan,
+                'gambaran_umum'       => $gambaranUmum,
+                'kesimpulan'          => $kesimpulan,
+                'saran_penutup'       => $saranPenutup,
+                'updated_by'          => $userId,
+            ]);
+        }
+
+        flash('success', 'Narasi dan kalimat naskah LHP Kepenghuluan ' . $desaId . ' berhasil diperbarui.');
+        redirect('lhp/show?desa_id=' . $desaId . '&tahun=' . $tahun);
     }
 
     public function print(): void {

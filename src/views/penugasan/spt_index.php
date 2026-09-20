@@ -3,15 +3,7 @@
 <?php partial('sidebar'); ?>
 
 <main class="main" data-testid="page-spt">
-  <div class="topbar">
-    <div class="crumb">
-      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">☰</button>
-      <i class="fa-solid fa-file-signature"></i> <b>Surat Perintah Tugas (SPT)</b>
-    </div>
-    <div class="topbar-right">
-      <?= count($list) ?> SPT terdaftar
-    </div>
-  </div>
+  <?php partial('topbar', ['title' => 'Surat Perintah Tugas (SPT)', 'icon' => 'fa-solid fa-file-signature']); ?>
 
   <div class="content">
     <?php partial('flash'); ?>
@@ -67,6 +59,20 @@
               <?php endforeach; ?>
             </tbody>
           </table>
+        </div>
+      </div>
+    <?php else: ?>
+      <div class="card" style="border-left:4px solid #3b82f6;margin-bottom:20px;background:#f8fafc;padding:14px 18px">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="width:38px;height:38px;border-radius:50%;background:#eff6ff;display:grid;place-items:center;flex-shrink:0">
+            <i class="fa-solid fa-circle-info" style="font-size:18px;color:#2563eb"></i>
+          </div>
+          <div>
+            <b style="font-size:13.5px;color:#1e293b">Alur Penerbitan Surat Perintah Tugas (SPT)</b>
+            <p style="font-size:12px;color:#64748b;margin:2px 0 0;line-height:1.5">
+              Saat ini belum ada antrean baru. Sesuai SOP pengawasan resmi APIP, berkas penugasan akan <b>otomatis masuk ke antrean Operator SPT</b> segera setelah <b>Nota Dinas diajukan oleh Irban Wilayah</b> dan <b>disetujui oleh Inspektur Daerah</b>.
+            </p>
+          </div>
         </div>
       </div>
     <?php endif; ?>

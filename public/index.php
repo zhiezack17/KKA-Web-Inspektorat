@@ -263,8 +263,36 @@ $routes = [
     // Modul Laporan Hasil Pengawasan (LHP) Otomatis Desa
     '/lhp'                            => ['LhpController', 'index'],
     '/lhp/show'                       => ['LhpController', 'show'],
+    '/lhp/edit'                       => ['LhpController', 'edit'],
+    '/lhp/update'                     => ['LhpController', 'update'],
     '/print/lhp'                      => ['LhpController', 'print'],
+
+    // Modul Berita Acara Pemeriksaan Kas (Opname Kas Desa)
+    '/opname-kas'                     => ['OpnameKasController', 'index'],
+    '/opname-kas/create'              => ['OpnameKasController', 'create'],
+    '/opname-kas/store'               => ['OpnameKasController', 'store'],
+    '/opname-kas/edit'                => ['OpnameKasController', 'edit'],
+    '/opname-kas/update'              => ['OpnameKasController', 'update'],
+    '/opname-kas/delete'              => ['OpnameKasController', 'delete'],
+    '/print/opname-kas'               => ['OpnameKasController', 'print'],
+
+    // Modul Pemantauan Tindak Lanjut LHP (TLHP 60 Hari) & Rekap Kerugian
+    '/tlhp'                           => ['TlhpController', 'index'],
+    '/tlhp/update'                    => ['TlhpController', 'update'],
+    '/print/matriks-tlhp'             => ['TlhpController', 'matriks'],
+
+    // Modul Integrasi Google Drive
+    '/gdrive'                         => ['GoogleDriveController', 'index'],
+    '/gdrive/test'                    => ['GoogleDriveController', 'test'],
+    '/gdrive/auth'                    => ['GoogleDriveController', 'auth'],
+    '/gdrive/callback'                => ['GoogleDriveController', 'callback'],
+    '/gdrive/save-token'              => ['GoogleDriveController', 'saveToken'],
+    '/gdrive/sync-lhp'                => ['GoogleDriveController', 'syncLhp'],
+    '/gdrive/sync-opname-kas'         => ['GoogleDriveController', 'syncOpnameKas'],
+    '/gdrive/sync-kka'                => ['GoogleDriveController', 'syncKka'],
+    '/gdrive/sync-all'                => ['GoogleDriveController', 'syncAll'],
 ];
+
 
 if (!isset($routes[$route])) {
     http_response_code(404);

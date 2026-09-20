@@ -10,7 +10,7 @@ return [
         'Balai Jaya' => ['Bagan Bhakti','Balai Jaya','Balam Jaya','Balam Sempurna','Kencana','Lubuk Jawi','Pasir Putih','Pasir Putih Barat','Pasir Putih Utara','Balai Jaya Kota','Balam Sempurna Kota'],
         'Bangko' => ['Bagan Jawa','Bagan Jawa Pesisir','Bagan Punak Pesisir','Bagan Punak Meranti','Labuhan Tangga Baru','Labuhan Tangga Besar','Labuhan Tangga Hilir','Labuhan Tangga Kecil','Parit Aman','Serusa','Bagan Barat','Bagan Hulu','Bagan Kota','Bagan Punak','Bagan Timur'],
         'Bangko Pusako' => ['Bangko Bakti','Bangko Balam','Bangko Lestari','Bangko Jaya','Bangko Makmur','Bangko Mas Raya','Bangko Mukti','Bangko Permata','Bangko Pusako','Bangko Sempurna'],
-        'Batu Hampar' => ['Pematang Damar','Pematang Ibul','Sungai Menasib','Teluk Bano I','Bangko Kanan','Bangko Kiri','Bantayan','Bantayan Baru','Sei Sialang','Sei Sialang Hulu','Bantayan Hilir'],
+        'Batu Hampar' => ['Pematang Damar','Pematang Ibul','Sungai Menasib','Teluk Bano I','Bangko Kanan','Bangko Kiri','Bantaian','Bantaian Baru','Sei Sialang','Sei Sialang Hulu','Bantaian Hilir'],
         'Kubu' => ['Rantau Panjang Kanan','Sei Segajah Makmur','Sungai Kubu','Sungai Segajah Jaya','Sungai Sigajah','Sungaikubu Hulu','Tanjung Leban','Telukpiyai Pesisir','Teluk Piyai','Teluk Merbau'],
         'Kubu Babussalam' => ['Jojol','Pulau Halang Belakang','Pulau Halang Hulu','Pulau Halang Muka','Rantau Panjang Kiri','Rantau Panjang Kiri Hilir','Sungai Majo','Sungai Majo Pusako','Sungai Panji','Sungai Pinang','Teluk Nilap','Teluk Nilap Jaya'],
         'Pasir Limau Kapas' => ['Panipahan','Panipahan Darat','Panipahan Laut','Pasir Limau Kapas','Pulau Jemur','Sungai Daun','Teluk Pulai'],

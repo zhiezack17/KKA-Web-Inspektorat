@@ -1,7 +1,14 @@
 <?php
 class RekapController {
     private Auth $auth;
-    public function __construct(Auth $auth) { $this->auth = $auth; $auth->require(); }
+    public function __construct(Auth $auth) { 
+        $this->auth = $auth; 
+        $auth->require(); 
+        if ($this->auth->isOperatorSpt()) {
+            flash('warning', 'Akses dibatasi: Peran Bagian Perencanaan (Operator SPT) tidak memiliki akses ke Rekap Belanja Audit.');
+            redirect('penugasan/spt');
+        }
+    }
 
     public function index(): void {
         $tahun      = (int) input('tahun', 0);

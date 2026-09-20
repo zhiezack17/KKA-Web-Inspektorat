@@ -101,6 +101,8 @@
                       <div class="list-card" data-testid="sesi-item-<?= $s['id'] ?>">
                         <div class="ico"><i class="fa-solid fa-file-lines"></i></div>
                         <div class="main" onclick="window.location='<?= url('sesi/show?id='.$s['id']) ?>'" style="cursor:pointer">
+                          <div class="title">
+                            <?= e($s['objek_audit']) ?>
                           <div class="title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                             <span><?= e($s['objek_audit']) ?></span>
                             <span class="badge"><?= e($s['desa']) ?></span>

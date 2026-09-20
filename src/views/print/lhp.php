@@ -159,29 +159,26 @@
   <div style="font-weight:bold;text-transform:uppercase;border-bottom:1px solid #000;padding-bottom:4px;margin-bottom:8px;font-size:10.5pt">
     RINGKASAN EKSEKUTIF
   </div>
-  <p class="text-justify" style="margin:0 0 8px;font-size:10pt">
-    Berdasarkan Surat Perintah Tugas Inspektur Daerah Kabupaten Rokan Hilir Nomor: <b><?= e($spt['no_spt'] ?? '...........................') ?></b> tanggal <b><?= !empty($spt['tgl_spt']) ? tgl_id($spt['tgl_spt']) : '..............' ?></b>, Tim Pemeriksa telah melaksanakan Audit Dengan Tujuan Tertentu (ADTT) atas Pengelolaan Keuangan Kepenghuluan <?= e($desa['nama']) ?> Kecamatan <?= e($desa['kecamatan_nama']) ?> Tahun Anggaran <?= $tahun ?>.
-  </p>
-  <p class="text-justify" style="margin:0;font-size:10pt">
-    Dari hasil pemeriksaan dokumen belanja dan verifikasi fisik pekerjaan di lapangan atas realisasi belanja desa sebesar <b><?= rupiah($totalRealisasi) ?></b>, ditemukan <b><?= count($daftarTemuan) ?> butir temuan</b> dengan total nilai ketidaksesuaian/indikasi kerugian kas kepenghuluan sebesar <b><?= rupiah($totalNominalTemuan) ?></b>.
-  </p>
+  <div class="text-justify" style="margin:0;font-size:10pt;line-height:1.45">
+    <?= nl2br(e($narasiFinal['ringkasan_eksekutif'])) ?>
+  </div>
 </div>
 
 <!-- BAB I -->
 <div class="bab-title">BAB I : INFORMASI UMUM PENUGASAN</div>
 <table style="width:100%;font-size:10.5pt;border-collapse:collapse">
-  <tr><td style="width:25%;padding:2px 0;vertical-align:top"><b>1. Dasar Audit</b></td><td style="width:2%">:</td><td style="padding:2px 0">Program Kerja Pengawasan Tahunan (PKPT) Inspektorat Kabupaten Rokan Hilir Tahun Anggaran <?= $tahun ?> &bull; Surat Perintah Tugas Nomor: <?= e($spt['no_spt'] ?? '-') ?> tanggal <?= !empty($spt['tgl_spt']) ? tgl_id($spt['tgl_spt']) : '-' ?>.</td></tr>
-  <tr><td style="padding:2px 0;vertical-align:top"><b>2. Tujuan Audit</b></td><td>:</td><td style="padding:2px 0"><?= e($spt['tujuan'] ?? 'Memberikan keyakinan memadai atas ketaatan dan akuntabilitas pengelolaan keuangan kepenghuluan.') ?></td></tr>
-  <tr><td style="padding:2px 0;vertical-align:top"><b>3. Ruang Lingkup</b></td><td>:</td><td style="padding:2px 0">Pemeriksaan bukti pertanggungjawaban (SPJ) pengeluaran kas belanja desa, pengujian kepatuhan perpajakan, dan opname fisik pembangunan desa TA <?= $tahun ?>.</td></tr>
+  <tr><td style="width:25%;padding:2px 0;vertical-align:top"><b>1. Dasar Audit</b></td><td style="width:2%">:</td><td style="padding:2px 0"><?= nl2br(e($narasiFinal['dasar_penugasan'])) ?></td></tr>
+  <tr><td style="padding:2px 0;vertical-align:top"><b>2. Tujuan Audit</b></td><td>:</td><td style="padding:2px 0"><?= nl2br(e($narasiFinal['tujuan_pengawasan'])) ?></td></tr>
+  <tr><td style="padding:2px 0;vertical-align:top"><b>3. Ruang Lingkup</b></td><td>:</td><td style="padding:2px 0"><?= nl2br(e($narasiFinal['ruang_lingkup'])) ?></td></tr>
+  <tr><td style="padding:2px 0;vertical-align:top"><b>4. Batasan Pengawasan</b></td><td>:</td><td style="padding:2px 0"><?= nl2br(e($narasiFinal['batasan_pengawasan'])) ?></td></tr>
   <tr>
-    <td style="padding:2px 0;vertical-align:top"><b>4. Susunan Tim</b></td><td>:</td>
+    <td style="padding:2px 0;vertical-align:top"><b>5. Susunan Tim</b></td><td>:</td>
     <td style="padding:2px 0">
-      <div>a. Penanggung Jawab : <?= e($inspektur['nama']) ?> (Inspektur Daerah)</div>
-      <div>b. Wakil Penanggung Jawab : <?= e($spt['wakil_pj_nama'] ?? '-') ?> (Inspektur Pembantu)</div>
-      <div>c. Pengendali Teknis : <?= e($spt['dalnis_nama'] ?? '-') ?></div>
-      <div>d. Ketua Tim : <?= e($spt['ketua_tim_nama'] ?? '-') ?></div>
+      <div>a. Wakil Penanggung Jawab : <?= e($spt['wakil_pj_nama'] ?? 'MARWAN, M.T') ?> (Inspektur Pembantu)</div>
+      <div>b. Pengendali Teknis : <?= e($spt['dalnis_nama'] ?? '-') ?></div>
+      <div>c. Ketua Tim : <?= e($spt['ketua_tim_nama'] ?? '-') ?></div>
       <?php if (!empty($anggotaList)): ?>
-        <div>e. Anggota Tim : 
+        <div>d. Anggota Tim : 
           <?= implode(', ', array_map(fn($a) => e($a['nama'] ?? ''), $anggotaList)) ?>
         </div>
       <?php endif; ?>
@@ -192,7 +189,7 @@
 <!-- BAB II -->
 <div class="bab-title">BAB II : GAMBARAN PENGELOLAAN KEUANGAN KEPENGHULUAN</div>
 <p class="text-justify" style="margin:0 0 6px">
-  Realisasi belanja APBDesa Kepenghuluan <?= e($desa['nama']) ?> Tahun Anggaran <?= $tahun ?> yang dilakukan pengujian oleh Tim Pengawasan dirangkum pada tabel berikut:
+  <?= nl2br(e($narasiFinal['gambaran_umum'])) ?>
 </p>
 
 <table class="data-table">
@@ -265,9 +262,15 @@
 
 <!-- BAB IV -->
 <div class="bab-title">BAB IV : KESIMPULAN &amp; PENUTUP</div>
-<p class="text-justify">
-  Demikian Laporan Hasil Pengawasan (LHP) atas Audit Dengan Tujuan Tertentu (ADTT) Pengelolaan Keuangan Kepenghuluan <?= e($desa['nama']) ?> Kecamatan <?= e($desa['kecamatan_nama']) ?> ini disusun untuk dipergunakan sebagaimana mestinya. Sesuai ketentuan peraturan perundang-undangan, Pj. Penghulu wajib menyampaikan laporan tindak lanjut atas rekomendasi dalam laporan ini selambat-lambatnya 60 (enam puluh) hari kalender setelah LHP ini diterima.
-</p>
+<div class="text-justify" style="margin-bottom:10px;line-height:1.45">
+  <?= nl2br(e($narasiFinal['kesimpulan'])) ?>
+</div>
+<?php if (!empty($narasiFinal['saran_penutup'])): ?>
+  <div style="border-left:2.5px solid #000;padding-left:10px;font-size:9.5pt;margin-top:6px;line-height:1.4">
+    <b>Langkah Tindak Lanjut Prioritas:</b><br>
+    <?= nl2br(e($narasiFinal['saran_penutup'])) ?>
+  </div>
+<?php endif; ?>
 
 <!-- TANDA TANGAN & PENGESAHAN -->
 <div class="ttd-section">

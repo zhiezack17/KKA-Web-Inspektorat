@@ -21,11 +21,54 @@ partial('sidebar');
         <a href="<?= url('lhp?tahun=' . $tahun) ?>" class="btn btn-outline">
           <i class="fa-solid fa-arrow-left"></i> Kembali ke Daftar LHP
         </a>
+        <a href="<?= url('lhp/edit?desa_id=' . $desa['id'] . '&tahun=' . $tahun) ?>" class="btn btn-outline" style="color:#0284c7;border-color:#0284c7;font-weight:700">
+          <i class="fa-solid fa-pen-to-square"></i> Edit Narasi LHP (Bab I - IV)
+        </a>
         <a href="<?= url('print/lhp?desa_id=' . $desa['id'] . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-primary" style="background:#059669;border-color:#059669">
           <i class="fa-solid fa-print"></i> Cetak / Ekspor PDF Naskah LHP
         </a>
+
+        <?php
+          $gdriveLhp = DB::one("
+              SELECT * FROM kka_gdrive_sync 
+              WHERE tipe_dokumen = 'LHP_FINAL' AND desa_id = ? AND tahun_anggaran = ?
+              ORDER BY id DESC LIMIT 1
+          ", [$desa['id'], $tahun]);
+        ?>
+        <?php if ($gdriveLhp): ?>
+          <a href="<?= e($gdriveLhp['web_view_link']) ?>" target="_blank" class="btn" style="background:#0284c7;color:#fff;display:inline-flex;align-items:center;gap:6px">
+            <i class="fa-brands fa-google-drive"></i>
+            <span>Buka di Google Drive</span>
+          </a>
+          <a href="<?= url('gdrive/sync-lhp?desa_id=' . $desa['id'] . '&tahun=' . $tahun) ?>" class="btn btn-outline" style="border-color:#0284c7;color:#0284c7;display:inline-flex;align-items:center;gap:6px" onclick="this.innerHTML='<i class=\'fa-solid fa-spinner fa-spin\'></i> Menyimpan...'">
+            <i class="fa-solid fa-arrows-rotate"></i>
+            <span>Sinkron Ulang Drive</span>
+          </a>
+        <?php else: ?>
+          <a href="<?= url('gdrive/sync-lhp?desa_id=' . $desa['id'] . '&tahun=' . $tahun) ?>" class="btn" style="background:#0284c7;color:#fff;border-color:#0284c7;display:inline-flex;align-items:center;gap:6px" onclick="this.innerHTML='<i class=\'fa-solid fa-spinner fa-spin\'></i> Menyimpan...'">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Simpan ke Google Drive</span>
+          </a>
+        <?php endif; ?>
       </div>
     </div>
+
+    <?php if ($gdriveLhp): ?>
+      <div class="card" style="background:#f0fdf4;border:1px solid #86efac;padding:12px 18px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:10px;font-size:12.5px;color:#166534">
+          <i class="fa-solid fa-cloud-check" style="font-size:18px;color:#15803d"></i>
+          <div>
+            <b>Naskah LHP Final telah tersinkronisasi di Google Drive:</b>
+            <span style="color:#15803d">Folder <code>KKA DIGITAL INSPEKTORAT / <?= e($gdriveLhp['irban_nama']) ?> / TAHUN ANGGARAN <?= $tahun ?> / Kepenghuluan <?= e($desa['nama']) ?> / 04_LHP_FINAL</code> (Disimpan <?= date('d/m/Y H:i', strtotime($gdriveLhp['synced_at'])) ?> WIB)</span>
+          </div>
+        </div>
+        <a href="<?= e($gdriveLhp['web_view_link']) ?>" target="_blank" style="font-size:12px;font-weight:700;color:#0369a1;text-decoration:none;display:flex;align-items:center;gap:4px">
+          <span>Buka di Drive</span>
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </a>
+      </div>
+    <?php endif; ?>
+
 
     <!-- Ringkasan Kartu Atas -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px;margin-bottom:20px">
@@ -77,16 +120,18 @@ partial('sidebar');
       </div>
 
       <!-- RINGKASAN EKSEKUTIF -->
-      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:18px 20px;margin-bottom:28px">
-        <h4 style="margin:0 0 10px;font-size:14px;color:#0f172a;text-transform:uppercase;font-weight:800;border-bottom:1px solid #cbd5e1;padding-bottom:6px">
-          RINGKASAN EKSEKUTIF (EXECUTIVE SUMMARY)
-        </h4>
-        <p style="margin:0 0 10px;font-size:13px;color:#334155;text-align:justify">
-          Berdasarkan Surat Perintah Tugas Inspektur Daerah Kabupaten Rokan Hilir Nomor: <b><?= e($spt['no_spt'] ?? '...........................') ?></b> tanggal <b><?= !empty($spt['tgl_spt']) ? tgl_id($spt['tgl_spt']) : '..............' ?></b>, Tim Pemeriksa telah melakukan Audit Dengan Tujuan Tertentu (ADTT) atas Pengelolaan Keuangan Kepenghuluan <?= e($desa['nama']) ?> Kecamatan <?= e($desa['kecamatan_nama']) ?> Tahun Anggaran <?= $tahun ?>.
-        </p>
-        <p style="margin:0 0 12px;font-size:13px;color:#334155;text-align:justify">
-          Dari hasil pengujian terhadap bukti pertanggungjawaban (SPJ) dan verifikasi fisik di lapangan atas realisasi belanja sebesar <b><?= rupiah($totalRealisasi) ?></b>, Tim Pengawasan mengidentifikasi <b><?= count($daftarTemuan) ?> butir Pokok Temuan Pemeriksaan</b> dengan total nilai ketidaksesuaian/indikasi kerugian kas desa sebesar <b><?= rupiah($totalNominalTemuan) ?></b>.
-        </p>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:18px 20px;margin-bottom:28px;position:relative">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px solid #cbd5e1;padding-bottom:6px">
+          <h4 style="margin:0;font-size:14px;color:#0f172a;text-transform:uppercase;font-weight:800">
+            RINGKASAN EKSEKUTIF (EXECUTIVE SUMMARY)
+          </h4>
+          <a href="<?= url('lhp/edit?desa_id=' . $desa['id'] . '&tahun=' . $tahun) ?>" style="font-size:11.5px;color:#0284c7;text-decoration:none;font-weight:700">
+            <i class="fa-solid fa-pencil"></i> Edit Narasi
+          </a>
+        </div>
+        <div style="font-size:13px;color:#334155;text-align:justify;line-height:1.65">
+          <?= nl2br(e($narasiFinal['ringkasan_eksekutif'])) ?>
+        </div>
       </div>
 
       <!-- BAB I -->
@@ -95,18 +140,18 @@ partial('sidebar');
           BAB I : INFORMASI UMUM PENUGASAN
         </h4>
         <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:8px">
-          <tr><td style="width:25%;padding:3px 0;vertical-align:top"><b>1. Dasar Penugasan</b></td><td style="width:2%">:</td><td style="padding:3px 0">Program Kerja Pengawasan Tahunan (PKPT) Inspektorat Kabupaten Rokan Hilir Tahun <?= $tahun ?> &bull; Surat Perintah Tugas Nomor <?= e($spt['no_spt'] ?? '-') ?> tanggal <?= !empty($spt['tgl_spt']) ? tgl_id($spt['tgl_spt']) : '-' ?>.</td></tr>
-          <tr><td style="padding:3px 0;vertical-align:top"><b>2. Tujuan Pengawasan</b></td><td>:</td><td style="padding:3px 0"><?= e($spt['tujuan'] ?? 'Memberikan keyakinan memadai atas ketaatan, efisiensi, dan efektivitas pengelolaan keuangan serta kepatuhan administrasi belanja Kepenghuluan.') ?></td></tr>
-          <tr><td style="padding:3px 0;vertical-align:top"><b>3. Ruang Lingkup</b></td><td>:</td><td style="padding:3px 0">Pengujian aspek keuangan tertentu, kepatuhan perpajakan belanja desa, dan opname fisik pekerjaan pembangunan desa Tahun Anggaran <?= $tahun ?>.</td></tr>
+          <tr><td style="width:25%;padding:3px 0;vertical-align:top"><b>1. Dasar Penugasan</b></td><td style="width:2%">:</td><td style="padding:3px 0"><?= nl2br(e($narasiFinal['dasar_penugasan'])) ?></td></tr>
+          <tr><td style="padding:3px 0;vertical-align:top"><b>2. Tujuan Pengawasan</b></td><td>:</td><td style="padding:3px 0"><?= nl2br(e($narasiFinal['tujuan_pengawasan'])) ?></td></tr>
+          <tr><td style="padding:3px 0;vertical-align:top"><b>3. Ruang Lingkup</b></td><td>:</td><td style="padding:3px 0"><?= nl2br(e($narasiFinal['ruang_lingkup'])) ?></td></tr>
+          <tr><td style="padding:3px 0;vertical-align:top"><b>4. Batasan Pengawasan</b></td><td>:</td><td style="padding:3px 0"><?= nl2br(e($narasiFinal['batasan_pengawasan'])) ?></td></tr>
           <tr>
-            <td style="padding:3px 0;vertical-align:top"><b>4. Susunan Tim</b></td><td>:</td>
+            <td style="padding:3px 0;vertical-align:top"><b>5. Susunan Tim</b></td><td>:</td>
             <td style="padding:3px 0">
-              <div>1. Penanggung Jawab : <?= e($inspektur['nama']) ?> (Inspektur Daerah)</div>
-              <div>2. Wakil Penanggung Jawab : <?= e($spt['wakil_pj_nama'] ?? '-') ?> (Inspektur Pembantu)</div>
-              <div>3. Pengendali Teknis : <?= e($spt['dalnis_nama'] ?? '-') ?></div>
-              <div>4. Ketua Tim : <?= e($spt['ketua_tim_nama'] ?? '-') ?></div>
+              <div>1. Wakil Penanggung Jawab : <?= e($spt['wakil_pj_nama'] ?? 'MARWAN, M.T') ?> (Inspektur Pembantu)</div>
+              <div>2. Pengendali Teknis : <?= e($spt['dalnis_nama'] ?? '-') ?></div>
+              <div>3. Ketua Tim : <?= e($spt['ketua_tim_nama'] ?? '-') ?></div>
               <?php if (!empty($anggotaList)): ?>
-                <div>5. Anggota Tim : 
+                <div>4. Anggota Tim : 
                   <?= implode(', ', array_map(fn($a) => e($a['nama'] ?? ''), $anggotaList)) ?>
                 </div>
               <?php endif; ?>
@@ -120,8 +165,8 @@ partial('sidebar');
         <h4 style="margin:0 0 8px;font-size:14px;font-weight:800;color:#0f172a;border-bottom:1.5px solid #0f172a;padding-bottom:4px">
           BAB II : GAMBARAN PENGELOLAAN KEUANGAN KEPENGHULUAN
         </h4>
-        <p style="margin:0 0 10px;font-size:13px;color:#334155">
-          Realisasi pengeluaran kas belanja APBDesa Kepenghuluan <?= e($desa['nama']) ?> Tahun Anggaran <?= $tahun ?> yang dilakukan uji petik adalah sebagai berikut:
+        <p style="margin:0 0 10px;font-size:13px;color:#334155;text-align:justify;line-height:1.6">
+          <?= nl2br(e($narasiFinal['gambaran_umum'])) ?>
         </p>
         
         <table class="table" style="width:100%;font-size:12px;margin-bottom:14px">
@@ -217,9 +262,15 @@ partial('sidebar');
         <h4 style="margin:0 0 8px;font-size:14px;font-weight:800;color:#0f172a;border-bottom:1.5px solid #0f172a;padding-bottom:4px">
           BAB IV : KESIMPULAN &amp; PENUTUP
         </h4>
-        <p style="margin:0 0 10px;font-size:13px;color:#334155;text-align:justify">
-          Demikian Laporan Hasil Pengawasan (LHP) Audit Dengan Tujuan Tertentu (ADTT) atas Pengelolaan Keuangan Kepenghuluan <?= e($desa['nama']) ?> Kecamatan <?= e($desa['kecamatan_nama']) ?> ini disusun sebagai bahan evaluasi dan perbaikan tata kelola keuangan desa. Diharapkan Pj. Penghulu beserta jajaran segera menindaklanjuti rekomendasi yang termuat dalam laporan ini selambat-lambatnya 60 (enam puluh) hari kalender sejak laporan ini diterima.
-        </p>
+        <div style="margin:0 0 12px;font-size:13px;color:#334155;text-align:justify;line-height:1.65">
+          <?= nl2br(e($narasiFinal['kesimpulan'])) ?>
+        </div>
+        <?php if (!empty($narasiFinal['saran_penutup'])): ?>
+          <div style="background:#f8fafc;border-left:3px solid #059669;padding:10px 14px;font-size:12.5px;color:#334155;margin-top:10px;line-height:1.6">
+            <b>Langkah Tindak Lanjut Prioritas:</b><br>
+            <?= nl2br(e($narasiFinal['saran_penutup'])) ?>
+          </div>
+        <?php endif; ?>
       </div>
 
       <!-- LEMBAR TANDA TANGAN & PENGESAHAN -->

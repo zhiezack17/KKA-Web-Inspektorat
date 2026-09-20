@@ -60,4 +60,14 @@ return [
         'image/jpeg', 'image/png', 'image/webp', 'image/gif',
     ],
     'max_upload_mb' => 10,
+
+    // Google Drive Integration
+    'gdrive_enabled' => filter_var($env['GOOGLE_DRIVE_ENABLED'] ?? 'true', FILTER_VALIDATE_BOOLEAN),
+    'gdrive_client_id' => $env['GOOGLE_OAUTH_CLIENT_ID'] ?? '',
+    'gdrive_client_secret' => $env['GOOGLE_OAUTH_CLIENT_SECRET'] ?? '',
+    'gdrive_refresh_token' => $env['GOOGLE_OAUTH_REFRESH_TOKEN'] ?? '',
+    'gdrive_parent_folder_name' => $env['GOOGLE_DRIVE_PARENT_FOLDER_NAME'] ?? 'KKA DIGITAL INSPEKTORAT',
+    'gdrive_parent_folder_id' => !empty($env['GOOGLE_DRIVE_FOLDER_ID']) ? $env['GOOGLE_DRIVE_FOLDER_ID'] : null,
+    'gdrive_account_email' => $env['GOOGLE_DRIVE_ACCOUNT_EMAIL'] ?? 'teamirban4@gmail.com',
 ];
+

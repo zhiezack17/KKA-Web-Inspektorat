@@ -3,17 +3,7 @@
 <?php partial('sidebar'); ?>
 
 <main class="main" data-testid="page-nd-create">
-  <div class="topbar">
-    <div class="crumb">
-      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">☰</button>
-      <i class="fa-solid fa-envelope-open-text"></i> <b>Penyusunan Nota Dinas Penugasan</b>
-    </div>
-    <div class="topbar-right">
-      <a href="<?= url('penugasan/nota-dinas') ?>" class="btn btn-outline btn-sm">
-        <i class="fa-solid fa-arrow-left"></i> Kembali ke Daftar ND
-      </a>
-    </div>
-  </div>
+  <?php partial('topbar', ['title' => 'Penyusunan Nota Dinas Penugasan', 'icon' => 'fa-solid fa-envelope-open-text']); ?>
 
   <div class="content">
     <?php partial('flash'); ?>

@@ -87,15 +87,37 @@ class UserController {
     public function updateProfile(): void {
         only_post(); csrf_check();
         $id = $this->auth->id();
+        $u = DB::one('SELECT * FROM kka_users WHERE id = ?', [$id]);
+        if (!$u) { flash('error', 'User tidak ditemukan.'); redirect('profile'); }
+
         $data = [
             'nama'    => trim((string) input('nama')),
             'nip'     => trim((string) input('nip')) ?: null,
             'jabatan' => trim((string) input('jabatan')) ?: null,
         ];
+
+        // Upload Foto Profil jika dilampirkan
+        if (!empty($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+            $file = $_FILES['foto'];
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+            if (in_array($ext, $allowed, true) && $file['size'] <= 5 * 1024 * 1024) {
+                $targetDir = __DIR__ . '/../../public/assets/img/';
+                if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
+                $uname = strtolower(trim((string)$u['username']));
+                if ($uname !== '') {
+                    $targetFile = $targetDir . $uname . '.jpg';
+                    move_uploaded_file($file['tmp_name'], $targetFile);
+                    flash('success', 'Foto profil berhasil diperbarui.');
+                }
+            } else {
+                flash('error', 'Format foto harus JPG/PNG/WEBP (maks 5 MB).');
+            }
+        }
+
         $oldPass = (string) input('old_password');
         $newPass = (string) input('new_password');
         if ($newPass !== '') {
-            $u = DB::one('SELECT password_hash FROM kka_users WHERE id = ?', [$id]);
             if (!$u || !password_verify($oldPass, $u['password_hash'])) {
                 flash('error', 'Password lama salah.'); redirect('profile');
             }
@@ -103,7 +125,7 @@ class UserController {
             $data['password_hash'] = password_hash($newPass, PASSWORD_BCRYPT);
         }
         DB::update('kka_users', $data, ['id' => $id]);
-        flash('success', 'Profil diperbarui.');
+        flash('success', 'Profil berhasil disimpan.');
         redirect('profile');
     }
 }

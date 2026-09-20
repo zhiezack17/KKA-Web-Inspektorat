@@ -46,6 +46,45 @@
       if(window.innerWidth > 992) closeMenu();
     });
   })();
+
+  // Desktop AI-Style Collapsible Sidebar
+  (function(){
+    const toggleBtn = document.getElementById('sidebarToggleBtn');
+    const collapseBtn = document.getElementById('sidebarCollapseBtn');
+    
+    function toggleSidebar(){
+      if (window.innerWidth <= 992) return;
+      const isCollapsed = document.body.classList.toggle('sidebar-collapsed');
+      document.documentElement.classList.toggle('sidebar-collapsed', isCollapsed);
+      try {
+        localStorage.setItem('kka_sidebar_collapsed', isCollapsed ? '1' : '0');
+      } catch (e) {}
+    }
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        toggleSidebar();
+      });
+    }
+
+    if (collapseBtn) {
+      collapseBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        toggleSidebar();
+      });
+    }
+
+    // Shortcut Ctrl+B / Cmd+B (AI Editor Standard)
+    document.addEventListener('keydown', function(e){
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
+        const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+        e.preventDefault();
+        toggleSidebar();
+      }
+    });
+  })();
 </script>
 </body>
 </html>

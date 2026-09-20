@@ -3,17 +3,7 @@
 <?php partial('sidebar'); ?>
 
 <main class="main" data-testid="page-master">
-  <div class="topbar">
-    <div class="crumb"><i class="fa-solid fa-folder-tree"></i> <b>Master KKA</b></div>
-    <div style="display:flex;gap:8px">
-      <a href="<?= url('master/download-template') ?>" class="btn btn-outline btn-sm" data-testid="btn-download-template">
-        <i class="fa-solid fa-file-arrow-down"></i> Download Template .xls
-      </a>
-      <a href="<?= url('master/create') ?>" class="btn btn-primary btn-sm" data-testid="btn-master-new">
-        <i class="fa-solid fa-plus"></i> Buat Dokumen Baru
-      </a>
-    </div>
-  </div>
+  <?php partial('topbar', ['title' => 'Master KKA Fisik & Pengujian', 'icon' => 'fa-solid fa-folder-tree']); ?>
 
   <div class="content">
     <?php partial('flash'); ?>
@@ -22,6 +12,14 @@
       <div>
         <h2>Master KKA</h2>
         <p>Dokumen tambahan untuk melengkapi Sesi Audit &mdash; ada 3 tipe berdasarkan template KKP Master:</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <a href="<?= url('master/download-template') ?>" class="btn btn-outline btn-sm" data-testid="btn-download-template">
+          <i class="fa-solid fa-file-arrow-down"></i> Download Template .xls
+        </a>
+        <a href="<?= url('master/create') ?>" class="btn btn-primary btn-sm" data-testid="btn-master-new">
+          <i class="fa-solid fa-plus"></i> Buat Dokumen Baru
+        </a>
       </div>
     </div>
 

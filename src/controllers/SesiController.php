@@ -1,7 +1,14 @@
 <?php
 class SesiController {
     private Auth $auth;
-    public function __construct(Auth $auth) { $this->auth = $auth; $auth->require(); }
+    public function __construct(Auth $auth) { 
+        $this->auth = $auth; 
+        $auth->require(); 
+        if ($this->auth->isOperatorSpt()) {
+            flash('warning', 'Akses dibatasi: Peran Bagian Perencanaan (Operator SPT) difokuskan pada pengelolaan administrasi penugasan (Nota Dinas & SPT) dan tidak memiliki akses ke Kertas Kerja Audit.');
+            redirect('penugasan/spt');
+        }
+    }
 
     public function index(): void {
         $q       = trim((string) input('q', ''));

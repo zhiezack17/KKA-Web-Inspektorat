@@ -18,6 +18,10 @@ class MasterKkaController {
     public function __construct(Auth $auth) {
         $this->auth = $auth;
         $auth->require();
+        if ($this->auth->isOperatorSpt()) {
+            flash('warning', 'Akses dibatasi: Peran Bagian Perencanaan (Operator SPT) tidak memiliki akses ke Master KKA Fisik.');
+            redirect('penugasan/spt');
+        }
     }
 
     /* -------------------- LIST -------------------- */

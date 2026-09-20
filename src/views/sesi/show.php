@@ -16,8 +16,12 @@
       <a href="<?= url('print/reviu?id='.$sesi['id']) ?>" class="btn btn-outline btn-sm" target="_blank" style="border-color:#6366f1;color:#4f46e5;font-weight:600" data-testid="btn-print-reviu"><i class="fa-solid fa-clipboard-check"></i> Lembar Reviu KKA</a>
       <a href="<?= url('print/sesi?id='.$sesi['id']) ?>" class="btn btn-outline btn-sm" target="_blank" data-testid="btn-print"><i class="fa-solid fa-print"></i> Cetak / Preview</a>
       <a href="<?= url('export/sesi?id='.$sesi['id']) ?>" class="btn btn-accent btn-sm" data-testid="btn-export"><i class="fa-solid fa-file-excel"></i> Export Excel</a>
+      <a href="<?= url('gdrive/sync-kka?id='.$sesi['id']) ?>" class="btn btn-outline btn-sm" style="border-color:#0284c7;color:#0284c7;background:#f0f9ff;font-weight:600" title="Cadangkan KKA ke Google Drive" onclick="this.innerHTML='<i class=\'fa-solid fa-spinner fa-spin\'></i> Menyimpan...'">
+        <i class="fa-brands fa-google-drive"></i> Simpan ke Drive
+      </a>
     </div>
   </div>
+
 
   <div class="content">
     <?php partial('flash'); ?>

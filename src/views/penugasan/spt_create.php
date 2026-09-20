@@ -3,17 +3,7 @@
 <?php partial('sidebar'); ?>
 
 <main class="main" data-testid="page-spt-create">
-  <div class="topbar">
-    <div class="crumb">
-      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">☰</button>
-      <i class="fa-solid fa-file-signature"></i> <b>Penerbitan Surat Perintah Tugas (SPT)</b>
-    </div>
-    <div class="topbar-right">
-      <a href="<?= url('penugasan/spt') ?>" class="btn btn-outline btn-sm">
-        <i class="fa-solid fa-arrow-left"></i> Kembali ke Daftar SPT
-      </a>
-    </div>
-  </div>
+  <?php partial('topbar', ['title' => 'Penerbitan Surat Perintah Tugas (SPT)', 'icon' => 'fa-solid fa-file-signature']); ?>
 
   <div class="content">
     <?php partial('flash'); ?>

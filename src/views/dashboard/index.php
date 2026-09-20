@@ -10,13 +10,19 @@
 
     <!-- Welcome & Page Head -->
     <div class="page-head" style="margin-bottom:18px">
-      <div>
-        <h2 style="font-size:22px;font-weight:800;letter-spacing:-0.3px;color:#0f172a">
-          Selamat Datang, <?= e(sapaan_nama($auth->user()['nama'], $auth->user()['role'])) ?> 👋
-        </h2>
-        <p style="color:#64748b;font-size:13.5px;margin-top:2px">
-          Sistem Pengawasan Terpadu Kertas Kerja Audit (KKA) Digital &mdash; Inspektorat Kabupaten Rokan Hilir.
-        </p>
+      <div style="display:flex;align-items:center;gap:14px">
+        <?php $dashAvatar = user_avatar_url($auth->user()); ?>
+        <?php if ($dashAvatar): ?>
+          <img src="<?= $dashAvatar ?>" alt="Foto Resmi" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2.5px solid <?= $auth->isInspektur() ? '#d97706' : '#0284c7' ?>;box-shadow:0 4px 8px rgba(0,0,0,0.12);flex-shrink:0">
+        <?php endif; ?>
+        <div>
+          <h2 style="font-size:22px;font-weight:800;letter-spacing:-0.3px;color:#0f172a">
+            Selamat Datang, <?= e(sapaan_nama($auth->user()['nama'], $auth->user()['role'])) ?> 👋
+          </h2>
+          <p style="color:#64748b;font-size:13.5px;margin-top:2px">
+            Sistem Pengawasan Terpadu Kertas Kerja Audit (KKA) Digital &mdash; Inspektorat Kabupaten Rokan Hilir.
+          </p>
+        </div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <?php if ($auth->isInspektur()): ?>
@@ -27,8 +33,8 @@
             <i class="fa-solid fa-file-shield"></i> Laporan Hasil Audit (LHP)
           </a>
         <?php elseif ($auth->isOperatorSpt()): ?>
-          <a href="<?= url('penugasan/spt/create') ?>" class="btn btn-primary" style="background:#059669;border:none">
-            <i class="fa-solid fa-file-signature"></i> Terbitkan SPT Baru
+          <a href="<?= url('penugasan/spt') ?>" class="btn btn-primary" style="background:#059669;border:none">
+            <i class="fa-solid fa-file-signature"></i> Antrean Surat Tugas (SPT)
           </a>
         <?php else: ?>
           <a href="<?= url('penugasan/nota-dinas/create') ?>" class="btn btn-outline" style="border-color:#2563eb;color:#2563eb">
@@ -86,7 +92,7 @@
               <div style="font-size:13px; color:#047857; margin-top:2px;">Ada <strong><?= $readyNd ?></strong> Nota Dinas telah disetujui Inspektur dan siap diterbitkan Surat Tugas (SPT).</div>
             </div>
           </div>
-          <a href="<?= url('penugasan/spt/create') ?>" class="btn btn-sm" style="background:#059669; color:#fff; border:none; font-weight:700; flex-shrink:0; box-shadow:0 2px 4px rgba(5,150,105,0.25);"><i class="fa-solid fa-plus"></i> Terbitkan SPT Sekarang</a>
+          <a href="<?= url('penugasan/spt') ?>" class="btn btn-sm" style="background:#059669; color:#fff; border:none; font-weight:700; flex-shrink:0; box-shadow:0 2px 4px rgba(5,150,105,0.25);"><i class="fa-solid fa-stamp"></i> Buka Antrean Penerbitan</a>
         </div>
       <?php endif; ?>
     <?php endif; ?>

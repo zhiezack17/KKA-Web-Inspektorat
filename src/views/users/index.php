@@ -9,10 +9,8 @@
 </style>
 
 <main class="main" data-testid="page-users">
-  <div class="topbar">
-    <div class="crumb"><i class="fa-solid fa-users-gear"></i> <b>Manajemen Pengguna</b></div>
-    <div class="topbar-right"><?= count($users) ?> akun terdaftar</div>
-  </div>
+  <?php partial('topbar', ['title' => 'Manajemen Akun & Pengguna', 'icon' => 'fa-solid fa-users-gear']); ?>
+
   <div class="content">
     <?php partial('flash'); ?>
     <div class="page-head">

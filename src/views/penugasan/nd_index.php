@@ -3,19 +3,7 @@
 <?php partial('sidebar'); ?>
 
 <main class="main" data-testid="page-nota-dinas">
-  <div class="topbar">
-    <div class="crumb">
-      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">☰</button>
-      <i class="fa-solid fa-envelope-open-text"></i> <b>Nota Dinas Pengajuan Audit</b>
-    </div>
-    <div class="topbar-right">
-      <?php if ($isIrban || $auth->isAdmin()): ?>
-        <a href="<?= url('penugasan/nota-dinas/create') ?>" class="btn btn-primary btn-sm" data-testid="btn-create-nd">
-          <i class="fa-solid fa-plus"></i> Buat Nota Dinas
-        </a>
-      <?php endif; ?>
-    </div>
-  </div>
+  <?php partial('topbar', ['title' => 'Nota Dinas Pengajuan Audit', 'icon' => 'fa-solid fa-envelope-open-text']); ?>
 
   <div class="content">
     <?php partial('flash'); ?>

@@ -3,10 +3,7 @@
 <?php partial('sidebar'); ?>
 
 <main class="main" data-testid="page-desa">
-  <div class="topbar">
-    <div class="crumb"><i class="fa-solid fa-building-columns"></i> <b>Manajemen Desa</b></div>
-    <div class="topbar-right"><?= count($desa) ?> desa ditampilkan</div>
-  </div>
+  <?php partial('topbar', ['title' => 'Manajemen Desa & Kepenghuluan', 'icon' => 'fa-solid fa-building-columns']); ?>
 
   <div class="content">
     <?php partial('flash'); ?>

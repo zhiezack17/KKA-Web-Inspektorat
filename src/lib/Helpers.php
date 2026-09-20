@@ -90,9 +90,16 @@ function view(string $tpl, array $data = []): void {
     require $file;
 }
 
+function view_render(string $tpl, array $data = []): string {
+    ob_start();
+    view($tpl, $data);
+    return (string)ob_get_clean();
+}
+
 function partial(string $tpl, array $data = []): void {
     view('partials/' . $tpl, $data);
 }
+
 
 function only_post(): void {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -185,7 +192,7 @@ function kka_status_badge(?string $status, bool $withIcon = true): string {
  * $col adalah kolom created_by pada tabel kka_sesi ber-alias (mis. "s.created_by").
  */
 function owner_where($auth, string $col = 's.created_by'): array {
-    if ($auth && ($auth->isAdmin() || $auth->isInspektur() || $auth->isIrban() || $auth->isOperatorSpt())) return ['', []];
+    if ($auth && ($auth->isAdmin() || $auth->isInspektur() || $auth->isIrban())) return ['', []];
     $uid = $auth ? (int) $auth->id() : 0;
     $alias = strpos($col, '.') !== false ? substr($col, 0, strpos($col, '.')) : $col;
     $u = $auth ? $auth->user() : null;
@@ -215,7 +222,7 @@ function owner_where($auth, string $col = 's.created_by'): array {
  */
 function sesi_is_owned($auth, ?array $sesi): bool {
     if (!$sesi || !$auth) return false;
-    if ($auth->isAdmin() || $auth->isInspektur() || $auth->isIrban() || $auth->isOperatorSpt()) return true;
+    if ($auth->isAdmin() || $auth->isInspektur() || $auth->isIrban()) return true;
     $uid = (int) $auth->id();
     if ((int) ($sesi['created_by'] ?? 0) === $uid) return true;
     if ((int) ($sesi['ketua_tim_id'] ?? 0) === $uid) return true;
@@ -402,3 +409,75 @@ function terbilang_angka(int $n): string {
     if ($n < 100) return $dasar[(int)($n / 10)] . ' puluh' . ($n % 10 ? ' ' . $dasar[$n % 10] : '');
     return (string)$n;
 }
+
+function penyebut($nilai): string {
+    $nilai = abs((float)$nilai);
+    $huruf = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
+    $temp = '';
+    if ($nilai < 12) {
+        $temp = ' ' . $huruf[(int)$nilai];
+    } else if ($nilai < 20) {
+        $temp = penyebut($nilai - 10) . ' belas';
+    } else if ($nilai < 100) {
+        $temp = penyebut((int)($nilai / 10)) . ' puluh' . penyebut(fmod($nilai, 10));
+    } else if ($nilai < 200) {
+        $temp = ' seratus' . penyebut($nilai - 100);
+    } else if ($nilai < 1000) {
+        $temp = penyebut((int)($nilai / 100)) . ' ratus' . penyebut(fmod($nilai, 100));
+    } else if ($nilai < 2000) {
+        $temp = ' seribu' . penyebut($nilai - 1000);
+    } else if ($nilai < 1000000) {
+        $temp = penyebut((int)($nilai / 1000)) . ' ribu' . penyebut(fmod($nilai, 1000));
+    } else if ($nilai < 1000000000) {
+        $temp = penyebut((int)($nilai / 1000000)) . ' juta' . penyebut(fmod($nilai, 1000000));
+    } else if ($nilai < 1000000000000) {
+        $temp = penyebut((int)($nilai / 1000000000)) . ' milyar' . penyebut(fmod($nilai, 1000000000));
+    } else if ($nilai < 1000000000000000) {
+        $temp = penyebut((int)($nilai / 1000000000000)) . ' trilyun' . penyebut(fmod($nilai, 1000000000000));
+    }
+    return $temp;
+}
+
+function terbilang_rupiah(float $angka): string {
+    if ((int)$angka === 0) return 'Nol Rupiah';
+    $hasil = trim(penyebut($angka));
+    return ucwords($hasil) . ' Rupiah';
+}
+
+/**
+ * Dapatkan URL foto profil/avatar pengguna jika ada
+ */
+function user_avatar_url(?array $user): ?string {
+    if (!$user) return null;
+    
+    // 1. Cek dari field 'foto' di DB jika ada
+    if (!empty($user['foto'])) {
+        $photoRel = ltrim($user['foto'], '/');
+        $serverPath = __DIR__ . '/../../public/' . $photoRel;
+        if (file_exists($serverPath)) {
+            return url($photoRel);
+        }
+    }
+    
+    // 2. Cek berdasarkan username di folder assets/img/
+    $uname = strtolower(trim((string)($user['username'] ?? '')));
+    if ($uname !== '') {
+        $checkFiles = [
+            'assets/img/' . $uname . '.jpg',
+            'assets/img/' . $uname . '.png',
+            'assets/img/' . $uname . '.jpeg',
+            'assets/img/' . $uname . '.webp',
+            'assets/img/avatars/' . $uname . '.jpg',
+            'assets/img/avatars/' . $uname . '.png',
+        ];
+        foreach ($checkFiles as $rel) {
+            $full = __DIR__ . '/../../public/' . $rel;
+            if (file_exists($full)) {
+                return url($rel);
+            }
+        }
+    }
+    
+    return null;
+}
+

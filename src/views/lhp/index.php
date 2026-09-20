@@ -4,7 +4,7 @@ partial('sidebar');
 ?>
 
 <main class="main">
-  <?php partial('topbar'); ?>
+  <?php partial('topbar', ['title' => 'Laporan Hasil Pengawasan (LHP) Desa', 'icon' => 'fa-solid fa-file-shield']); ?>
 
   <div class="content">
     <?php partial('flash'); ?>
@@ -17,21 +17,24 @@ partial('sidebar');
         </h2>
         <p>Penyusunan Otomatis Dokumen LHP Desa (ADTT) Merangkum SPT, PKA, Seluruh Belanja KKA, Evaluasi Pajak, dan Temuan 5 Unsur.</p>
       </div>
-      <div class="field" style="margin:0;width:140px">
-        <form method="get" action="<?= url('lhp') ?>">
-          <select name="tahun" class="input" onchange="this.form.submit()">
+      <div style="display:flex;gap:10px;align-items:center">
+        <form method="get" action="<?= url('lhp') ?>" style="margin:0">
+          <select name="tahun" class="input" style="width:130px;margin:0" onchange="this.form.submit()">
             <?php for ($y = date('Y') + 1; $y >= 2024; $y--): ?>
               <option value="<?= $y ?>" <?= $tahun == $y ? 'selected' : '' ?>>Tahun <?= $y ?></option>
             <?php endfor; ?>
           </select>
         </form>
+        <a href="<?= url('gdrive') ?>" class="btn btn-outline" style="border-color:#0284c7;color:#0284c7">
+          <i class="fa-brands fa-google-drive"></i> Cadangan Drive
+        </a>
       </div>
     </div>
 
     <!-- Highlight Banner -->
     <div class="card" style="background:linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);border:1px solid #a7f3d0;padding:16px 20px;margin-bottom:20px">
       <div style="display:flex;align-items:center;gap:16px">
-        <div style="width:48px;height:48px;border-radius:12px;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">
+        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#059669,#047857);color:#fff;display:grid;place-items:center;font-size:22px;flex-shrink:0;box-shadow:0 4px 10px rgba(5,150,105,0.25)">
           <i class="fa-solid fa-award"></i>
         </div>
         <div>
@@ -44,25 +47,34 @@ partial('sidebar');
     </div>
 
     <!-- Daftar Desa LHP -->
-    <div class="card" style="padding:0">
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--slate-200);display:flex;justify-content:space-between;align-items:center;background:#f8fafc">
+        <h3 style="margin:0;font-size:14px;font-weight:700;color:var(--slate-800)">
+          <i class="fa-solid fa-file-lines" style="color:#059669;margin-right:6px"></i>
+          Register Naskah LHP Kepenghuluan (TA <?= $tahun ?>)
+        </h3>
+        <span style="font-size:12px;color:var(--slate-500)">Total: <?= count($daftarLhp) ?> Kepenghuluan</span>
+      </div>
+
       <div class="table-wrap" style="border:0">
         <table class="table">
           <thead>
             <tr>
-              <th style="width:36px">No</th>
+              <th style="width:40px;text-align:center">No</th>
               <th>Desa / Kepenghuluan</th>
               <th>Surat Tugas (SPT)</th>
               <th class="num">Pagu Anggaran</th>
               <th class="num">Realisasi Uji</th>
               <th class="num">Selisih Belanja</th>
               <th style="text-align:center">Temuan (KTP)</th>
-              <th style="width:160px;text-align:center">Aksi LHP</th>
+              <th style="text-align:center">Google Drive</th>
+              <th style="min-width:185px;text-align:center;padding-right:20px">Aksi LHP</th>
             </tr>
           </thead>
           <tbody>
             <?php if (empty($daftarLhp)): ?>
               <tr>
-                <td colspan="8" style="text-align:center;padding:40px;color:var(--slate-500)">
+                <td colspan="9" style="text-align:center;padding:40px;color:var(--slate-500)">
                   <i class="fa-solid fa-folder-open" style="font-size:36px;color:#cbd5e1;margin-bottom:10px;display:block"></i>
                   Belum ada sesi audit atau penugasan SPT untuk tahun anggaran <?= $tahun ?>.
                 </td>
@@ -71,19 +83,19 @@ partial('sidebar');
               $selisih = (float)$d['total_realisasi'] - (float)$d['total_kuitansi'];
             ?>
               <tr>
-                <td><?= $no++ ?></td>
+                <td style="text-align:center"><?= $no++ ?></td>
                 <td>
-                  <strong style="font-size:14px;color:var(--slate-800)"><?= e($d['desa_nama']) ?></strong>
-                  <div style="font-size:12px;color:var(--slate-500)">Kecamatan <?= e($d['kecamatan_nama']) ?></div>
-                  <div style="font-size:11.5px;color:var(--emerald-700);margin-top:2px">
+                  <strong style="font-size:14px;color:var(--slate-900)"><?= e($d['desa_nama']) ?></strong>
+                  <div style="font-size:11.5px;color:var(--slate-500)">Kecamatan <?= e($d['kecamatan_nama']) ?></div>
+                  <div style="font-size:11px;color:var(--emerald-700);margin-top:2px;font-weight:600">
                     <i class="fa-solid fa-clipboard-check"></i> <?= $d['sesi_final'] ?> dari <?= $d['total_sesi'] ?> sesi KKA Sah
                   </div>
                 </td>
                 <td>
                   <?php if (!empty($d['no_spt'])): ?>
-                    <span style="font-weight:600;color:var(--slate-800)"><?= e($d['no_spt']) ?></span>
-                    <div style="font-size:11.5px;color:var(--slate-500)">Tgl: <?= tgl_id($d['tgl_spt']) ?></div>
-                    <div style="font-size:11px;color:#4f46e5">KT: <?= e($d['ketua_tim_nama']) ?></div>
+                    <span style="font-weight:700;color:var(--slate-800);font-size:12.5px"><?= e($d['no_spt']) ?></span>
+                    <div style="font-size:11px;color:var(--slate-500)">Tgl: <?= tgl_id($d['tgl_spt']) ?></div>
+                    <div style="font-size:11px;color:#4f46e5;font-weight:600">KT: <?= e($d['ketua_tim_nama']) ?></div>
                   <?php else: ?>
                     <span style="color:var(--slate-400);font-size:12px">Belum Terbit SPT</span>
                   <?php endif; ?>
@@ -95,20 +107,33 @@ partial('sidebar');
                 </td>
                 <td style="text-align:center">
                   <?php if ((int)$d['total_temuan'] > 0): ?>
-                    <a href="<?= url('temuan?desa_id=' . $d['desa_id'] . '&tahun=' . $tahun) ?>" class="badge" style="background:#fee2e2;color:#dc2626;font-weight:700;text-decoration:none">
-                      <?= $d['total_temuan'] ?> Butir (<?= rupiah($d['nominal_temuan']) ?>)
+                    <a href="<?= url('temuan?desa_id=' . $d['desa_id'] . '&tahun=' . $tahun) ?>" class="badge badge-danger" style="text-decoration:none" title="Lihat rincian temuan">
+                      <i class="fa-solid fa-triangle-exclamation"></i> <?= $d['total_temuan'] ?> Butir (<?= rupiah($d['nominal_temuan']) ?>)
                     </a>
                   <?php else: ?>
-                    <span class="badge" style="background:#f1f5f9;color:#64748b">Nihil Temuan</span>
+                    <span class="badge badge-success"><i class="fa-solid fa-check"></i> Nihil Temuan</span>
                   <?php endif; ?>
                 </td>
-                <td style="text-align:center;white-space:nowrap">
-                  <a href="<?= url('lhp/show?desa_id=' . $d['desa_id'] . '&tahun=' . $tahun) ?>" class="btn btn-outline btn-sm" style="border-color:#059669;color:#059669;padding:6px 10px" title="Buka Pratinjau Naskah LHP">
-                    <i class="fa-solid fa-eye"></i> Pratinjau LHP
-                  </a>
-                  <a href="<?= url('print/lhp?desa_id=' . $d['desa_id'] . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-primary btn-sm" style="background:#059669;border-color:#059669;padding:6px 10px" title="Cetak Resmi LHP">
-                    <i class="fa-solid fa-print"></i>
-                  </a>
+                <td style="text-align:center">
+                  <?php if (!empty($d['gdrive_lhp_link'])): ?>
+                    <a href="<?= e($d['gdrive_lhp_link']) ?>" target="_blank" class="badge badge-info" style="text-decoration:none;font-weight:700" title="Buka berkas PDF resmi di Google Drive teamirban4@gmail.com">
+                      <i class="fa-brands fa-google-drive"></i> PDF Drive
+                    </a>
+                  <?php else: ?>
+                    <a href="<?= url('gdrive/sync-lhp?desa_id=' . $d['desa_id'] . '&tahun=' . $tahun) ?>" class="badge badge-slate" style="text-decoration:none" title="Simpan naskah PDF ke Google Drive teamirban4@gmail.com" onclick="this.innerHTML='<i class=\'fa-solid fa-spinner fa-spin\'></i> Menyimpan...'">
+                      <i class="fa-solid fa-cloud-arrow-up"></i> Cadangkan
+                    </a>
+                  <?php endif; ?>
+                </td>
+                <td style="text-align:center;white-space:nowrap;padding-right:20px">
+                  <div style="display:inline-flex;gap:6px">
+                    <a href="<?= url('lhp/show?desa_id=' . $d['desa_id'] . '&tahun=' . $tahun) ?>" class="btn btn-outline btn-sm" style="border-color:#059669;color:#059669;padding:5px 10px" title="Buka Pratinjau Naskah LHP">
+                      <i class="fa-solid fa-eye"></i> Pratinjau
+                    </a>
+                    <a href="<?= url('print/lhp?desa_id=' . $d['desa_id'] . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-primary btn-sm" style="padding:5px 10px" title="Cetak Resmi LHP (Format Bookman Rohil)">
+                      <i class="fa-solid fa-print"></i> Cetak
+                    </a>
+                  </div>
                 </td>
               </tr>
             <?php endforeach; endif; ?>

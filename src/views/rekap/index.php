@@ -3,12 +3,7 @@
 <?php partial('sidebar'); ?>
 
 <main class="main" data-testid="page-rekap">
-  <div class="topbar">
-    <div class="crumb"><i class="fa-solid fa-chart-column"></i> <b>Rekap per Desa</b></div>
-    <a href="<?= url('export/rekap?' . http_build_query([
-        'tahun'=>$tahun,'bidang'=>$bidId,'sub_bidang'=>$subBidId,'kecamatan'=>$kecId
-    ])) ?>" class="btn btn-accent btn-sm" data-testid="btn-export-rekap"><i class="fa-solid fa-file-excel"></i> Export Excel</a>
-  </div>
+  <?php partial('topbar', ['title' => 'Rekapitulasi Belanja Per Desa', 'icon' => 'fa-solid fa-chart-column']); ?>
 
   <div class="content">
     <?php partial('flash'); ?>
@@ -16,6 +11,11 @@
       <div>
         <h2 style="text-transform:uppercase;letter-spacing:.5px">Rekap Kertas Kerja Audit &mdash; Per Desa</h2>
         <p>Ringkasan pagu, realisasi, dan kwitansi &mdash; dikelompokkan per <b>Sub Bidang</b> &middot; Kecamatan &middot; Tahun. Gunakan filter di bawah untuk memilih Bidang &amp; periode.</p>
+      </div>
+      <div>
+        <a href="<?= url('export/rekap?' . http_build_query([
+            'tahun'=>$tahun,'bidang'=>$bidId,'sub_bidang'=>$subBidId,'kecamatan'=>$kecId
+        ])) ?>" class="btn btn-accent btn-sm" style="font-weight:700" data-testid="btn-export-rekap"><i class="fa-solid fa-file-excel"></i> Export Excel</a>
       </div>
     </div>
 

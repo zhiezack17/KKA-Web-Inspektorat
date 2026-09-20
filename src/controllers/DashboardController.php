@@ -39,7 +39,7 @@ class DashboardController {
             SELECT d.id, d.nama AS desa, k.nama AS kecamatan,
                    COUNT(s.id)                         AS jumlah,
                    COALESCE(SUM(s.pagu_anggaran),0)    AS pagu,
-                   MAX(s.tahun_anggaran)               AS tahun_terakhir,
+                   COALESCE((SELECT t.tahun_anggaran FROM kka_temuan t WHERE t.desa_id = d.id ORDER BY t.tahun_anggaran DESC LIMIT 1), MAX(s.tahun_anggaran)) AS tahun_terakhir,
                    (SELECT COUNT(*) FROM kka_temuan t WHERE t.desa_id = d.id) AS jml_temuan,
                    (SELECT COALESCE(SUM(t.nominal),0) FROM kka_temuan t WHERE t.desa_id = d.id) AS nominal_temuan,
                    (SELECT COALESCE(SUM(CASE WHEN (r.biaya_dikwitansi - r.realisasi) > 0 THEN (r.biaya_dikwitansi - r.realisasi) ELSE 0 END),0)

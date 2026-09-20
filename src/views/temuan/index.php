@@ -4,7 +4,7 @@ partial('sidebar');
 ?>
 
 <main class="main">
-  <?php partial('topbar'); ?>
+  <?php partial('topbar', ['title' => 'Konsep Temuan Pemeriksaan (KTP 5 Unsur)', 'icon' => 'fa-solid fa-file-circle-exclamation']); ?>
 
   <div class="content">
     <?php partial('flash'); ?>
@@ -67,14 +67,32 @@ partial('sidebar');
     </div>
 
     <!-- Summary Box -->
+    <?php
+      $countDraft = 0; $countDibahas = 0; $countFinal = 0;
+      foreach ($daftarTemuan as $itemT) {
+        if ($itemT['status'] === 'FINAL_LHP') $countFinal++;
+        elseif ($itemT['status'] === 'DIBAHAS') $countDibahas++;
+        else $countDraft++;
+      }
+    ?>
     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;margin-bottom:18px">
       <div class="card" style="padding:14px 18px;border-left:4px solid #d97706">
-        <div style="font-size:12px;color:var(--slate-500);font-weight:600">TOTAL TEMUAN TERDATA</div>
+        <div style="font-size:12px;color:var(--slate-500);font-weight:700;text-transform:uppercase">TOTAL TEMUAN TERDATA</div>
         <div style="font-size:22px;font-weight:800;color:var(--slate-800);margin-top:4px"><?= count($daftarTemuan) ?> Butir</div>
+        <div style="font-size:11px;color:var(--slate-500);margin-top:4px">Standar SPKN &bull; 5 Unsur Pemeriksaan</div>
       </div>
       <div class="card" style="padding:14px 18px;border-left:4px solid #ef4444">
-        <div style="font-size:12px;color:var(--slate-500);font-weight:600">TOTAL NILAI TEMUAN (KERUGIAN/SELISIH)</div>
+        <div style="font-size:12px;color:var(--slate-500);font-weight:700;text-transform:uppercase">TOTAL NILAI KERUGIAN / SELISIH</div>
         <div style="font-size:20px;font-weight:800;color:#dc2626;margin-top:4px"><?= rupiah($totalNominal) ?></div>
+        <div style="font-size:11px;color:#dc2626;margin-top:4px;font-weight:600">Potensi Pemulihan Kas Desa</div>
+      </div>
+      <div class="card" style="padding:14px 18px;border-left:4px solid #059669">
+        <div style="font-size:12px;color:var(--slate-500);font-weight:700;text-transform:uppercase">STATUS PEMBAHASAN AUDITI</div>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap">
+          <span class="badge" style="background:#dcfce7;color:#15803d;font-weight:700"><?= $countFinal ?> Final LHP</span>
+          <span class="badge" style="background:#e0e7ff;color:#4338ca;font-weight:700"><?= $countDibahas ?> Dibahas</span>
+          <span class="badge" style="background:#f1f5f9;color:#475569;font-weight:700"><?= $countDraft ?> Draft</span>
+        </div>
       </div>
     </div>
 

@@ -3,20 +3,7 @@
 <?php partial('sidebar'); ?>
 
 <main class="main" data-testid="page-nd-edit">
-  <div class="topbar">
-    <div class="crumb">
-      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">☰</button>
-      <i class="fa-solid fa-pen-to-square"></i> <b>Koreksi / Edit Nota Dinas: <?= e($nd['no_nd']) ?></b>
-    </div>
-    <div class="topbar-right">
-      <a href="<?= url('print/nota-dinas?id=' . $nd['id']) ?>" target="_blank" class="btn btn-outline btn-sm">
-        <i class="fa-solid fa-print"></i> Cetak ND
-      </a>
-      <a href="<?= url('penugasan/nota-dinas') ?>" class="btn btn-outline btn-sm">
-        <i class="fa-solid fa-arrow-left"></i> Kembali ke Daftar ND
-      </a>
-    </div>
-  </div>
+  <?php partial('topbar', ['title' => 'Koreksi Nota Dinas: ' . $nd['no_nd'], 'icon' => 'fa-solid fa-pen-to-square']); ?>
 
   <div class="content">
     <?php partial('flash'); ?>

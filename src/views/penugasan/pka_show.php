@@ -3,23 +3,19 @@
 <?php partial('sidebar'); ?>
 
 <main class="main" data-testid="page-pka-show">
-  <div class="topbar">
-    <div class="crumb">
-      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">☰</button>
-      <i class="fa-solid fa-list-check"></i> <b>Matriks Program Kerja Audit (PKA)</b>
-    </div>
-    <div class="topbar-right">
-      <a href="<?= url('penugasan/pka') ?>" class="btn btn-outline btn-sm">
-        <i class="fa-solid fa-arrow-left"></i> Kembali ke Daftar PKA
-      </a>
-      <a href="<?= url('print/pka?id=' . $pka['id']) ?>" target="_blank" class="btn btn-outline btn-sm" data-testid="btn-print-pka">
-        <i class="fa-solid fa-print"></i> Cetak PKA Resmi
-      </a>
-    </div>
-  </div>
+  <?php partial('topbar', ['title' => 'Matriks Program Kerja Audit (PKA)', 'icon' => 'fa-solid fa-list-check']); ?>
 
   <div class="content">
     <?php partial('flash'); ?>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <a href="<?= url('penugasan/pka') ?>" class="btn btn-outline btn-sm">
+        <i class="fa-solid fa-arrow-left"></i> Kembali ke Daftar PKA
+      </a>
+      <a href="<?= url('print/pka?id=' . $pka['id']) ?>" target="_blank" class="btn btn-outline btn-sm" style="color:#059669;border-color:#059669" data-testid="btn-print-pka">
+        <i class="fa-solid fa-print"></i> Cetak PKA Resmi (KM.6)
+      </a>
+    </div>
 
     <!-- HEADER PENUGASAN -->
     <div class="card" style="margin-bottom:16px;background:linear-gradient(to right, #f8fafc, #f1f5f9)">

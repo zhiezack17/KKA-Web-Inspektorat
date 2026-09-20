@@ -3,15 +3,7 @@
 <?php partial('sidebar'); ?>
 
 <main class="main" data-testid="page-pka">
-  <div class="topbar">
-    <div class="crumb">
-      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">☰</button>
-      <i class="fa-solid fa-list-check"></i> <b>Program Kerja Audit (PKA)</b>
-    </div>
-    <div class="topbar-right">
-      <?= count($list) ?> PKA terdaftar
-    </div>
-  </div>
+  <?php partial('topbar', ['title' => 'Program Kerja Audit (PKA)', 'icon' => 'fa-solid fa-list-check']); ?>
 
   <div class="content">
     <?php partial('flash'); ?>
