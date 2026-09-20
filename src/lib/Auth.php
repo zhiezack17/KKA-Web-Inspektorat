@@ -36,12 +36,13 @@ class Auth {
     public function isInspektur(): bool {
         $r = $this->user['role'] ?? '';
         $j = $this->user['jabatan'] ?? '';
-        return $r === 'inspektur' || (stripos($j, 'Inspektur') !== false && stripos($j, 'Pembantu') === false) || $r === 'admin';
+        return $r === 'inspektur' || (stripos($j, 'Inspektur') !== false && stripos($j, 'Pembantu') === false);
     }
     public function isOperatorSpt(): bool {
         $r = $this->user['role'] ?? '';
+        if ($r === 'admin') return false;
         $j = $this->user['jabatan'] ?? '';
-        return $r === 'operator_spt' || stripos($j, 'Surat Perintah') !== false || stripos($j, 'Perencanaan') !== false || $r === 'admin';
+        return $r === 'operator_spt' || stripos($j, 'Surat Perintah') !== false || stripos($j, 'Perencanaan') !== false;
     }
     public function role(): string { return $this->user['role'] ?? 'auditor'; }
 

@@ -33,7 +33,17 @@
         </div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <?php if ($auth->isInspektur()): ?>
+        <?php if ($auth->isAdmin()): ?>
+          <a href="<?= url('sesi') ?>" class="btn btn-primary" style="font-weight:700">
+            <i class="fa-solid fa-clipboard-list"></i> Kertas Kerja (KKA)
+          </a>
+          <a href="<?= url('lhp') ?>" class="btn btn-outline" style="border-color:#0f766e;color:#0f766e;font-weight:700">
+            <i class="fa-solid fa-file-shield"></i> Laporan Hasil (LHP)
+          </a>
+          <a href="<?= url('users') ?>" class="btn btn-outline" style="border-color:#6366f1;color:#6366f1;font-weight:700">
+            <i class="fa-solid fa-users-gear"></i> Kelola Pengguna
+          </a>
+        <?php elseif ($auth->isInspektur()): ?>
           <a href="<?= url('penugasan/nota-dinas') ?>" class="btn btn-primary" style="background:#b45309;border:none;font-weight:700;box-shadow:0 2px 4px rgba(180,83,9,0.25)">
             <i class="fa-solid fa-pen-nib"></i> Lembar Disposisi Inspektur
           </a>

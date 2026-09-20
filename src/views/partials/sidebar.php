@@ -52,7 +52,7 @@ if ($auth->isInspektur()) {
       <i class="fa-solid fa-list-check"></i><span>Matriks PKA</span>
     </a>
 
-    <?php if (!$auth->isOperatorSpt()): ?>
+    <?php if (!$auth->isOperatorSpt() || $auth->isAdmin()): ?>
     <div class="nav-section">Pelaksanaan Audit (KKA ADTT)</div>
     <a href="<?= url('sesi') ?>" class="nav-item<?= nav_active('/sesi', $current) ?>" data-testid="nav-sesi">
       <i class="fa-solid fa-clipboard-list"></i><span>Kertas Kerja (KKA)</span>
