@@ -24,9 +24,9 @@ class DashboardController {
         ];
         $stats['selisih'] = max(0, $stats['dikwitansi'] - $stats['realisasi']);
         $stats['spt_sample_id'] = (int) DB::scalar("SELECT id FROM kka_spt ORDER BY id DESC LIMIT 1");
-        $lhpSample = DB::row("SELECT desa_id, tahun_anggaran FROM kka_temuan WHERE status = 'FINAL_LHP' LIMIT 1");
+        $lhpSample = DB::one("SELECT desa_id, tahun_anggaran FROM kka_temuan WHERE status = 'FINAL_LHP' LIMIT 1");
         if (!$lhpSample) {
-            $lhpSample = DB::row("SELECT desa_id, tahun_anggaran FROM kka_sesi ORDER BY id DESC LIMIT 1");
+            $lhpSample = DB::one("SELECT desa_id, tahun_anggaran FROM kka_sesi ORDER BY id DESC LIMIT 1");
         }
         $stats['sample_desa_id'] = $lhpSample['desa_id'] ?? 69;
         $stats['sample_tahun'] = $lhpSample['tahun_anggaran'] ?? (int)date('Y');
