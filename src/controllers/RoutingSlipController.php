@@ -32,21 +32,22 @@ class RoutingSlipController {
                 spt.wakil_pj_nama, spt.dalnis_nama, spt.ketua_tim_nama,
                 COUNT(DISTINCT s.id) AS total_sesi,
                 COUNT(DISTINCT CASE WHEN s.status = 'SELESAI_FINAL' THEN s.id END) AS sesi_final,
-                COALESCE((SELECT n.status_lhp FROM kka_lhp_narasi n WHERE n.desa_id = d.id AND n.tahun_anggaran = ? LIMIT 1), 'DRAFT') AS status_lhp,
-                (SELECT n.tgl_disahkan_inspektur FROM kka_lhp_narasi n WHERE n.desa_id = d.id AND n.tahun_anggaran = ? LIMIT 1) AS tgl_disahkan_inspektur,
-                (SELECT n.disahkan_oleh_nama FROM kka_lhp_narasi n WHERE n.desa_id = d.id AND n.tahun_anggaran = ? LIMIT 1) AS disahkan_oleh_nama,
-                (SELECT n.catatan_dalnis FROM kka_lhp_narasi n WHERE n.desa_id = d.id AND n.tahun_anggaran = ? LIMIT 1) AS catatan_dalnis,
-                (SELECT n.tgl_reviu_dalnis FROM kka_lhp_narasi n WHERE n.desa_id = d.id AND n.tahun_anggaran = ? LIMIT 1) AS tgl_reviu_dalnis,
-                (SELECT n.catatan_irban FROM kka_lhp_narasi n WHERE n.desa_id = d.id AND n.tahun_anggaran = ? LIMIT 1) AS catatan_irban,
-                (SELECT n.tgl_reviu_irban FROM kka_lhp_narasi n WHERE n.desa_id = d.id AND n.tahun_anggaran = ? LIMIT 1) AS tgl_reviu_irban
+                COALESCE(n.status_lhp, 'DRAFT') AS status_lhp,
+                n.tgl_disahkan_inspektur,
+                n.disahkan_oleh_nama,
+                n.catatan_dalnis,
+                n.tgl_reviu_dalnis,
+                n.catatan_irban,
+                n.tgl_reviu_irban
             FROM kka_desa d
             JOIN kka_kecamatan k ON k.id = d.kecamatan_id
             LEFT JOIN kka_sesi s ON s.desa_id = d.id AND s.tahun_anggaran = ?
             LEFT JOIN kka_spt spt ON spt.desa_id = d.id AND spt.tahun_anggaran = ?
-            GROUP BY d.id, d.nama, k.nama, spt.id, spt.no_spt, spt.tgl_spt, spt.status, spt.wakil_pj_nama, spt.dalnis_nama, spt.ketua_tim_nama
+            LEFT JOIN kka_lhp_narasi n ON n.desa_id = d.id AND n.tahun_anggaran = ?
+            GROUP BY d.id, d.nama, k.nama, spt.id, spt.no_spt, spt.tgl_spt, spt.status, spt.wakil_pj_nama, spt.dalnis_nama, spt.ketua_tim_nama, n.id, n.status_lhp, n.tgl_disahkan_inspektur, n.disahkan_oleh_nama, n.catatan_dalnis, n.tgl_reviu_dalnis, n.catatan_irban, n.tgl_reviu_irban
             HAVING total_sesi > 0 OR spt_id IS NOT NULL
             ORDER BY k.nama ASC, d.nama ASC
-        ", [$tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun]);
+        ", [$tahun, $tahun, $tahun]);
 
         view('routing_slip/index', compact('daftar', 'tahun'));
     }

@@ -35,20 +35,21 @@ class LhpController {
                 COALESCE((SELECT SUM(r.biaya_dikwitansi) FROM kka_rincian r JOIN kka_sesi s2 ON s2.id = r.sesi_id WHERE s2.desa_id = d.id AND s2.tahun_anggaran = ?), 0) AS total_kuitansi,
                 (SELECT COUNT(*) FROM kka_temuan t WHERE t.desa_id = d.id AND t.tahun_anggaran = ?) AS total_temuan,
                 (SELECT COALESCE(SUM(t.nominal), 0) FROM kka_temuan t WHERE t.desa_id = d.id AND t.tahun_anggaran = ?) AS nominal_temuan,
-                (SELECT COUNT(*) FROM kka_lhp_narasi n WHERE n.desa_id = d.id AND n.tahun_anggaran = ?) AS is_custom_narasi,
-                COALESCE((SELECT n.status_lhp FROM kka_lhp_narasi n WHERE n.desa_id = d.id AND n.tahun_anggaran = ? LIMIT 1), 'DRAFT') AS status_lhp,
-                (SELECT n.tgl_disahkan_inspektur FROM kka_lhp_narasi n WHERE n.desa_id = d.id AND n.tahun_anggaran = ? LIMIT 1) AS tgl_disahkan_inspektur,
-                (SELECT n.disahkan_oleh_nama FROM kka_lhp_narasi n WHERE n.desa_id = d.id AND n.tahun_anggaran = ? LIMIT 1) AS disahkan_oleh_nama,
+                COALESCE(n.status_lhp, 'DRAFT') AS status_lhp,
+                n.tgl_disahkan_inspektur,
+                n.disahkan_oleh_nama,
+                (CASE WHEN n.id IS NOT NULL THEN 1 ELSE 0 END) AS is_custom_narasi,
                 (SELECT web_view_link FROM kka_gdrive_sync g WHERE g.tipe_dokumen = 'LHP_FINAL' AND g.desa_id = d.id AND g.tahun_anggaran = ? ORDER BY id DESC LIMIT 1) AS gdrive_lhp_link,
                 (SELECT synced_at FROM kka_gdrive_sync g WHERE g.tipe_dokumen = 'LHP_FINAL' AND g.desa_id = d.id AND g.tahun_anggaran = ? ORDER BY id DESC LIMIT 1) AS gdrive_lhp_synced_at
             FROM kka_desa d
             JOIN kka_kecamatan k ON k.id = d.kecamatan_id
             LEFT JOIN kka_sesi s ON s.desa_id = d.id AND s.tahun_anggaran = ?
             LEFT JOIN kka_spt spt ON spt.desa_id = d.id AND spt.tahun_anggaran = ?
-            GROUP BY d.id, d.nama, k.nama, spt.id, spt.no_spt, spt.tgl_spt, spt.status, spt.wakil_pj_nama, spt.dalnis_nama, spt.ketua_tim_nama
+            LEFT JOIN kka_lhp_narasi n ON n.desa_id = d.id AND n.tahun_anggaran = ?
+            GROUP BY d.id, d.nama, k.nama, spt.id, spt.no_spt, spt.tgl_spt, spt.status, spt.wakil_pj_nama, spt.dalnis_nama, spt.ketua_tim_nama, n.id, n.status_lhp, n.tgl_disahkan_inspektur, n.disahkan_oleh_nama
             HAVING total_sesi > 0 OR spt_id IS NOT NULL
             ORDER BY k.nama ASC, d.nama ASC
-        ", [$tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun]);
+        ", [$tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun, $tahun]);
 
         view('lhp/index', compact('daftarLhp', 'tahun'));
     }
