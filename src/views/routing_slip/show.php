@@ -149,7 +149,7 @@ partial('sidebar');
 
         <div style="display:flex;justify-content:space-between;align-items:center;background:#fffbeb;padding:10px 14px;border-radius:6px;font-size:12px;color:#92400e">
           <div>
-            <b>Pejabat Pengendali Teknis:</b> <?= e($spt['dalnis_nama'] ?: ($narasi['dalnis_nama'] ?? 'Auditor Ahli Madya')) ?>
+            <b>Pejabat Pengendali Teknis:</b> <?= e(($spt['dalnis_nama'] ?? '') ?: ($narasi['dalnis_nama'] ?? 'Auditor Ahli Madya')) ?>
           </div>
           <?php if ($auth->isDalnis() || $auth->isAdmin()): ?>
             <button type="submit" class="btn btn-sm" style="background:#d97706;color:#fff;font-weight:700">
@@ -187,7 +187,7 @@ partial('sidebar');
 
         <div style="display:flex;justify-content:space-between;align-items:center;background:#eff6ff;padding:10px 14px;border-radius:6px;font-size:12px;color:#1e40af">
           <div>
-            <b>Inspektur Pembantu IV:</b> <?= e($spt['wakil_pj_nama'] ?: ($narasi['irban_nama'] ?? 'MARWAN, M.T')) ?>
+            <b>Inspektur Pembantu IV:</b> <?= e(($spt['wakil_pj_nama'] ?? '') ?: ($narasi['irban_nama'] ?? 'MARWAN, M.T')) ?>
           </div>
           <?php if ($auth->isIrban() || $auth->isAdmin()): ?>
             <button type="submit" class="btn btn-sm" style="background:#2563eb;color:#fff;font-weight:700">
