@@ -8,6 +8,10 @@ class SesiController {
             flash('warning', 'Akses dibatasi: Peran Bagian Perencanaan (Operator SPT) difokuskan pada pengelolaan administrasi penugasan (Nota Dinas & SPT) dan tidak memiliki akses ke Kertas Kerja Audit.');
             redirect('penugasan/spt');
         }
+        if ($this->auth->isOperatorTl()) {
+            flash('warning', 'Akses dibatasi: Peran Bagian Tindak Lanjut (TLHP) difokuskan pada pemantauan rekomendasi dan tidak memiliki akses ke Kertas Kerja Audit.');
+            redirect('tlhp');
+        }
     }
 
     public function index(): void {

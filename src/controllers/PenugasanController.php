@@ -12,6 +12,10 @@ class PenugasanController {
     public function __construct(Auth $auth) {
         $this->auth = $auth;
         $this->auth->require();
+        if ($this->auth->isOperatorTl()) {
+            flash('warning', 'Akses dibatasi: Peran Bagian Tindak Lanjut (TLHP) tidak memiliki akses ke modul Penugasan Pengawasan.');
+            redirect('tlhp');
+        }
     }
 
     // ============================================================

@@ -16,6 +16,10 @@ class OpnameKasController {
             flash('warning', 'Akses dibatasi: Peran Bagian Perencanaan (Operator SPT) tidak memiliki akses ke Pemeriksaan Kas (Opname).');
             redirect('penugasan/spt');
         }
+        if ($this->auth->isOperatorTl()) {
+            flash('warning', 'Akses dibatasi: Peran Bagian Tindak Lanjut (TLHP) tidak memiliki akses ke Pemeriksaan Kas (Opname).');
+            redirect('tlhp');
+        }
     }
 
     /**

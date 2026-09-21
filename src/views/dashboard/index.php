@@ -195,66 +195,146 @@
         </div>
       </div>
 
+      <?php 
+        $isTlUser  = $auth->isOperatorTl();
+        $isSptUser = $auth->isOperatorSpt();
+      ?>
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px">
-        <!-- Tahap 1 -->
-        <a href="<?= url('penugasan/nota-dinas') ?>" style="display:block;text-decoration:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;transition:all 0.2s ease" onmouseover="this.style.background='#f1f5f9';this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0'">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-            <span style="font-size:9.5px;font-weight:800;color:#6366f1;text-transform:uppercase;background:#e0e7ff;padding:2px 6px;border-radius:4px">1. PRA-AUDIT</span>
-            <i class="fa-solid fa-envelope-open-text" style="color:#6366f1;font-size:12px"></i>
+        <!-- Tahap 1: PRA-AUDIT -->
+        <?php if ($isTlUser): ?>
+          <div style="display:block;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;opacity:0.85">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:9.5px;font-weight:800;color:#64748b;text-transform:uppercase;background:#f1f5f9;padding:2px 6px;border-radius:4px">1. PRA-AUDIT</span>
+              <i class="fa-solid fa-envelope-open-text" style="color:#94a3b8;font-size:12px"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#0f172a;margin-top:2px"><?= $stats['nd_total'] ?> <span style="font-size:11px;font-weight:600;color:#64748b">Nota Dinas</span></div>
+            <div style="font-size:10.5px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              <?= $pipeline['nd_diajukan'] ?> Menunggu &bull; <?= $pipeline['nd_disetujui'] ?> Disetujui
+            </div>
           </div>
-          <div style="font-size:15px;font-weight:800;color:#0f172a;margin-top:2px"><?= $stats['nd_total'] ?> <span style="font-size:11px;font-weight:600;color:#64748b">Nota Dinas</span></div>
-          <div style="font-size:10.5px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-            <?= $pipeline['nd_diajukan'] ?> Menunggu &bull; <?= $pipeline['nd_disetujui'] ?> Disetujui
-          </div>
-        </a>
+        <?php else: ?>
+          <a href="<?= url('penugasan/nota-dinas') ?>" style="display:block;text-decoration:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;transition:all 0.2s ease" onmouseover="this.style.background='#f1f5f9';this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0'">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:9.5px;font-weight:800;color:#6366f1;text-transform:uppercase;background:#e0e7ff;padding:2px 6px;border-radius:4px">1. PRA-AUDIT</span>
+              <i class="fa-solid fa-envelope-open-text" style="color:#6366f1;font-size:12px"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#0f172a;margin-top:2px"><?= $stats['nd_total'] ?> <span style="font-size:11px;font-weight:600;color:#64748b">Nota Dinas</span></div>
+            <div style="font-size:10.5px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              <?= $pipeline['nd_diajukan'] ?> Menunggu &bull; <?= $pipeline['nd_disetujui'] ?> Disetujui
+            </div>
+          </a>
+        <?php endif; ?>
 
-        <!-- Tahap 2 -->
-        <a href="<?= url('penugasan/spt') ?>" style="display:block;text-decoration:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;transition:all 0.2s ease" onmouseover="this.style.background='#f1f5f9';this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0'">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-            <span style="font-size:9.5px;font-weight:800;color:#0f766e;text-transform:uppercase;background:#ccfbf1;padding:2px 6px;border-radius:4px">2. SURAT TUGAS</span>
-            <i class="fa-solid fa-file-signature" style="color:#0f766e;font-size:12px"></i>
+        <!-- Tahap 2: SURAT TUGAS -->
+        <?php if ($isTlUser): ?>
+          <div style="display:block;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;opacity:0.85">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:9.5px;font-weight:800;color:#64748b;text-transform:uppercase;background:#f1f5f9;padding:2px 6px;border-radius:4px">2. SURAT TUGAS</span>
+              <i class="fa-solid fa-file-signature" style="color:#94a3b8;font-size:12px"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#0f766e;margin-top:2px"><?= $stats['spt_total'] ?> <span style="font-size:11px;font-weight:600;color:#64748b">SPT Sah</span></div>
+            <div style="font-size:10.5px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              Matriks PKA &amp; TTE Digital
+            </div>
           </div>
-          <div style="font-size:15px;font-weight:800;color:#0f766e;margin-top:2px"><?= $stats['spt_total'] ?> <span style="font-size:11px;font-weight:600;color:#64748b">SPT Sah</span></div>
-          <div style="font-size:10.5px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-            Matriks PKA &amp; TTE Digital
-          </div>
-        </a>
+        <?php else: ?>
+          <a href="<?= url('penugasan/spt') ?>" style="display:block;text-decoration:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;transition:all 0.2s ease" onmouseover="this.style.background='#f1f5f9';this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0'">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:9.5px;font-weight:800;color:#0f766e;text-transform:uppercase;background:#ccfbf1;padding:2px 6px;border-radius:4px">2. SURAT TUGAS</span>
+              <i class="fa-solid fa-file-signature" style="color:#0f766e;font-size:12px"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#0f766e;margin-top:2px"><?= $stats['spt_total'] ?> <span style="font-size:11px;font-weight:600;color:#64748b">SPT Sah</span></div>
+            <div style="font-size:10.5px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              Matriks PKA &amp; TTE Digital
+            </div>
+          </a>
+        <?php endif; ?>
 
-        <!-- Tahap 3 -->
-        <a href="<?= url('sesi') ?>" style="display:block;text-decoration:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;transition:all 0.2s ease" onmouseover="this.style.background='#f1f5f9';this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0'">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-            <span style="font-size:9.5px;font-weight:800;color:#0284c7;text-transform:uppercase;background:#e0f2fe;padding:2px 6px;border-radius:4px">3. UJI LAPANGAN</span>
-            <i class="fa-solid fa-clipboard-check" style="color:#0284c7;font-size:12px"></i>
+        <!-- Tahap 3: UJI LAPANGAN -->
+        <?php if ($isTlUser || $isSptUser): ?>
+          <div style="display:block;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;opacity:0.85">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:9.5px;font-weight:800;color:#64748b;text-transform:uppercase;background:#f1f5f9;padding:2px 6px;border-radius:4px">3. UJI LAPANGAN</span>
+              <i class="fa-solid fa-clipboard-check" style="color:#94a3b8;font-size:12px"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#0284c7;margin-top:2px"><?= $stats['sesi'] ?> <span style="font-size:11px;font-weight:600;color:#64748b">Sesi Audit</span></div>
+            <div style="font-size:10.5px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              Fisik, Kwitansi &amp; Pajak
+            </div>
           </div>
-          <div style="font-size:15px;font-weight:800;color:#0284c7;margin-top:2px"><?= $stats['sesi'] ?> <span style="font-size:11px;font-weight:600;color:#64748b">Sesi Audit</span></div>
-          <div style="font-size:10.5px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-            Fisik, Kwitansi &amp; Pajak
-          </div>
-        </a>
+        <?php else: ?>
+          <a href="<?= url('sesi') ?>" style="display:block;text-decoration:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;transition:all 0.2s ease" onmouseover="this.style.background='#f1f5f9';this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0'">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:9.5px;font-weight:800;color:#0284c7;text-transform:uppercase;background:#e0f2fe;padding:2px 6px;border-radius:4px">3. UJI LAPANGAN</span>
+              <i class="fa-solid fa-clipboard-check" style="color:#0284c7;font-size:12px"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#0284c7;margin-top:2px"><?= $stats['sesi'] ?> <span style="font-size:11px;font-weight:600;color:#64748b">Sesi Audit</span></div>
+            <div style="font-size:10.5px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              Fisik, Kwitansi &amp; Pajak
+            </div>
+          </a>
+        <?php endif; ?>
 
-        <!-- Tahap 4 -->
-        <a href="<?= url('temuan') ?>" style="display:block;text-decoration:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;transition:all 0.2s ease" onmouseover="this.style.background='#f1f5f9';this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0'">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-            <span style="font-size:9.5px;font-weight:800;color:#d97706;text-transform:uppercase;background:#fef3c7;padding:2px 6px;border-radius:4px">4. KONSEP TEMUAN</span>
-            <i class="fa-solid fa-file-circle-exclamation" style="color:#d97706;font-size:12px"></i>
+        <!-- Tahap 4: KONSEP TEMUAN -->
+        <?php if ($isTlUser || $isSptUser): ?>
+          <div style="display:block;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;opacity:0.85">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:9.5px;font-weight:800;color:#64748b;text-transform:uppercase;background:#f1f5f9;padding:2px 6px;border-radius:4px">4. KONSEP TEMUAN</span>
+              <i class="fa-solid fa-file-circle-exclamation" style="color:#94a3b8;font-size:12px"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#b45309;margin-top:2px"><?= $stats['temuan_total'] ?> <span style="font-size:11px;font-weight:600;color:#64748b">Temuan</span></div>
+            <div style="font-size:10.5px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              5 Unsur &amp; Rekomendasi
+            </div>
           </div>
-          <div style="font-size:15px;font-weight:800;color:#b45309;margin-top:2px"><?= $stats['temuan_total'] ?> <span style="font-size:11px;font-weight:600;color:#64748b">Temuan</span></div>
-          <div style="font-size:10.5px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-            5 Unsur &amp; Rekomendasi
-          </div>
-        </a>
+        <?php else: ?>
+          <a href="<?= url('temuan') ?>" style="display:block;text-decoration:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;transition:all 0.2s ease" onmouseover="this.style.background='#f1f5f9';this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0'">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:9.5px;font-weight:800;color:#d97706;text-transform:uppercase;background:#fef3c7;padding:2px 6px;border-radius:4px">4. KONSEP TEMUAN</span>
+              <i class="fa-solid fa-file-circle-exclamation" style="color:#d97706;font-size:12px"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#b45309;margin-top:2px"><?= $stats['temuan_total'] ?> <span style="font-size:11px;font-weight:600;color:#64748b">Temuan</span></div>
+            <div style="font-size:10.5px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              5 Unsur &amp; Rekomendasi
+            </div>
+          </a>
+        <?php endif; ?>
 
-        <!-- Tahap 5 -->
-        <a href="<?= url('lhp') ?>" style="display:block;text-decoration:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;transition:all 0.2s ease" onmouseover="this.style.background='#f1f5f9';this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0'">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-            <span style="font-size:9.5px;font-weight:800;color:#16a34a;text-transform:uppercase;background:#dcfce7;padding:2px 6px;border-radius:4px">5. NASKAH LHP</span>
-            <i class="fa-solid fa-file-shield" style="color:#16a34a;font-size:12px"></i>
+        <!-- Tahap 5: NASKAH LHP / TINDAK LANJUT -->
+        <?php if ($isTlUser): ?>
+          <a href="<?= url('tlhp') ?>" style="display:block;text-decoration:none;background:#ecfdf5;border:1.5px solid #059669;border-radius:8px;padding:10px 12px;transition:all 0.2s ease;box-shadow:0 2px 6px rgba(5,150,105,0.15)" onmouseover="this.style.background='#d1fae5'" onmouseout="this.style.background='#ecfdf5'">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:9.5px;font-weight:800;color:#065f46;text-transform:uppercase;background:#a7f3d0;padding:2px 6px;border-radius:4px">5. TINDAK LANJUT</span>
+              <i class="fa-solid fa-clock-rotate-left" style="color:#059669;font-size:12px"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#065f46;margin-top:2px">TLHP 60 Hari <span style="font-size:11px;font-weight:600;color:#047857">&rarr; Buka</span></div>
+            <div style="font-size:10.5px;color:#047857;margin-top:3px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              Monitoring Rekomendasi &amp; STS
+            </div>
+          </a>
+        <?php elseif ($isSptUser): ?>
+          <div style="display:block;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;opacity:0.85">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:9.5px;font-weight:800;color:#64748b;text-transform:uppercase;background:#f1f5f9;padding:2px 6px;border-radius:4px">5. NASKAH LHP</span>
+              <i class="fa-solid fa-file-shield" style="color:#94a3b8;font-size:12px"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#15803d;margin-top:2px"><?= max(1, $pipeline['lhp_desa']) ?> <span style="font-size:11px;font-weight:600;color:#64748b">Desa Siap</span></div>
+            <div style="font-size:10.5px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              Format Standar Rohil
+            </div>
           </div>
-          <div style="font-size:15px;font-weight:800;color:#15803d;margin-top:2px"><?= max(1, $pipeline['lhp_desa']) ?> <span style="font-size:11px;font-weight:600;color:#64748b">Desa Siap</span></div>
-          <div style="font-size:10.5px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-            Format Standar Rohil
-          </div>
-        </a>
+        <?php else: ?>
+          <a href="<?= url('lhp') ?>" style="display:block;text-decoration:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;transition:all 0.2s ease" onmouseover="this.style.background='#f1f5f9';this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0'">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:9.5px;font-weight:800;color:#16a34a;text-transform:uppercase;background:#dcfce7;padding:2px 6px;border-radius:4px">5. NASKAH LHP</span>
+              <i class="fa-solid fa-file-shield" style="color:#16a34a;font-size:12px"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#15803d;margin-top:2px"><?= max(1, $pipeline['lhp_desa']) ?> <span style="font-size:11px;font-weight:600;color:#64748b">Desa Siap</span></div>
+            <div style="font-size:10.5px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              Format Standar Rohil
+            </div>
+          </a>
+        <?php endif; ?>
       </div>
     </div>
 
@@ -320,9 +400,19 @@
             </h3>
             <p style="margin:3px 0 0;font-size:12px;color:#64748b">Ringkasan hasil audit fisik belanja, kepatuhan perpajakan, dan status temuan per desa.</p>
           </div>
-          <a href="<?= url('sesi') ?>" class="btn btn-ghost btn-sm" style="font-size:12px;font-weight:700">
-            Semua Sesi <i class="fa-solid fa-arrow-right" style="margin-left:4px"></i>
-          </a>
+          <?php if ($isTlUser): ?>
+            <a href="<?= url('tlhp') ?>" class="btn btn-sm" style="background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;font-size:11.5px;font-weight:700">
+              <i class="fa-solid fa-clock-rotate-left"></i> Monitoring TLHP <i class="fa-solid fa-arrow-right" style="margin-left:4px"></i>
+            </a>
+          <?php elseif ($isSptUser): ?>
+            <a href="<?= url('penugasan/spt') ?>" class="btn btn-ghost btn-sm" style="font-size:12px;font-weight:700">
+              Antrean SPT <i class="fa-solid fa-arrow-right" style="margin-left:4px"></i>
+            </a>
+          <?php else: ?>
+            <a href="<?= url('sesi') ?>" class="btn btn-ghost btn-sm" style="font-size:12px;font-weight:700">
+              Semua Sesi <i class="fa-solid fa-arrow-right" style="margin-left:4px"></i>
+            </a>
+          <?php endif; ?>
         </div>
 
         <?php if (empty($perDesa)): ?>
@@ -341,7 +431,7 @@
                   <th style="padding:10px 12px;text-align:right">Pagu APBDes</th>
                   <th style="padding:10px 12px;text-align:center">Sesi Audit</th>
                   <th style="padding:10px 12px;text-align:center">Status Kepatuhan</th>
-                  <th style="padding:10px 12px;text-align:center;width:90px">Aksi</th>
+                  <th style="padding:10px 12px;text-align:center;width:100px">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -350,9 +440,17 @@
                     <td style="padding:10px 12px;text-align:center;color:#64748b;font-weight:600"><?= $no++ ?></td>
                     <td style="padding:10px 12px;text-align:left">
                       <div style="font-weight:700;color:#0f172a;font-size:13px">
-                        <a href="<?= url('sesi?desa=' . $d['id']) ?>" style="color:inherit;text-decoration:none" class="hover:text-primary">
-                          <?= e($d['desa']) ?>
-                        </a>
+                        <?php if ($isTlUser): ?>
+                          <a href="<?= url('tlhp?desa_id=' . $d['id']) ?>" style="color:inherit;text-decoration:none" class="hover:text-primary" title="Buka Monitoring TLHP Desa ini">
+                            <?= e($d['desa']) ?>
+                          </a>
+                        <?php elseif ($isSptUser): ?>
+                          <span><?= e($d['desa']) ?></span>
+                        <?php else: ?>
+                          <a href="<?= url('sesi?desa=' . $d['id']) ?>" style="color:inherit;text-decoration:none" class="hover:text-primary">
+                            <?= e($d['desa']) ?>
+                          </a>
+                        <?php endif; ?>
                       </div>
                       <div style="font-size:11px;color:#64748b;margin-top:1px">
                         Kec. <?= e($d['kecamatan']) ?>
@@ -379,12 +477,22 @@
                     </td>
                     <td style="padding:10px 12px;text-align:center">
                       <div style="display:inline-flex;align-items:center;gap:4px">
-                        <a href="<?= url('sesi?desa=' . $d['id']) ?>" class="btn btn-sm btn-ghost" title="Buka Kertas Kerja (KKA)" style="padding:4px 7px;font-size:11px">
-                          <i class="fa-solid fa-clipboard-list" style="color:#2563eb"></i>
-                        </a>
-                        <a href="<?= url('lhp/show?desa_id=' . $d['id'] . '&tahun=' . $d['tahun_terakhir']) ?>" class="btn btn-sm btn-ghost" title="Buka Naskah LHP" style="padding:4px 7px;font-size:11px">
-                          <i class="fa-solid fa-file-shield" style="color:#0f766e"></i>
-                        </a>
+                        <?php if ($isTlUser): ?>
+                          <a href="<?= url('tlhp?desa_id=' . $d['id']) ?>" class="btn btn-sm" title="Buka Monitoring Tindak Lanjut" style="background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;padding:4px 9px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px">
+                            <i class="fa-solid fa-clock-rotate-left"></i> TLHP
+                          </a>
+                        <?php elseif ($isSptUser): ?>
+                          <a href="<?= url('penugasan/spt?desa_id=' . $d['id']) ?>" class="btn btn-sm btn-ghost" title="Buka SPT" style="padding:4px 7px;font-size:11px">
+                            <i class="fa-solid fa-file-signature" style="color:#0f766e"></i>
+                          </a>
+                        <?php else: ?>
+                          <a href="<?= url('sesi?desa=' . $d['id']) ?>" class="btn btn-sm btn-ghost" title="Buka Kertas Kerja (KKA)" style="padding:4px 7px;font-size:11px">
+                            <i class="fa-solid fa-clipboard-list" style="color:#2563eb"></i>
+                          </a>
+                          <a href="<?= url('lhp/show?desa_id=' . $d['id'] . '&tahun=' . $d['tahun_terakhir']) ?>" class="btn btn-sm btn-ghost" title="Buka Naskah LHP" style="padding:4px 7px;font-size:11px">
+                            <i class="fa-solid fa-file-shield" style="color:#0f766e"></i>
+                          </a>
+                        <?php endif; ?>
                       </div>
                     </td>
                   </tr>
@@ -432,49 +540,137 @@
           </div>
         </div>
 
-        <!-- Widget 2: Pintasan Dokumen & Cetak Resmi (Solid & Clean Card) -->
-        <div class="card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,0.03)">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <h3 style="margin:0;font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:7px">
-              <i class="fa-solid fa-print" style="color:#2563eb"></i> Pintasan Dokumen Audit
-            </h3>
-            <span class="badge" style="background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;font-size:10px;font-weight:700">Format Rohil</span>
+        <!-- Widget 2: Pintasan Dokumen & Cetak Resmi (Role-aware) -->
+        <?php if ($isTlUser): ?>
+          <div class="card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,0.03)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <h3 style="margin:0;font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:7px">
+                <i class="fa-solid fa-clock-rotate-left" style="color:#059669"></i> Pintasan Tindak Lanjut (TLHP)
+              </h3>
+              <span class="badge" style="background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;font-size:10px;font-weight:700">Ruang TLHP</span>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <a href="<?= url('tlhp') ?>" class="btn btn-ghost btn-sm" style="justify-content:space-between;padding:8px 10px;font-size:12px;border:1px solid #f1f5f9;border-radius:8px">
+                <span style="display:flex;align-items:center;gap:8px">
+                  <i class="fa-solid fa-list-check" style="color:#059669;width:14px"></i>
+                  <span style="font-weight:600;color:#1e293b">Monitoring Rekomendasi 60 Hari</span>
+                </span>
+                <i class="fa-solid fa-chevron-right" style="font-size:10px;color:#94a3b8"></i>
+              </a>
+
+              <a href="<?= url('tlhp') ?>" class="btn btn-ghost btn-sm" style="justify-content:space-between;padding:8px 10px;font-size:12px;border:1px solid #f1f5f9;border-radius:8px">
+                <span style="display:flex;align-items:center;gap:8px">
+                  <i class="fa-solid fa-receipt" style="color:#d97706;width:14px"></i>
+                  <span style="font-weight:600;color:#1e293b">Verifikasi Setoran Kas (STS)</span>
+                </span>
+                <i class="fa-solid fa-chevron-right" style="font-size:10px;color:#94a3b8"></i>
+              </a>
+
+              <a href="<?= url('sop') ?>" class="btn btn-ghost btn-sm" style="justify-content:space-between;padding:8px 10px;font-size:12px;border:1px solid #f1f5f9;border-radius:8px">
+                <span style="display:flex;align-items:center;gap:8px">
+                  <i class="fa-solid fa-book-open-reader" style="color:#2563eb;width:14px"></i>
+                  <span style="font-weight:600;color:#1e293b">Alur &amp; SOP Pengawasan</span>
+                </span>
+                <i class="fa-solid fa-chevron-right" style="font-size:10px;color:#94a3b8"></i>
+              </a>
+
+              <a href="<?= url('gdrive') ?>" class="btn btn-ghost btn-sm" style="justify-content:space-between;padding:8px 10px;font-size:12px;border:1px solid #f1f5f9;border-radius:8px">
+                <span style="display:flex;align-items:center;gap:8px">
+                  <i class="fa-brands fa-google-drive" style="color:#0284c7;width:14px"></i>
+                  <span style="font-weight:600;color:#1e293b">Arsip Dokumen Google Drive</span>
+                </span>
+                <i class="fa-solid fa-chevron-right" style="font-size:10px;color:#94a3b8"></i>
+              </a>
+            </div>
           </div>
+        <?php elseif ($isSptUser): ?>
+          <div class="card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,0.03)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <h3 style="margin:0;font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:7px">
+                <i class="fa-solid fa-file-signature" style="color:#0f766e"></i> Pintasan Perencanaan (SPT)
+              </h3>
+              <span class="badge" style="background:#ccfbf1;color:#0f766e;border:1px solid #99f6e4;font-size:10px;font-weight:700">Perencanaan</span>
+            </div>
 
-          <div style="display:flex;flex-direction:column;gap:6px">
-            <a href="<?= url('penugasan/spt') ?>" class="btn btn-ghost btn-sm" style="justify-content:space-between;padding:8px 10px;font-size:12px;border:1px solid #f1f5f9;border-radius:8px">
-              <span style="display:flex;align-items:center;gap:8px">
-                <i class="fa-solid fa-file-signature" style="color:#0f766e;width:14px"></i>
-                <span style="font-weight:600;color:#1e293b">Surat Tugas (SPT) Rohil</span>
-              </span>
-              <i class="fa-solid fa-chevron-right" style="font-size:10px;color:#94a3b8"></i>
-            </a>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <a href="<?= url('penugasan/nota-dinas') ?>" class="btn btn-ghost btn-sm" style="justify-content:space-between;padding:8px 10px;font-size:12px;border:1px solid #f1f5f9;border-radius:8px">
+                <span style="display:flex;align-items:center;gap:8px">
+                  <i class="fa-solid fa-envelope-open-text" style="color:#6366f1;width:14px"></i>
+                  <span style="font-weight:600;color:#1e293b">Nota Dinas Usulan Tim</span>
+                </span>
+                <i class="fa-solid fa-chevron-right" style="font-size:10px;color:#94a3b8"></i>
+              </a>
 
-            <a href="<?= url('sesi') ?>" class="btn btn-ghost btn-sm" style="justify-content:space-between;padding:8px 10px;font-size:12px;border:1px solid #f1f5f9;border-radius:8px">
-              <span style="display:flex;align-items:center;gap:8px">
-                <i class="fa-solid fa-list-check" style="color:#2563eb;width:14px"></i>
-                <span style="font-weight:600;color:#1e293b">Matriks PKA (KM.6 BPKP)</span>
-              </span>
-              <i class="fa-solid fa-chevron-right" style="font-size:10px;color:#94a3b8"></i>
-            </a>
+              <a href="<?= url('penugasan/spt') ?>" class="btn btn-ghost btn-sm" style="justify-content:space-between;padding:8px 10px;font-size:12px;border:1px solid #f1f5f9;border-radius:8px">
+                <span style="display:flex;align-items:center;gap:8px">
+                  <i class="fa-solid fa-file-signature" style="color:#0f766e;width:14px"></i>
+                  <span style="font-weight:600;color:#1e293b">Surat Tugas (SPT) Rohil</span>
+                </span>
+                <i class="fa-solid fa-chevron-right" style="font-size:10px;color:#94a3b8"></i>
+              </a>
 
-            <a href="<?= url('temuan') ?>" class="btn btn-ghost btn-sm" style="justify-content:space-between;padding:8px 10px;font-size:12px;border:1px solid #f1f5f9;border-radius:8px">
-              <span style="display:flex;align-items:center;gap:8px">
-                <i class="fa-solid fa-file-circle-exclamation" style="color:#d97706;width:14px"></i>
-                <span style="font-weight:600;color:#1e293b">Matriks Temuan 5 Unsur</span>
-              </span>
-              <i class="fa-solid fa-chevron-right" style="font-size:10px;color:#94a3b8"></i>
-            </a>
+              <a href="<?= url('desa') ?>" class="btn btn-ghost btn-sm" style="justify-content:space-between;padding:8px 10px;font-size:12px;border:1px solid #f1f5f9;border-radius:8px">
+                <span style="display:flex;align-items:center;gap:8px">
+                  <i class="fa-solid fa-map-location-dot" style="color:#2563eb;width:14px"></i>
+                  <span style="font-weight:600;color:#1e293b">Master Wilayah Kepenghuluan</span>
+                </span>
+                <i class="fa-solid fa-chevron-right" style="font-size:10px;color:#94a3b8"></i>
+              </a>
 
-            <a href="<?= url('lhp') ?>" class="btn btn-ghost btn-sm" style="justify-content:space-between;padding:8px 10px;font-size:12px;border:1px solid #f1f5f9;border-radius:8px">
-              <span style="display:flex;align-items:center;gap:8px">
-                <i class="fa-solid fa-file-shield" style="color:#16a34a;width:14px"></i>
-                <span style="font-weight:600;color:#1e293b">Laporan Hasil Audit (LHP)</span>
-              </span>
-              <i class="fa-solid fa-chevron-right" style="font-size:10px;color:#94a3b8"></i>
-            </a>
+              <a href="<?= url('sop') ?>" class="btn btn-ghost btn-sm" style="justify-content:space-between;padding:8px 10px;font-size:12px;border:1px solid #f1f5f9;border-radius:8px">
+                <span style="display:flex;align-items:center;gap:8px">
+                  <i class="fa-solid fa-book-open-reader" style="color:#d97706;width:14px"></i>
+                  <span style="font-weight:600;color:#1e293b">Standar Dokumen Penugasan</span>
+                </span>
+                <i class="fa-solid fa-chevron-right" style="font-size:10px;color:#94a3b8"></i>
+              </a>
+            </div>
           </div>
-        </div>
+        <?php else: ?>
+          <div class="card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,0.03)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <h3 style="margin:0;font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:7px">
+                <i class="fa-solid fa-print" style="color:#2563eb"></i> Pintasan Dokumen Audit
+              </h3>
+              <span class="badge" style="background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;font-size:10px;font-weight:700">Format Rohil</span>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <a href="<?= url('penugasan/spt') ?>" class="btn btn-ghost btn-sm" style="justify-content:space-between;padding:8px 10px;font-size:12px;border:1px solid #f1f5f9;border-radius:8px">
+                <span style="display:flex;align-items:center;gap:8px">
+                  <i class="fa-solid fa-file-signature" style="color:#0f766e;width:14px"></i>
+                  <span style="font-weight:600;color:#1e293b">Surat Tugas (SPT) Rohil</span>
+                </span>
+                <i class="fa-solid fa-chevron-right" style="font-size:10px;color:#94a3b8"></i>
+              </a>
+
+              <a href="<?= url('sesi') ?>" class="btn btn-ghost btn-sm" style="justify-content:space-between;padding:8px 10px;font-size:12px;border:1px solid #f1f5f9;border-radius:8px">
+                <span style="display:flex;align-items:center;gap:8px">
+                  <i class="fa-solid fa-list-check" style="color:#2563eb;width:14px"></i>
+                  <span style="font-weight:600;color:#1e293b">Matriks PKA (KM.6 BPKP)</span>
+                </span>
+                <i class="fa-solid fa-chevron-right" style="font-size:10px;color:#94a3b8"></i>
+              </a>
+
+              <a href="<?= url('temuan') ?>" class="btn btn-ghost btn-sm" style="justify-content:space-between;padding:8px 10px;font-size:12px;border:1px solid #f1f5f9;border-radius:8px">
+                <span style="display:flex;align-items:center;gap:8px">
+                  <i class="fa-solid fa-file-circle-exclamation" style="color:#d97706;width:14px"></i>
+                  <span style="font-weight:600;color:#1e293b">Matriks Temuan 5 Unsur</span>
+                </span>
+                <i class="fa-solid fa-chevron-right" style="font-size:10px;color:#94a3b8"></i>
+              </a>
+
+              <a href="<?= url('lhp') ?>" class="btn btn-ghost btn-sm" style="justify-content:space-between;padding:8px 10px;font-size:12px;border:1px solid #f1f5f9;border-radius:8px">
+                <span style="display:flex;align-items:center;gap:8px">
+                  <i class="fa-solid fa-file-shield" style="color:#16a34a;width:14px"></i>
+                  <span style="font-weight:600;color:#1e293b">Laporan Hasil Audit (LHP)</span>
+                </span>
+                <i class="fa-solid fa-chevron-right" style="font-size:10px;color:#94a3b8"></i>
+              </a>
+            </div>
+          </div>
+        <?php endif; ?>
 
         <!-- Widget 3: Sebaran Bidang APBDesa -->
         <div class="card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,0.03)">
