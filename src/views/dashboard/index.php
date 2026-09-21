@@ -185,9 +185,14 @@
             <span style="font-size:11px;color:#64748b;margin-left:6px">(Standar SPKN &amp; SAIPI Terpadu)</span>
           </div>
         </div>
-        <span class="badge" style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;font-size:10.5px;font-weight:700">
-          <i class="fa-solid fa-circle-check" style="color:#22c55e;margin-right:4px"></i> Alur Aktif Hulu ke Hilir
-        </span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button type="button" onclick="openPilarModal()" class="btn btn-sm" style="background:#f8fafc;border:1px solid #cbd5e1;color:#047857;font-size:11px;font-weight:700;padding:4px 10px;cursor:pointer;border-radius:6px;display:flex;align-items:center;gap:6px" title="Buka infografis 5 Pilar Siklus Pengawasan">
+            <i class="fa-solid fa-circle-nodes" style="color:#059669"></i> Diagram 5 Pilar Siklus
+          </button>
+          <span class="badge" style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;font-size:10.5px;font-weight:700">
+            <i class="fa-solid fa-circle-check" style="color:#22c55e;margin-right:4px"></i> Alur Aktif Hulu ke Hilir
+          </span>
+        </div>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px">
@@ -502,5 +507,42 @@
     </div>
   </div>
 </main>
+
+<!-- LIGHTBOX MODAL 5 PILAR HD -->
+<div id="pilarModal" class="pilar-modal" onclick="if(event.target === this) closePilarModal()" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(2,44,34,0.88);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px">
+  <div style="position:relative;max-width:1020px;width:100%;background:#064e3b;border:2px solid rgba(250,204,21,0.5);border-radius:16px;box-shadow:0 25px 60px rgba(0,0,0,0.6);overflow:hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:rgba(0,0,0,0.35);border-bottom:1px solid rgba(255,255,255,0.1)">
+      <div style="color:#fde68a;font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:8px">
+        <i class="fa-solid fa-shield-halved" style="color:#fbbf24"></i> 5 Pilar Siklus Pengawasan Terpadu (End-to-End) — APIP Inspektorat Rohil 2026
+      </div>
+      <button type="button" onclick="closePilarModal()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:16px;width:32px;height:32px;border-radius:50%;cursor:pointer;display:grid;place-items:center;transition:background .2s" title="Tutup (ESC)">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div style="padding:14px;background:#022c22;display:grid;place-items:center">
+      <img src="<?= asset('img/5_pilar_siklus_pengawasan.jpg') ?>" alt="5 Pilar Siklus Pengawasan Terpadu" style="max-width:100%;max-height:80vh;object-fit:contain;border-radius:8px;display:block;box-shadow:0 10px 30px rgba(0,0,0,0.5)">
+    </div>
+  </div>
+</div>
+
+<script>
+function openPilarModal() {
+  const m = document.getElementById('pilarModal');
+  if (m) {
+    m.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+}
+function closePilarModal() {
+  const m = document.getElementById('pilarModal');
+  if (m) {
+    m.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closePilarModal();
+});
+</script>
 
 <?php partial('foot'); ?>
