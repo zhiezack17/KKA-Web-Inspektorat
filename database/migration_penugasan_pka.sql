@@ -15,7 +15,7 @@ SELECT 'H. SARMAN SYAHRONI, ST., M.IP', 'inspektur@rohilkab.go.id', 'inspektur',
 WHERE NOT EXISTS (SELECT 1 FROM `kka_users` WHERE `username` = 'inspektur' OR `role` = 'inspektur');
 
 INSERT INTO `kka_users` (`nama`, `email`, `username`, `password_hash`, `role`, `nip`, `jabatan`, `is_active`)
-SELECT 'BAGIAN PERENCANAAN & EVALUASI (OPERATOR SPT)', 'spt@rohilkab.go.id', 'operator_spt', '$2y$10$RCoE5pZXXz4XOiJXTGRwUuKqumEKeA4uxDPKSQUTmT8JHlBZ2Azbi', 'operator_spt', '-', 'Pengelola Surat Perintah Tugas', 1
+SELECT 'BAGIAN PERENCANAAN (OPERATOR SPT)', 'spt@rohilkab.go.id', 'operator_spt', '$2y$10$RCoE5pZXXz4XOiJXTGRwUuKqumEKeA4uxDPKSQUTmT8JHlBZ2Azbi', 'operator_spt', '-', 'Pengelola Surat Perintah Tugas', 1
 WHERE NOT EXISTS (SELECT 1 FROM `kka_users` WHERE `username` = 'operator_spt');
 
 -- 3. Tabel kka_nota_dinas

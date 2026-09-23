@@ -376,7 +376,7 @@ function sapaan_nama(?string $nama, ?string $role = null): string {
     if ($nama === '') return 'Auditor';
     
     if ($role === 'operator_spt') {
-        return 'Bagian Perencanaan & Evaluasi';
+        return 'Bagian Perencanaan';
     }
 
     // Hilangkan gelar belakang setelah koma pertama (misal: ", ST., M.IP" atau ", S.Pi, M.Si")
