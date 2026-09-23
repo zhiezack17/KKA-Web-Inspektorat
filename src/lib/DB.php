@@ -43,6 +43,10 @@ class DB {
         return $row === false ? null : $row;
     }
 
+    public static function row(string $sql, array $params = []): ?array {
+        return self::one($sql, $params);
+    }
+
     public static function scalar(string $sql, array $params = []) {
         $row = self::q($sql, $params)->fetch(PDO::FETCH_NUM);
         return $row[0] ?? null;

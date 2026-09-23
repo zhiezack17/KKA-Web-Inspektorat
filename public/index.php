@@ -283,6 +283,10 @@ $routes = [
     '/opname-kas/delete'              => ['OpnameKasController', 'delete'],
     '/print/opname-kas'               => ['OpnameKasController', 'print'],
 
+    // Modul Aspek Keuangan & Deteksi Ketekoran (Metode Siswaskeudes)
+    '/aspek-keuangan'                 => ['AspekKeuanganController', 'index'],
+    '/print/aspek-keuangan'           => ['AspekKeuanganController', 'print'],
+
     // Modul Pemantauan Tindak Lanjut LHP (TLHP 60 Hari) & Rekap Kerugian
     '/tlhp'                           => ['TlhpController', 'index'],
     '/tlhp/update'                    => ['TlhpController', 'update'],

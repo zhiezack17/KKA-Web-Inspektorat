@@ -261,13 +261,43 @@ $stLhp = $narasi['status_lhp'] ?? 'DRAFT';
           </tfoot>
         </table>
 
-        <!-- Evaluasi Pajak -->
-        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:10px 14px;font-size:12.5px;color:#166534">
-          <b>Evaluasi Kepatuhan Pajak Belanja:</b>
-          Total Pajak PPN Diuji: <b><?= rupiah($rekapPajak['total_ppn'] ?? 0) ?></b> &bull; 
-          Total Pajak PPh: <b><?= rupiah($rekapPajak['total_pph'] ?? 0) ?></b> &bull; 
-          Sudah Disetor: <b><?= rupiah($rekapPajak['pajak_disetor'] ?? 0) ?></b> &bull; 
-          Tunggakan Belum Setor: <b style="color:#dc2626"><?= rupiah($rekapPajak['pajak_belum_setor'] ?? 0) ?></b>
+        <!-- Evaluasi Aspek Keuangan & Pajak (Metode Siswaskeudes) -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+          <!-- Posisi Kas -->
+          <div style="background:<?= !empty($aspekKeuangan) && $aspekKeuangan['status_kas'] === 'TEKOR_KAS' ? '#fff1f2' : '#f8fafc' ?>;border:1px solid <?= !empty($aspekKeuangan) && $aspekKeuangan['status_kas'] === 'TEKOR_KAS' ? '#fca5a5' : '#e2e8f0' ?>;border-radius:6px;padding:10px 12px;font-size:12px">
+            <div style="font-weight:700;color:#0f172a;margin-bottom:3px;display:flex;justify-content:space-between">
+              <span>Posisi Keseimbangan Kas:</span>
+              <?php if (!empty($aspekKeuangan) && $aspekKeuangan['status_kas'] === 'TEKOR_KAS'): ?>
+                <span class="badge" style="background:#fee2e2;color:#991b1b;font-weight:800;font-size:10px">TEKOR KAS</span>
+              <?php elseif (!empty($aspekKeuangan) && $aspekKeuangan['status_kas'] === 'COCOK'): ?>
+                <span class="badge" style="background:#ecfdf5;color:#065f46;font-weight:800;font-size:10px">COCOK</span>
+              <?php else: ?>
+                <span class="badge" style="background:#f1f5f9;color:#64748b;font-size:10px">BELUM OPNAME</span>
+              <?php endif; ?>
+            </div>
+            <div style="color:#475569">
+              BKU: <b><?= rupiah($aspekKeuangan['kas_bku'] ?? 0) ?></b> &bull; Riil: <b><?= rupiah($aspekKeuangan['kas_riil'] ?? 0) ?></b>
+              <?php if (!empty($aspekKeuangan) && $aspekKeuangan['selisih_kas'] < 0): ?>
+                <div style="color:#dc2626;font-weight:700;margin-top:2px">Selisih Kurang (Tekor Kas): -<?= rupiah(abs($aspekKeuangan['selisih_kas'])) ?></div>
+              <?php endif; ?>
+            </div>
+          </div>
+
+          <!-- Kepatuhan Pajak -->
+          <div style="background:<?= ($rekapPajak['pajak_belum_setor'] ?? 0) > 0 ? '#fffbeb' : '#f0fdf4' ?>;border:1px solid <?= ($rekapPajak['pajak_belum_setor'] ?? 0) > 0 ? '#fde68a' : '#bbf7d0' ?>;border-radius:6px;padding:10px 12px;font-size:12px">
+            <div style="font-weight:700;color:#0f172a;margin-bottom:3px;display:flex;justify-content:space-between">
+              <span>Kepatuhan Pajak Belanja:</span>
+              <?php if (($rekapPajak['pajak_belum_setor'] ?? 0) > 0): ?>
+                <span class="badge" style="background:#fef3c7;color:#92400e;font-weight:800;font-size:10px">TEKOR PAJAK</span>
+              <?php else: ?>
+                <span class="badge" style="background:#ecfdf5;color:#065f46;font-weight:800;font-size:10px">TERTIB 100%</span>
+              <?php endif; ?>
+            </div>
+            <div style="color:#475569">
+              Disetor: <b><?= rupiah($rekapPajak['pajak_disetor'] ?? 0) ?></b> &bull; 
+              Tunggakan: <b style="color:<?= ($rekapPajak['pajak_belum_setor'] ?? 0) > 0 ? '#dc2626' : '#059669' ?>"><?= rupiah($rekapPajak['pajak_belum_setor'] ?? 0) ?></b>
+            </div>
+          </div>
         </div>
       </div>
 

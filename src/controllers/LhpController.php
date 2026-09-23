@@ -184,11 +184,13 @@ class LhpController {
             'is_customized'       => !empty($narasi),
         ];
 
+        $aspekKeuangan = AspekKeuanganService::getAnalisisDesa($desaId, $tahun);
+
         return compact(
             'desa', 'spt', 'notaDinas', 'tahun', 'anggotaList', 'sesiList',
             'rekapBidang', 'rekapPajak', 'daftarTemuan', 'totalPagu',
             'totalRealisasi', 'totalKuitansi', 'totalSelisih', 'totalNominalTemuan',
-            'inspektur', 'narasiFinal', 'narasi'
+            'inspektur', 'narasiFinal', 'narasi', 'aspekKeuangan'
         );
     }
 
