@@ -43,12 +43,6 @@
           <a href="<?= url('users') ?>" class="btn btn-outline" style="border-color:#6366f1;color:#6366f1;font-weight:700">
             <i class="fa-solid fa-users-gear"></i> Kelola Pengguna
           </a>
-          <form action="<?= url('dashboard/reset') ?>" method="POST" style="display:inline" onsubmit="return confirm('PERHATIAN: Apakah Anda yakin ingin MENGHAPUS SEMUA DATA TRANSAKSI (Nota Dinas, KKA, LHP, dll) untuk keperluan presentasi? Data yang dihapus tidak bisa dikembalikan!');">
-              <?= csrf_field() ?>
-              <button type="submit" class="btn btn-outline" style="border-color:#dc2626;color:#dc2626;font-weight:700;margin-left:4px">
-                  <i class="fa-solid fa-trash-can"></i> Bersihkan Data Demo
-              </button>
-          </form>
         <?php elseif ($auth->isInspektur()): ?>
           <a href="<?= url('penugasan/nota-dinas') ?>" class="btn btn-primary" style="background:#b45309;border:none;font-weight:700;box-shadow:0 2px 4px rgba(180,83,9,0.25)">
             <i class="fa-solid fa-pen-nib"></i> Lembar Disposisi Inspektur
