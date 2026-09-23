@@ -133,7 +133,7 @@ if ($auth->isInspektur()) {
       <option value="amdattofa" <?= ($user['username'] ?? '') === 'amdattofa' ? 'selected' : '' ?>>👤 Ketua Tim (Amdat Tofa, SH)</option>
       <option value="budicahyadi" <?= ($user['username'] ?? '') === 'budicahyadi' ? 'selected' : '' ?>>👤 Ketua Tim (Budi Cahyadi)</option>
       <option value="fakhrurrazi" <?= ($user['username'] ?? '') === 'fakhrurrazi' ? 'selected' : '' ?>>👤 Anggota (Fakhrurrazi)</option>
-      <option value="operator_tl" <?= ($user['username'] ?? '') === 'operator_tl' ? 'selected' : '' ?>>👤 Bag. Tindak Lanjut (TLHP)</option>
+      <option value="operator_tl" <?= ($user['username'] ?? '') === 'operator_tl' ? 'selected' : '' ?>>👤 Bag. Evaluasi & TL</option>
       <option value="admin" <?= ($user['username'] ?? '') === 'admin' ? 'selected' : '' ?>>⚡ Administrator Sistem</option>
     </select>
   </div>

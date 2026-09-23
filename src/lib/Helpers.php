@@ -378,6 +378,9 @@ function sapaan_nama(?string $nama, ?string $role = null): string {
     if ($role === 'operator_spt') {
         return 'Bagian Perencanaan';
     }
+    if ($role === 'operator_tl') {
+        return 'Bagian Evaluasi & Tindak Lanjut';
+    }
 
     // Hilangkan gelar belakang setelah koma pertama (misal: ", ST., M.IP" atau ", S.Pi, M.Si")
     $clean = trim(preg_replace('/,.*$/', '', $nama));
