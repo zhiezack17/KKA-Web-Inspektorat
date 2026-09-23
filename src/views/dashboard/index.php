@@ -575,13 +575,7 @@
                 <i class="fa-solid fa-chevron-right" style="font-size:10px;color:#94a3b8"></i>
               </a>
 
-              <a href="<?= url('gdrive') ?>" class="btn btn-ghost btn-sm" style="justify-content:space-between;padding:8px 10px;font-size:12px;border:1px solid #f1f5f9;border-radius:8px">
-                <span style="display:flex;align-items:center;gap:8px">
-                  <i class="fa-brands fa-google-drive" style="color:#0284c7;width:14px"></i>
-                  <span style="font-weight:600;color:#1e293b">Arsip Dokumen Google Drive</span>
-                </span>
-                <i class="fa-solid fa-chevron-right" style="font-size:10px;color:#94a3b8"></i>
-              </a>
+
             </div>
           </div>
         <?php elseif ($isSptUser): ?>

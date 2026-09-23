@@ -14,6 +14,13 @@ class GoogleDriveController
     {
         $this->auth = $auth;
         $auth->require();
+        
+        // Batasi akses untuk Operator SPT (Perencanaan) dan Operator TL (Tindak Lanjut)
+        if ($this->auth->isOperatorSpt() || $this->auth->isOperatorTl()) {
+            flash('warning', 'Akses dibatasi: Peran Anda tidak memiliki akses ke Manajemen Arsip Google Drive.');
+            redirect('dashboard');
+            exit;
+        }
     }
 
     /**

@@ -99,9 +99,11 @@ if ($auth->isInspektur()) {
     <?php endif; ?>
 
     <div class="nav-section">Panduan &amp; Pengaturan</div>
+    <?php if (!$auth->isOperatorSpt() && !$auth->isOperatorTl()): ?>
     <a href="<?= url('gdrive') ?>" class="nav-item<?= nav_active('/gdrive', $current) ?>" data-testid="nav-gdrive">
       <i class="fa-solid fa-cloud-arrow-up" style="color:#38bdf8"></i><span>Google Drive</span>
     </a>
+    <?php endif; ?>
     <a href="<?= url('panduan-workflow') ?>" class="nav-item<?= nav_active('/panduan-workflow', $current) ?>" data-testid="nav-workflow">
       <i class="fa-solid fa-diagram-project"></i><span>SOP &amp; Workflow</span>
     </a>
