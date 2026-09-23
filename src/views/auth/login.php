@@ -3,9 +3,13 @@
 
 <div class="login-card" data-testid="login-card">
   <div class="login-left">
-    <div class="logos">
-      <div class="lg"><img src="<?= asset('img/logo-rohil.png') ?>" alt="Rohil"></div>
-      <div class="lg"><img src="<?= asset('img/logo-inspektorat.png') ?>" alt="Inspektorat"></div>
+    <div class="logos" style="display:flex;align-items:center;gap:14px">
+      <div class="lg lg-rohil" style="height:64px;width:auto;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <img src="<?= asset('img/logo-rohil.png') ?>" alt="Rohil" style="height:64px;width:auto;max-height:64px;object-fit:contain;display:block;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))">
+      </div>
+      <div class="lg lg-insp" style="height:64px;width:auto;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <img src="<?= asset('img/logo-inspektorat.png') ?>?v=2" alt="Inspektorat" style="height:64px;width:auto;max-height:64px;object-fit:contain;display:block;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))">
+      </div>
       <div class="txt">
         <b>Pemerintah Kabupaten Rokan Hilir</b>
         Inspektorat Daerah
