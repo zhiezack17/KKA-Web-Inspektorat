@@ -20,14 +20,42 @@ $title = 'Lembar Uji Aspek Keuangan - ' . $desa['desa_nama'] . ' TA ' . $tahun;
     position:relative;
   }
   .kop{
-    display:flex;gap:12px;align-items:flex-start;
+    display:flex;gap:14px;align-items:flex-start;
     border-bottom:3px double #000;
     padding-bottom:8px;margin-bottom:12px;
-    min-height:70px;
+    min-height:68px;
   }
-  .kop .logo{width:64px;height:64px;display:grid;place-items:center;flex-shrink:0}
-  .kop .logo img{max-width:100%;max-height:100%;object-fit:contain;display:block}
-  .kop .center{flex:1;text-align:center;line-height:1.25}
+  .kop .logo-rohil{
+    width:52px;
+    height:56px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    flex-shrink:0;
+    margin-top:-6px;
+  }
+  .kop .logo-rohil img{
+    max-width:100%;
+    max-height:100%;
+    object-fit:contain;
+    display:block;
+  }
+  .kop .logo-inspektorat{
+    width:56px;
+    height:56px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    flex-shrink:0;
+    margin-top:-4px;
+  }
+  .kop .logo-inspektorat img{
+    max-width:100%;
+    max-height:100%;
+    object-fit:contain;
+    display:block;
+  }
+  .kop .center{flex:1;text-align:center;line-height:1.25;padding-top:0}
   .kop .center .l1{font-size:11.5pt;font-weight:bold;letter-spacing:.3px}
   .kop .center .l2{font-size:15pt;font-weight:bold;letter-spacing:1px;margin:1px 0}
   .kop .center .l3{font-size:8.5pt}
@@ -75,18 +103,18 @@ $title = 'Lembar Uji Aspek Keuangan - ' . $desa['desa_nama'] . ' TA ' . $tahun;
 <div class="page">
   <!-- KOP SURAT RESMI -->
   <div class="kop">
-    <div class="logo"><img src="<?= asset('img/logo-rohil.png') ?>" alt="Rohil"></div>
+    <div class="logo-rohil"><img src="<?= asset('img/logo-rohil.png') ?>" alt="Rohil"></div>
     <div class="center">
       <div class="l1">PEMERINTAH KABUPATEN ROKAN HILIR</div>
       <div class="l2">INSPEKTORAT DAERAH</div>
       <div class="l3">Komplek Perkantoran Batu 6 Jl. Lintas Pesisir Sungai Rokan, Kec. Bangko - Bagansiapiapi</div>
       <div class="l3">Telp. (0767) 2700270 · Email: inspektorat@rohilkab.go.id · Website: arsipdigital-inspektorat.com</div>
     </div>
-    <div class="logo"><img src="<?= asset('img/logo-inspektorat.png') ?>" alt="Inspektorat"></div>
+    <div class="logo-inspektorat"><img src="<?= asset('img/logo-inspektorat.png') ?>" alt="Inspektorat"></div>
   </div>
 
   <h1>KERTAS KERJA PENGUJIAN ASPEK KEUANGAN DESA</h1>
-  <h2>UJI KESEIMBANGAN KAS, KEPATUHAN PERPAJAKAN &amp; PROPORSI APBDES (METODE SISWASKEUDES)</h2>
+  <h2>UJI KESEIMBANGAN KAS, KEPATUHAN PERPAJAKAN &amp; PROPORSI APBDES</h2>
 
   <table class="id-table">
     <tr>
@@ -207,7 +235,7 @@ $title = 'Lembar Uji Aspek Keuangan - ' . $desa['desa_nama'] . ' TA ' . $tahun;
         <th>Bidang Pengeluaran APBDes</th>
         <th style="width:140px">Realisasi Belanja (Rp)</th>
         <th style="width:90px">Proporsi (%)</th>
-        <th style="width:110px">Kriteria Siswaskeudes</th>
+        <th style="width:110px">Kriteria / Batasan</th>
       </tr>
     </thead>
     <tbody>

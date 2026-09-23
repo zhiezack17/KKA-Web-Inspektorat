@@ -15,9 +15,9 @@ partial('sidebar');
       <div>
         <div style="display:flex;align-items:center;gap:10px">
           <span class="badge" style="background:#065f46;color:#a7f3d0;font-size:11px;font-weight:700">
-            <i class="fa-solid fa-shield-halved" style="margin-right:4px"></i> METODE SISWASKEUDES BPKP
+            <i class="fa-solid fa-shield-halved" style="margin-right:4px"></i> STANDAR PENGAWASAN KEUANGAN DESA
           </span>
-          <span style="font-size:12px;color:#64748b">Standar Pengawasan Kinerja Keuangan Desa 2026</span>
+          <span style="font-size:12px;color:#64748b">Pengawasan Kinerja Keuangan Desa 2026</span>
         </div>
         <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.3px;color:#0f172a;margin:6px 0 2px">
           Uji Keseimbangan Kas &amp; Kepatuhan Pajak Belanja
@@ -221,10 +221,10 @@ partial('sidebar');
             </div>
           </div>
 
-          <!-- KESIMPULAN SKOR RISIKO SISWASKEUDES -->
+          <!-- KESIMPULAN SKOR RISIKO KEUANGAN -->
           <div style="border-top:1px solid #f1f5f9;padding-top:10px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-              <span style="font-size:11.5px;font-weight:700;color:#0f172a">Skor Risiko Siswaskeudes:</span>
+              <span style="font-size:11.5px;font-weight:700;color:#0f172a">Skor Risiko Keuangan:</span>
               <span class="badge" style="background:<?= $analisis['kategori_risiko'] === 'TINGGI' ? '#fee2e2' : ($analisis['kategori_risiko'] === 'SEDANG' ? '#fef3c7' : '#ecfdf5') ?>;color:<?= $analisis['kategori_risiko'] === 'TINGGI' ? '#991b1b' : ($analisis['kategori_risiko'] === 'SEDANG' ? '#92400e' : '#065f46') ?>;font-weight:800;font-size:11px">
                 <?= $analisis['skor_risiko'] ?> / 100 &bull; RISIKO <?= $analisis['kategori_risiko'] ?>
               </span>

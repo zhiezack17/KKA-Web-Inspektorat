@@ -64,7 +64,7 @@ if ($auth->isInspektur()) {
     </a>
     <a href="<?= url('aspek-keuangan') ?>" class="nav-item<?= nav_active('/aspek-keuangan', $current) ?>" data-testid="nav-aspek-keuangan">
       <i class="fa-solid fa-calculator" style="color:#38bdf8"></i><span>Aspek Keuangan &amp; Kas</span>
-      <span class="badge" style="background:#0f766e;color:#a7f3d0;font-size:9px;padding:1px 5px;border-radius:10px;margin-left:auto;font-weight:700">BPKP</span>
+      <span class="badge" style="background:#0f766e;color:#a7f3d0;font-size:9px;padding:1px 5px;border-radius:10px;margin-left:auto;font-weight:700">Uji Kas</span>
     </a>
     <a href="<?= url('rekap') ?>" class="nav-item<?= nav_active('/rekap', $current) ?>" data-testid="nav-rekap">
       <i class="fa-solid fa-chart-column"></i><span>Rekap Belanja</span>
