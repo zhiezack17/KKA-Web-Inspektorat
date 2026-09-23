@@ -1055,15 +1055,16 @@ body.login::before {
 .login-left .logos div.txt {
   font-size: 13px;
   color: #a7f3d0;
-  line-height: 1.45;
+  line-height: 1.35;
   margin-left: 4px;
+  margin-top: -6px;
 }
 .login-left .logos div.txt b {
   display: block;
   color: #fff;
-  font-size: 15px;
-  letter-spacing: .4px;
-  margin-bottom: 2px;
+  font-size: 15.5px;
+  letter-spacing: .3px;
+  margin-bottom: 3px;
 }
 .login-left .hero {
   position: relative;

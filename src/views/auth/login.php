@@ -10,9 +10,9 @@
       <div class="lg lg-insp" style="height:64px;width:auto;display:flex;align-items:center;justify-content:center;flex-shrink:0">
         <img src="<?= asset('img/logo-inspektorat.png') ?>?v=2" alt="Inspektorat" style="height:64px;width:auto;max-height:64px;object-fit:contain;display:block;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))">
       </div>
-      <div class="txt">
-        <b>Pemerintah Kabupaten Rokan Hilir</b>
-        Inspektorat Daerah
+      <div class="txt" style="margin-top:-6px">
+        <b style="font-size:15.5px;letter-spacing:0.3px;margin-bottom:3px;display:block;color:#fff">Pemerintah Kabupaten Rokan Hilir</b>
+        <span style="font-size:13px;color:#a7f3d0;font-weight:600;letter-spacing:0.2px">Inspektorat Daerah</span>
       </div>
     </div>
 
