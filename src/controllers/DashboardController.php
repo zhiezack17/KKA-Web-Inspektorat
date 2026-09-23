@@ -3,6 +3,25 @@ class DashboardController {
     private Auth $auth;
     public function __construct(Auth $auth) { $this->auth = $auth; $auth->require(); }
 
+    public function reset(): void {
+        if (!$this->auth->isAdmin()) {
+            flash('error', 'Akses ditolak.');
+            redirect('dashboard');
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            DB::execute("SET FOREIGN_KEY_CHECKS = 0;");
+            $tables = ['kka_nota_dinas', 'kka_spt', 'kka_matriks_pka', 'kka_sesi', 'kka_rincian', 'kka_opname_kas', 'kka_temuan', 'kka_lhp', 'kka_lhp_reviu', 'kka_routing_slip', 'kka_gdrive_sync', 'kka_notifikasi', 'kka_lampiran'];
+            foreach ($tables as $table) {
+                DB::execute("TRUNCATE TABLE $table;");
+            }
+            DB::execute("SET FOREIGN_KEY_CHECKS = 1;");
+            flash('success', '✅ Data transaksi uji coba berhasil dibersihkan! Sistem siap untuk presentasi besok.');
+        }
+        redirect('dashboard');
+    }
+
     public function index(): void {
         // Isolasi data: auditor hanya melihat statistik miliknya, admin melihat semua
         [$ow, $op] = owner_where($this->auth);

@@ -167,6 +167,7 @@ $routes = [
     '/switch-user'            => ['AuthController', 'switchUser'],
 
     '/dashboard'              => ['DashboardController', 'index'],
+    '/dashboard/reset'        => ['DashboardController', 'reset'],
 
     '/desa'                   => ['DesaController', 'index'],
     '/desa/store'             => ['DesaController', 'store'],
