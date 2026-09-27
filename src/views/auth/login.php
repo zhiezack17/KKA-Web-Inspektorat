@@ -67,9 +67,8 @@
       </button>
     </form>
 
-    <div class="help" style="font-size:12px;line-height:1.5">
-      Password standar: <code>12345678</code> (Dapat diubah di menu Profil setelah masuk).<br>
-      Kendala login? Hubungi Administrator Inspektorat.
+    <div class="help" style="font-size:12px;line-height:1.5;text-align:center;color:var(--slate-500);margin-top:16px">
+      Kendala saat masuk? Hubungi Administrator Inspektorat Rokan Hilir.
     </div>
   </div>
 </div>

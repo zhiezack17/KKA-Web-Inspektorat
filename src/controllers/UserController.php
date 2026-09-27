@@ -117,15 +117,31 @@ class UserController {
 
         $oldPass = (string) input('old_password');
         $newPass = (string) input('new_password');
+        $passwordChanged = false;
         if ($newPass !== '') {
             if (!$u || !password_verify($oldPass, $u['password_hash'])) {
                 flash('error', 'Password lama salah.'); redirect('profile');
             }
+            if ($newPass === '12345678') {
+                flash('error', 'Password baru tidak boleh menggunakan password standar (12345678). Buat password baru yang unik.');
+                redirect('profile');
+            }
             if (strlen($newPass) < 6) { flash('error','Password baru minimal 6 karakter.'); redirect('profile'); }
             $data['password_hash'] = password_hash($newPass, PASSWORD_BCRYPT);
+            unset($_SESSION['must_change_password']);
+            $passwordChanged = true;
+        } elseif (!empty($_SESSION['must_change_password'])) {
+            flash('error', 'Anda wajib mengisi password baru sebelum dapat melanjutkan.');
+            redirect('profile');
         }
+
         DB::update('kka_users', $data, ['id' => $id]);
-        flash('success', 'Profil berhasil disimpan.');
-        redirect('profile');
+        if ($passwordChanged) {
+            flash('success', 'Password berhasil diubah! Akun Anda kini terlindungi dan siap digunakan.');
+            redirect('dashboard');
+        } else {
+            flash('success', 'Profil berhasil disimpan.');
+            redirect('profile');
+        }
     }
 }

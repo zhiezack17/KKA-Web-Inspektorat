@@ -95,6 +95,15 @@ class Auth {
             flash('error', 'Silakan login terlebih dahulu.');
             redirect('login');
         }
+
+        // Jika user masuk dengan password standar, wajibkan ganti password sebelum mengakses menu lain
+        if (!empty($_SESSION['must_change_password'])) {
+            $uri = $_SERVER['REQUEST_URI'] ?? '';
+            if (!str_contains($uri, '/profile') && !str_contains($uri, '/logout')) {
+                flash('warning', 'Pemberitahuan Keamanan: Anda masih menggunakan password standar bawaan (12345678). Silakan ubah password Anda terlebih dahulu.');
+                redirect('profile');
+            }
+        }
     }
 
     public function requireAdmin(): void {

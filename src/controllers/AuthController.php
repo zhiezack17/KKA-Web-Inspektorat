@@ -23,6 +23,16 @@ class AuthController {
                 } else {
                     unset($_SESSION['is_admin_master']);
                 }
+
+                // Deteksi jika pengguna login menggunakan password standar bawaan
+                if ($pwd === '12345678') {
+                    $_SESSION['must_change_password'] = true;
+                    flash('warning', 'Pemberitahuan Keamanan: Anda masuk menggunakan password standar bawaan (12345678). Demi keamanan data pengawasan, silakan ubah password Anda di bawah ini sebelum melanjutkan.');
+                    redirect('profile');
+                    return;
+                }
+
+                unset($_SESSION['must_change_password']);
                 flash('success', 'Selamat datang, ' . $loggedInUser['nama'] . '!');
                 redirect('dashboard');
             } else {
