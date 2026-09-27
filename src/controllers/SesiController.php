@@ -122,6 +122,183 @@ class SesiController {
         redirect('sesi/show?id=' . $id);
     }
 
+    /**
+     * Buat Sesi KKA baru langsung dari dokumen LRA (PDF Siskeudes / Excel)
+     */
+    public function createFromLra(): void {
+        only_post(); csrf_check();
+
+        if (empty($_FILES['file_lra']['name']) || empty($_FILES['file_lra']['tmp_name'])) {
+            flash('error', 'Silakan pilih file PDF LRA atau file Excel (.xlsx/.csv).');
+            redirect('sesi');
+        }
+
+        $desaId = (int) input('desa_id');
+        $tahun  = (int) input('tahun_anggaran', (int)date('Y'));
+        $semester = (int) input('semester', 1);
+        $bidangInput = trim((string) input('bidang_id', 'ALL'));
+        $objekAudit = trim((string) input('objek_audit'));
+
+        if (!$desaId) {
+            flash('error', 'Pilih Kepenghuluan / Desa yang akan diaudit.');
+            redirect('sesi');
+        }
+
+        $desa = DB::one('SELECT d.nama, k.nama as kec_nama FROM kka_desa d JOIN kka_kecamatan k ON k.id=d.kecamatan_id WHERE d.id = ?', [$desaId]);
+        if (!$desa) {
+            flash('error', 'Desa tidak valid.');
+            redirect('sesi');
+        }
+
+        require_once __DIR__ . '/../lib/LraParserService.php';
+        $file     = $_FILES['file_lra'];
+        $tmpPath  = $file['tmp_name'];
+        $origName = $file['name'];
+
+        try {
+            $items = LraParserService::parse($tmpPath, $origName);
+        } catch (Exception $e) {
+            flash('error', 'Gagal membaca dokumen LRA: ' . $e->getMessage());
+            redirect('sesi');
+        }
+
+        if (empty($items)) {
+            flash('warning', 'Tidak ada data kegiatan belanja yang berhasil diekstrak dari dokumen. Pastikan file berisi tabel belanja dan angka anggaran/realisasi.');
+            redirect('sesi');
+        }
+
+        $bidangRows = DB::all('SELECT id, nama, urutan FROM kka_bidang ORDER BY urutan');
+        $bidangMap = [];
+        $bidangShortMap = [
+            1 => 'Bidang Penyelenggaraan Pemerintahan',
+            2 => 'Bidang Pelaksanaan Pembangunan (Fisik)',
+            3 => 'Bidang Pembinaan Kemasyarakatan',
+            4 => 'Bidang Pemberdayaan Masyarakat',
+            5 => 'Bidang Penanggulangan Bencana & Mendesak'
+        ];
+        foreach ($bidangRows as $b) {
+            $bidangMap[$b['id']] = $b['nama'];
+        }
+
+        $currUser = $this->auth->user();
+
+        // OPSI A: OTOMATIS PISAHKAN PER BIDANG (Semua Bidang dibuatkan sesi masing-masing)
+        if ($bidangInput === 'ALL' || empty($bidangInput) || $bidangInput === '0') {
+            $grouped = [];
+            foreach ($items as $it) {
+                $bId = (int)($it['bidang_id'] ?? 1);
+                if (!isset($bidangMap[$bId])) $bId = 1;
+                $grouped[$bId][] = $it;
+            }
+
+            $createdCount = 0;
+            $grandTotalPagu = 0.0;
+            $createdBidangs = [];
+
+            foreach ($grouped as $bId => $bItems) {
+                if (empty($bItems)) continue;
+
+                $totalPaguBidang = 0.0;
+                foreach ($bItems as $it) {
+                    $totalPaguBidang += (float)($it['pagu_anggaran'] ?? 0);
+                }
+                $grandTotalPagu += $totalPaguBidang;
+
+                $bShort = $bidangShortMap[$bId] ?? ($bidangMap[$bId] ?? "Bidang $bId");
+                $sesiObjek = ($objekAudit !== '') 
+                    ? ($objekAudit . ' — ' . $bShort) 
+                    : ('Pemeriksaan Kepatuhan Keuangan dan Fisik Kepenghuluan ' . $desa['nama'] . ' — ' . $bShort . ' TA ' . $tahun);
+
+                $sesiId = DB::insert('kka_sesi', [
+                    'desa_id'        => $desaId,
+                    'bidang_id'      => $bId,
+                    'sub_bidang_id'  => null,
+                    'objek_audit'    => $sesiObjek,
+                    'kegiatan'       => 'Pemeriksaan Dokumen LRA & SPJ Belanja (' . $bShort . ')',
+                    'pagu_anggaran'  => $totalPaguBidang,
+                    'semester'       => $semester,
+                    'tahun_anggaran' => $tahun,
+                    'dibuat_oleh'    => $currUser['nama'] ?? 'Auditor',
+                    'tanggal_dibuat' => date('Y-m-d'),
+                    'status'         => 'DRAFT',
+                    'created_by'     => $this->auth->id(),
+                ]);
+
+                $urutan = 1;
+                foreach ($bItems as $item) {
+                    DB::insert('kka_rincian', [
+                        'sesi_id'          => $sesiId,
+                        'urutan'           => $urutan++,
+                        'uraian'           => $item['uraian'],
+                        'pagu_anggaran'    => $item['pagu_anggaran'] ?? 0,
+                        'biaya_dikwitansi' => $item['biaya_dikwitansi'] ?? 0,
+                        'realisasi'        => $item['realisasi'] ?? 0,
+                        'penerima'         => $item['penerima'] ?? null,
+                        'keterangan'       => $item['keterangan'] ?? null,
+                    ]);
+                }
+
+                $createdCount++;
+                $createdBidangs[] = $bShort . ' (' . count($bItems) . ' rincian)';
+            }
+
+            flash('success', "Berhasil membuat {$createdCount} Sesi Audit KKA per Bidang untuk Kepenghuluan {$desa['nama']}! Total Pagu APBDes: Rp " . number_format($grandTotalPagu, 0, ',', '.') . " teralokasi rapi sesuai bidang ke: " . implode(', ', $createdBidangs) . ".");
+            redirect('sesi');
+        } else {
+            // OPSI B: HANYA BIDANG TERTENTU YANG DIPILIH
+            $targetBidangId = (int)$bidangInput;
+            $bShort = $bidangShortMap[$targetBidangId] ?? ($bidangMap[$targetBidangId] ?? "Bidang $targetBidangId");
+
+            $filtered = array_values(array_filter($items, function($it) use ($targetBidangId) {
+                return (int)($it['bidang_id'] ?? 1) === $targetBidangId;
+            }));
+
+            if (empty($filtered)) {
+                flash('warning', "Dokumen LRA berhasil dibaca, namun tidak ditemukan kegiatan belanja untuk {$bShort}. Silakan pilih opsi '✨ Otomatis Pisahkan Per Bidang'.");
+                redirect('sesi');
+            }
+
+            $totalPagu = 0.0;
+            foreach ($filtered as $it) {
+                $totalPagu += (float)($it['pagu_anggaran'] ?? 0);
+            }
+
+            $sesiObjek = ($objekAudit !== '') ? $objekAudit : ('Pemeriksaan Kepatuhan Keuangan dan Fisik Kepenghuluan ' . $desa['nama'] . ' — ' . $bShort . ' TA ' . $tahun);
+
+            $sesiId = DB::insert('kka_sesi', [
+                'desa_id'        => $desaId,
+                'bidang_id'      => $targetBidangId,
+                'sub_bidang_id'  => null,
+                'objek_audit'    => $sesiObjek,
+                'kegiatan'       => 'Pemeriksaan Dokumen LRA & SPJ Belanja (' . $bShort . ')',
+                'pagu_anggaran'  => $totalPagu,
+                'semester'       => $semester,
+                'tahun_anggaran' => $tahun,
+                'dibuat_oleh'    => $currUser['nama'] ?? 'Auditor',
+                'tanggal_dibuat' => date('Y-m-d'),
+                'status'         => 'DRAFT',
+                'created_by'     => $this->auth->id(),
+            ]);
+
+            $urutan = 1;
+            foreach ($filtered as $item) {
+                DB::insert('kka_rincian', [
+                    'sesi_id'          => $sesiId,
+                    'urutan'           => $urutan++,
+                    'uraian'           => $item['uraian'],
+                    'pagu_anggaran'    => $item['pagu_anggaran'] ?? 0,
+                    'biaya_dikwitansi' => $item['biaya_dikwitansi'] ?? 0,
+                    'realisasi'        => $item['realisasi'] ?? 0,
+                    'penerima'         => $item['penerima'] ?? null,
+                    'keterangan'       => $item['keterangan'] ?? null,
+                ]);
+            }
+
+            flash('success', "Sesi KKA {$bShort} untuk Kepenghuluan {$desa['nama']} berhasil dibuat! " . count($filtered) . " rincian belanja berhasil diekstrak dengan Pagu Rp " . number_format($totalPagu, 0, ',', '.') . ".");
+            redirect('sesi/show?id=' . $sesiId);
+        }
+    }
+
     public function show(): void {
         $id = (int) input('id');
         $sesi = $this->loadSesi($id);

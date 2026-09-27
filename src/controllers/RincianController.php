@@ -178,79 +178,39 @@ class RincianController {
         $this->assertSesiCanEdit($sesiId);
 
         if (empty($_FILES['file_excel']['name']) || empty($_FILES['file_excel']['tmp_name'])) {
-            flash('error', 'Silakan pilih file Excel (.xlsx) atau CSV untuk diimpor.');
+            flash('error', 'Silakan pilih file PDF LRA atau file Excel (.xlsx/.csv) untuk diimpor.');
             redirect('sesi/show?id=' . $sesiId);
         }
 
         $file     = $_FILES['file_excel'];
         $tmpPath  = $file['tmp_name'];
         $origName = $file['name'];
-        $ext      = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
 
-        if (!in_array($ext, ['xlsx', 'csv', 'xls'])) {
-            flash('error', 'Format file tidak didukung. Harap unggah file .xlsx atau .csv.');
+        require_once __DIR__ . '/../lib/LraParserService.php';
+
+        try {
+            $parsedItems = LraParserService::parse($tmpPath, $origName);
+        } catch (Exception $e) {
+            flash('error', 'Gagal memproses file: ' . $e->getMessage());
             redirect('sesi/show?id=' . $sesiId);
         }
 
-        require_once __DIR__ . '/../lib/SimpleXLSX.php';
-        $xlsx = SimpleXLSX::parse($tmpPath);
-        if (!$xlsx) {
-            flash('error', 'Gagal membaca file Excel/CSV. Pastikan format file valid.');
+        if (empty($parsedItems)) {
+            flash('warning', 'Tidak ada data belanja yang berhasil diekstrak dari dokumen. Pastikan dokumen berisi rincian kegiatan belanja dan nominal.');
             redirect('sesi/show?id=' . $sesiId);
         }
 
-        $rows = $xlsx->rows();
-        if (empty($rows)) {
-            flash('error', 'File Excel/CSV kosong.');
-            redirect('sesi/show?id=' . $sesiId);
-        }
-
-        // Cari baris header tabel
-        $headerRowIdx = -1;
-        $colMap = [
-            'uraian'    => 1,
-            'pagu'      => 2,
-            'kwi'       => 3,
-            'real'      => 4,
-            'penerima'  => 5,
-            'ket'       => 6,
-        ];
-
-        foreach ($rows as $idx => $r) {
-            $hasUraian = false;
-            $hasFinancial = false;
-            foreach ($r as $cVal) {
-                $cLower = strtolower(trim((string)$cVal));
-                if (strpos($cLower, 'uraian') !== false || strpos($cLower, 'rincian') !== false) {
-                    $hasUraian = true;
-                }
-                if (strpos($cLower, 'pagu') !== false || strpos($cLower, 'kwitansi') !== false || strpos($cLower, 'kuitansi') !== false || strpos($cLower, 'realisasi') !== false) {
-                    $hasFinancial = true;
-                }
-            }
-            if ($hasUraian && $hasFinancial) {
-                $headerRowIdx = $idx;
-                foreach ($r as $cIdx => $cVal) {
-                    $cLower = strtolower(trim((string)$cVal));
-                    if (strpos($cLower, 'uraian') !== false || strpos($cLower, 'rincian') !== false) {
-                        $colMap['uraian'] = $cIdx;
-                    } elseif (strpos($cLower, 'pagu') !== false) {
-                        $colMap['pagu'] = $cIdx;
-                    } elseif (strpos($cLower, 'kwitansi') !== false || strpos($cLower, 'kuitansi') !== false || strpos($cLower, 'biaya') !== false) {
-                        $colMap['kwi'] = $cIdx;
-                    } elseif (strpos($cLower, 'realisasi') !== false) {
-                        $colMap['real'] = $cIdx;
-                    } elseif (strpos($cLower, 'penerima') !== false || strpos($cLower, 'rekanan') !== false || strpos($cLower, 'toko') !== false) {
-                        $colMap['penerima'] = $cIdx;
-                    } elseif (strpos($cLower, 'keterangan') !== false || strpos($cLower, 'pajak') !== false || strpos($cLower, 'catatan') !== false) {
-                        $colMap['ket'] = $cIdx;
-                    }
-                }
-                break;
+        // Filter agar hanya item yang sesuai dengan bidang sesi ini jika dokumen berisi banyak bidang
+        $sesiRow = DB::one('SELECT bidang_id FROM kka_sesi WHERE id = ?', [$sesiId]);
+        $targetBidang = (int)($sesiRow['bidang_id'] ?? 0);
+        if ($targetBidang > 0) {
+            $filtered = array_values(array_filter($parsedItems, function($it) use ($targetBidang) {
+                return (int)($it['bidang_id'] ?? 0) === $targetBidang;
+            }));
+            if (!empty($filtered)) {
+                $parsedItems = $filtered;
             }
         }
-
-        $dataStartIdx = ($headerRowIdx !== -1) ? ($headerRowIdx + 1) : 0;
 
         // Opsi replace / ganti seluruh data lama
         $modeReplace = (int) input('mode_replace', 0);
@@ -262,47 +222,23 @@ class RincianController {
         }
 
         $imported = 0;
-        $count = count($rows);
-
-        for ($i = $dataStartIdx; $i < $count; $i++) {
-            $r = $rows[$i];
-            $uraian = trim((string)($r[$colMap['uraian']] ?? ''));
-
-            // Abaikan baris kosong, baris komentar (#), header, atau baris petunjuk/summary
-            if ($uraian === '' || str_starts_with($uraian, '#')) continue;
-            $uLower = strtolower($uraian);
-            if (in_array($uLower, ['uraian', 'uraian belanja', 'uraian / rincian belanja', 'uraian belanja *', 'jumlah', 'total', 'subtotal', 'no'])) continue;
-            if (str_starts_with($uLower, 'isi data belanja') || str_starts_with($uLower, 'petunjuk') || str_starts_with($uLower, '# template')) continue;
-
-            $rawPagu = $r[$colMap['pagu']] ?? 0;
-            $rawKwi  = $r[$colMap['kwi']] ?? 0;
-            $rawReal = $r[$colMap['real']] ?? 0;
-
-            $pagu = $this->parseMoneySmart($rawPagu);
-            $kwi  = $this->parseMoneySmart($rawKwi);
-            $real = $this->parseMoneySmart($rawReal);
-            $penerima = trim((string)($r[$colMap['penerima']] ?? '')) ?: null;
-            $ket      = trim((string)($r[$colMap['ket']] ?? '')) ?: null;
-
+        foreach ($parsedItems as $item) {
             DB::insert('kka_rincian', [
                 'sesi_id'          => $sesiId,
                 'urutan'           => $urutan++,
-                'uraian'           => $uraian,
-                'pagu_anggaran'    => $pagu,
-                'biaya_dikwitansi' => $kwi,
-                'realisasi'        => $real,
-                'penerima'         => $penerima,
-                'keterangan'       => $ket,
+                'uraian'           => $item['uraian'],
+                'pagu_anggaran'    => $item['pagu_anggaran'] ?? 0,
+                'biaya_dikwitansi' => $item['biaya_dikwitansi'] ?? 0,
+                'realisasi'        => $item['realisasi'] ?? 0,
+                'penerima'         => $item['penerima'] ?? null,
+                'keterangan'       => $item['keterangan'] ?? null,
             ]);
             $imported++;
         }
 
-        if ($imported > 0) {
-            flash('success', 'Berhasil mengimpor ' . $imported . ' baris rincian belanja dari file Excel/CSV.');
-        } else {
-            flash('warning', 'Tidak ada data belanja yang diimpor. Pastikan kolom "Uraian Belanja" sudah terisi.');
-        }
-
+        $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+        $fileTypeLabel = ($ext === 'pdf') ? 'dokumen PDF LRA' : 'file Excel/CSV';
+        flash('success', 'Berhasil mengekstrak & mengimpor ' . $imported . ' kegiatan belanja dari ' . $fileTypeLabel . '. Auditor sekarang cukup memverifikasi nilai fisik kwitansi dan pajaknya.');
         redirect('sesi/show?id=' . $sesiId);
     }
 

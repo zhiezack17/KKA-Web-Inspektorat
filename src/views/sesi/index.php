@@ -16,9 +16,14 @@
         <h2>Sesi Audit KKA</h2>
         <p>Dikelompokkan per Bidang. Klik salah satu bidang untuk melihat sub bidang &amp; sesinya.</p>
       </div>
-      <a href="<?= url('sesi/create') ?>" class="btn btn-primary" data-testid="btn-sesi-baru">
-        <i class="fa-solid fa-plus"></i> Sesi Baru
-      </a>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button type="button" class="btn btn-primary" id="btnBukaModalCreateLra" style="background:#059669;border-color:#059669">
+          <i class="fa-solid fa-file-invoice"></i> Buat KKA dari Dokumen LRA
+        </button>
+        <a href="<?= url('sesi/create') ?>" class="btn btn-outline" data-testid="btn-sesi-baru">
+          <i class="fa-solid fa-plus"></i> Sesi Manual
+        </a>
+      </div>
     </div>
 
     <form method="get" class="filter-bar">
@@ -133,5 +138,106 @@
     <?php endif; ?>
   </div>
 </main>
+
+<!-- Modal Buat KKA dari Dokumen LRA -->
+<div id="modalCreateLra" class="kka-modal" role="dialog" aria-modal="true" hidden>
+  <div class="kka-modal__backdrop" data-close-modal></div>
+  <div class="kka-modal__box" style="max-width:580px">
+    <div class="kka-modal__head" style="background:#ecfdf5">
+      <h3 style="color:#065f46"><i class="fa-solid fa-wand-magic-sparkles"></i> Buat KKA Baru dari Dokumen LRA</h3>
+      <button type="button" class="kka-modal__x" data-close-modal aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form method="post" enctype="multipart/form-data" action="<?= url('sesi/create-from-lra') ?>">
+      <?= csrf_field() ?>
+      <div class="kka-modal__body">
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;margin-bottom:14px;color:#166534;font-size:12.5px;line-height:1.5">
+          <i class="fa-solid fa-circle-info"></i> <b>Alur Cerdas Audit Rinci:</b><br>
+          Cukup unggah file <b>PDF LRA Siskeudes / APBDesa</b> atau <b>Excel</b> dari Kepenghuluan. Sistem akan otomatis membuat sesi KKA dan mengekstrak seluruh rincian kegiatan belanja, pagu anggaran, serta realisasinya.
+        </div>
+
+        <div class="field">
+          <label>File Dokumen LRA Kepenghuluan (PDF / Excel) <span class="req">*</span></label>
+          <input type="file" name="file_lra" accept=".pdf, .xlsx, .csv, .xls" required class="input" style="padding:8px">
+          <small style="color:var(--slate-500);font-size:11.5px;margin-top:3px;display:block">Mendukung PDF Dokumen LRA Siskeudes, atau file Excel (.xlsx/.csv).</small>
+        </div>
+
+        <div class="field">
+          <label>Kepenghuluan / Desa yang Diaudit <span class="req">*</span></label>
+          <select name="desa_id" required class="select" style="width:100%">
+            <option value="">— Pilih Kepenghuluan / Desa —</option>
+            <?php foreach ($desa as $d): ?>
+              <option value="<?= $d['id'] ?>"><?= e($d['nama']) ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field">
+            <label>Tahun Anggaran <span class="req">*</span></label>
+            <input type="number" name="tahun_anggaran" value="<?= date('Y') ?>" required class="input">
+          </div>
+          <div class="field">
+            <label>Semester</label>
+            <select name="semester" class="select" style="width:100%">
+              <option value="1">Semester 1</option>
+              <option value="2">Semester 2</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Bidang Audit <span class="req">*</span></label>
+          <select name="bidang_id" class="select" style="width:100%;border-color:#10b981;background:#f0fdf4;font-weight:600">
+            <option value="ALL" selected>✨ Otomatis Pisahkan Per Bidang (Direkomendasikan)</option>
+            <?php foreach ($bidang as $b): ?>
+              <option value="<?= $b['id'] ?>">Hanya <?= e($b['nama']) ?></option>
+            <?php endforeach; ?>
+          </select>
+          <small style="color:var(--slate-500);font-size:11.5px;margin-top:4px;display:block;line-height:1.4">
+            <i class="fa-solid fa-circle-check" style="color:#059669"></i> <b>Rekomendasi:</b> Pilih <i>Otomatis Pisahkan Per Bidang</i> agar sistem membaca seluruh dokumen LRA dan otomatis membuat sesi audit terpisah untuk tiap bidang belanja (Bidang 1 s.d. 5) dengan pagu yang tepat sesuai APBDes tanpa bercampur.
+          </small>
+        </div>
+
+        <div class="field">
+          <label>Objek Audit (Opsional)</label>
+          <input type="text" name="objek_audit" placeholder="Otomatis: Pemeriksaan Kepatuhan Keuangan dan Fisik..." class="input">
+        </div>
+      </div>
+      <div class="kka-modal__foot">
+        <button type="button" class="btn btn-ghost" data-close-modal>Batal</button>
+        <button type="submit" class="btn btn-primary" style="background:#059669;border-color:#059669">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Mulai Ekstrak &amp; Buat KKA
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function(){
+  var btnOpen = document.getElementById('btnBukaModalCreateLra');
+  var modal = document.getElementById('modalCreateLra');
+  if (!btnOpen || !modal) return;
+
+  btnOpen.addEventListener('click', function(){
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+  });
+
+  modal.querySelectorAll('[data-close-modal]').forEach(function(el){
+    el.addEventListener('click', function(){
+      modal.hidden = true;
+      document.body.style.overflow = '';
+    });
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && !modal.hidden) {
+      modal.hidden = true;
+      document.body.style.overflow = '';
+    }
+  });
+})();
+</script>
 
 <?php partial('foot'); ?>

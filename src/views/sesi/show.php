@@ -72,7 +72,9 @@
         </div>
         <p style="margin-top:6px"><?= e($sesi['desa_nama']) ?> · Kec. <?= e($sesi['kecamatan_nama']) ?> · Semester <?= (int)$sesi['semester'] ?> / <?= (int)$sesi['tahun_anggaran'] ?></p>
       </div>
-      <a href="<?= url('sesi/edit?id='.$sesi['id']) ?>" class="btn btn-outline" data-testid="btn-edit-sesi"><i class="fa-solid fa-pen"></i> Edit Identitas</a>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <a href="<?= url('sesi/edit?id='.$sesi['id']) ?>" class="btn btn-outline" data-testid="btn-edit-sesi"><i class="fa-solid fa-pen"></i> Edit Identitas</a>
+      </div>
     </div>
 
     <!-- NOTIFIKASI CATATAN REVISI / REVIU -->
@@ -353,8 +355,8 @@
           <i class="fa-solid fa-file-excel"></i> Unduh Template Excel
         </a>
         <?php if (!in_array($statusKka, ['REVIEW_KETUA', 'REVIEW_DALNIS', 'SELESAI_FINAL'])): ?>
-          <button type="button" class="btn btn-primary btn-sm" id="btnBukaImportExcel" style="background:#059669;border-color:#059669" data-testid="btn-import-excel">
-            <i class="fa-solid fa-file-import"></i> Impor dari Excel
+          <button type="button" class="btn btn-outline btn-sm" id="btnBukaImportExcel" data-testid="btn-import-excel">
+            <i class="fa-solid fa-file-excel"></i> Impor Tambahan (Excel/PDF)
           </button>
         <?php else: ?>
           <button type="button" class="btn btn-ghost btn-sm" style="color:var(--slate-400);cursor:not-allowed" title="Data rincian dikunci selama proses reviu / setelah selesai">
@@ -382,7 +384,20 @@
           </thead>
           <tbody data-testid="tbody-rincian">
             <?php if (empty($rincian)): ?>
-              <tr><td colspan="10" style="text-align:center;color:var(--slate-500);padding:36px">Belum ada rincian. Tambahkan di formulir bawah.</td></tr>
+              <tr><td colspan="10" style="text-align:center;padding:36px 20px;background:#f8fafc">
+                <div style="max-width:480px;margin:0 auto">
+                  <div style="font-size:36px;color:#059669;margin-bottom:8px"><i class="fa-solid fa-file-invoice"></i></div>
+                  <div style="font-weight:700;font-size:15px;color:var(--slate-800);margin-bottom:4px">Belum Ada Rincian Belanja</div>
+                  <div style="font-size:12.5px;color:var(--slate-500);margin-bottom:16px;line-height:1.5">
+                    Unggah file <b>PDF Dokumen LRA Kepenghuluan (Siskeudes / APBDesa)</b> atau <b>Excel</b> agar kegiatan belanja, pagu, dan realisasi terisi otomatis. Anda juga dapat menambahkan manual di formulir bawah.
+                  </div>
+                  <?php if (!in_array($statusKka, ['REVIEW_KETUA', 'REVIEW_DALNIS', 'SELESAI_FINAL'])): ?>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('btnBukaImportExcel').click()" style="background:#059669;border-color:#059669;padding:7px 16px;font-size:13px">
+                      <i class="fa-solid fa-cloud-arrow-up"></i> Upload Dokumen LRA Sekarang (PDF / Excel)
+                    </button>
+                  <?php endif; ?>
+                </div>
+              </td></tr>
             <?php else: $no=1; $totPagu=0; foreach ($rincian as $r): 
               $sel = (float)$r['realisasi'] - (float)$r['biaya_dikwitansi']; 
               $totPagu += (float)$r['pagu_anggaran']; 
@@ -456,64 +471,92 @@
         </table>
       </div>
 
-      <!-- Form tambah rincian dengan Uji Pajak -->
-      <form method="post" action="<?= url('rincian/store') ?>" style="padding:16px 18px;border-top:1px solid var(--slate-200);background:var(--slate-50)" data-testid="form-rincian">
-        <?= csrf_field() ?>
-        <input type="hidden" name="sesi_id" value="<?= $sesi['id'] ?>">
-        
-        <div style="display:grid;grid-template-columns:2.5fr 1fr 1fr 1fr 1.2fr auto;gap:8px;align-items:end;margin-bottom:10px">
-          <div class="field" style="margin:0"><label>Uraian Belanja <span class="req">*</span></label><input type="text" name="uraian" required class="input" placeholder="cth: Pembayaran honor / belanja semen" data-testid="r-uraian"></div>
-          <div class="field" style="margin:0"><label>Pagu (Rp)</label><input type="text" name="pagu_anggaran" class="input" data-money placeholder="0" data-testid="r-pagu"></div>
-          <div class="field" style="margin:0"><label>Realisasi (Rp)</label><input type="text" name="realisasi" class="input" data-money placeholder="0" data-testid="r-realisasi"></div>
-          <div class="field" style="margin:0"><label>Kuitansi (Rp)</label><input type="text" name="biaya_dikwitansi" class="input" data-money placeholder="0"></div>
-          <div class="field" style="margin:0"><label>Penerima</label><input type="text" name="penerima" class="input" placeholder="Nama penerima"></div>
-          <button class="btn btn-primary" type="submit" data-testid="btn-tambah-rincian"><i class="fa-solid fa-plus"></i> Tambah</button>
+      <!-- Tombol & Form Tambah Rincian Belanja Manual (Collapsible / Tersembunyi saat data LRA sudah ada) -->
+      <?php if (!in_array($statusKka, ['REVIEW_KETUA', 'REVIEW_DALNIS', 'SELESAI_FINAL'])): ?>
+      <div style="padding:12px 18px;border-top:1px solid var(--slate-200);background:#f8fafc;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div style="font-size:12.5px;color:var(--slate-600)">
+          <i class="fa-solid fa-circle-info" style="color:#059669"></i>
+          Untuk melakukan pemeriksaan fisik, kwitansi, nama toko/rekanan, dan hitungan pajak, klik tombol <b>Edit (<i class="fa-solid fa-pen-to-square" style="color:var(--emerald-700)"></i>)</b> pada masing-masing baris belanja di atas.
         </div>
+        <button type="button" class="btn btn-outline btn-sm" id="btnToggleAddManual" style="font-size:12px;border-color:var(--slate-300)">
+          <i class="fa-solid fa-plus"></i> Tambah Belanja Manual
+        </button>
+      </div>
 
-        <!-- Baris Uji Kepatuhan Pajak -->
-        <div style="display:grid;grid-template-columns:1.2fr 1fr 1.2fr 1fr 1.2fr 1.2fr 1.5fr;gap:8px;align-items:end;background:#f1f5f9;padding:8px 12px;border-radius:6px;border:1px solid #e2e8f0;font-size:12px">
-          <div class="field" style="margin:0">
-            <label style="font-size:11px;font-weight:700;color:var(--slate-700)">Status Setor Pajak</label>
-            <select name="status_pajak" class="input" style="font-size:12px;padding:4px 8px">
-              <option value="TIDAK_TERUTANG">Tidak Terutang</option>
-              <option value="BELUM_SETOR">⚠️ Belum Disetor</option>
-              <option value="SUDAH_SETOR">✓ Sudah Disetor</option>
-            </select>
+      <div id="containerAddManual" style="display:none;border-top:1px solid var(--slate-200)">
+        <form method="post" action="<?= url('rincian/store') ?>" style="padding:16px 18px;background:var(--slate-50)" data-testid="form-rincian">
+          <?= csrf_field() ?>
+          <input type="hidden" name="sesi_id" value="<?= $sesi['id'] ?>">
+          
+          <div style="display:grid;grid-template-columns:2.5fr 1fr 1fr 1fr 1.2fr auto;gap:8px;align-items:end;margin-bottom:10px">
+            <div class="field" style="margin:0"><label>Uraian Belanja <span class="req">*</span></label><input type="text" name="uraian" id="add-uraian" required class="input" placeholder="cth: Pembayaran honor / belanja semen" data-testid="r-uraian"></div>
+            <div class="field" style="margin:0"><label>Pagu (Rp)</label><input type="text" name="pagu_anggaran" id="add-pagu" class="input" data-money placeholder="0" data-testid="r-pagu"></div>
+            <div class="field" style="margin:0"><label>Realisasi (Rp)</label><input type="text" name="realisasi" id="add-realisasi" class="input" data-money placeholder="0" data-testid="r-realisasi"></div>
+            <div class="field" style="margin:0"><label>Kuitansi (Rp)</label><input type="text" name="biaya_dikwitansi" id="add-kwi" class="input" data-money placeholder="0"></div>
+            <div class="field" style="margin:0"><label>Penerima</label><input type="text" name="penerima" id="add-penerima" class="input" placeholder="Nama penerima"></div>
+            <button class="btn btn-primary" type="submit" data-testid="btn-tambah-rincian"><i class="fa-solid fa-plus"></i> Tambah</button>
           </div>
-          <div class="field" style="margin:0">
-            <label style="font-size:11px;font-weight:700;color:var(--slate-700)">Potong PPN?</label>
-            <label style="display:flex;align-items:center;gap:4px;height:34px;font-size:12px;cursor:pointer">
-              <input type="checkbox" name="potong_ppn" value="1"> Ya (11%)
-            </label>
+
+          <!-- Smart Tax Suggestion Banner (Add Form) -->
+          <div id="smartTaxBanner" style="display:none;background:#ecfdf5;border:1px solid #10b981;border-radius:6px;padding:8px 12px;margin-bottom:8px;font-size:12px;color:#065f46;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:8px">
+              <i class="fa-solid fa-wand-magic-sparkles" style="color:#059669;font-size:14px"></i>
+              <div>
+                <span id="smartTaxTitle" style="font-weight:700">Rekomendasi Pajak:</span>
+                <span id="smartTaxDesc" style="color:#047857;margin-left:4px"></span>
+              </div>
+            </div>
+            <button type="button" id="btnApplySmartTax" class="btn btn-sm" style="background:#059669;color:#fff;border:none;padding:4px 10px;font-size:11px;font-weight:600;border-radius:4px;cursor:pointer;display:inline-flex;align-items:center;gap:4px">
+              <i class="fa-solid fa-check-double"></i> Terapkan Otomatis
+            </button>
           </div>
-          <div class="field" style="margin:0">
-            <label style="font-size:11px;font-weight:700;color:var(--slate-700)">Nominal PPN (Rp)</label>
-            <input type="text" name="nominal_ppn" class="input" data-money placeholder="0" style="font-size:12px;padding:4px 8px">
+
+          <!-- Baris Uji Kepatuhan Pajak -->
+          <div style="display:grid;grid-template-columns:1.2fr 1fr 1.2fr 1fr 1.2fr 1.2fr 1.5fr;gap:8px;align-items:end;background:#f1f5f9;padding:8px 12px;border-radius:6px;border:1px solid #e2e8f0;font-size:12px">
+            <div class="field" style="margin:0">
+              <label style="font-size:11px;font-weight:700;color:var(--slate-700)">Status Setor Pajak</label>
+              <select name="status_pajak" id="add-status-pajak" class="input" style="font-size:12px;padding:4px 8px">
+                <option value="TIDAK_TERUTANG">Tidak Terutang</option>
+                <option value="BELUM_SETOR">⚠️ Belum Disetor</option>
+                <option value="SUDAH_SETOR">✓ Sudah Disetor</option>
+              </select>
+            </div>
+            <div class="field" style="margin:0">
+              <label style="font-size:11px;font-weight:700;color:var(--slate-700)">Potong PPN?</label>
+              <label style="display:flex;align-items:center;gap:4px;height:34px;font-size:12px;cursor:pointer">
+                <input type="checkbox" name="potong_ppn" id="add-potong-ppn" value="1"> Ya (11%)
+              </label>
+            </div>
+            <div class="field" style="margin:0">
+              <label style="font-size:11px;font-weight:700;color:var(--slate-700)">Nominal PPN (Rp)</label>
+              <input type="text" name="nominal_ppn" id="add-nominal-ppn" class="input" data-money placeholder="0" style="font-size:12px;padding:4px 8px">
+            </div>
+            <div class="field" style="margin:0">
+              <label style="font-size:11px;font-weight:700;color:var(--slate-700)">Jenis PPh</label>
+              <select name="potong_pph" id="add-potong-pph" class="input" style="font-size:12px;padding:4px 8px">
+                <option value="">- Tanpa PPh -</option>
+                <option value="PPh 21">PPh 21 (Honor/Upah)</option>
+                <option value="PPh 22">PPh 22 (Barang)</option>
+                <option value="PPh 23">PPh 23 (Sewa/Jasa)</option>
+                <option value="PPh 4(2)">PPh Final 4(2) (Konstruksi)</option>
+              </select>
+            </div>
+            <div class="field" style="margin:0">
+              <label style="font-size:11px;font-weight:700;color:var(--slate-700)">Nominal PPh (Rp)</label>
+              <input type="text" name="nominal_pph" id="add-nominal-pph" class="input" data-money placeholder="0" style="font-size:12px;padding:4px 8px">
+            </div>
+            <div class="field" style="margin:0">
+              <label style="font-size:11px;font-weight:700;color:var(--slate-700)">NTPN / Biling</label>
+              <input type="text" name="ntpn" id="add-ntpn" class="input" placeholder="No. Biling/NTPN" style="font-size:12px;padding:4px 8px">
+            </div>
+            <div class="field" style="margin:0">
+              <label style="font-size:11px;font-weight:700;color:var(--slate-700)">Keterangan Tambahan</label>
+              <input type="text" name="keterangan" id="add-keterangan" class="input" placeholder="Catatan bukti SPJ" style="font-size:12px;padding:4px 8px">
+            </div>
           </div>
-          <div class="field" style="margin:0">
-            <label style="font-size:11px;font-weight:700;color:var(--slate-700)">Jenis PPh</label>
-            <select name="potong_pph" class="input" style="font-size:12px;padding:4px 8px">
-              <option value="">- Tanpa PPh -</option>
-              <option value="PPh 21">PPh 21 (Honor/Upah)</option>
-              <option value="PPh 22">PPh 22 (Barang)</option>
-              <option value="PPh 23">PPh 23 (Sewa/Jasa)</option>
-              <option value="PPh 4(2)">PPh Final 4(2) (Konstruksi)</option>
-            </select>
-          </div>
-          <div class="field" style="margin:0">
-            <label style="font-size:11px;font-weight:700;color:var(--slate-700)">Nominal PPh (Rp)</label>
-            <input type="text" name="nominal_pph" class="input" data-money placeholder="0" style="font-size:12px;padding:4px 8px">
-          </div>
-          <div class="field" style="margin:0">
-            <label style="font-size:11px;font-weight:700;color:var(--slate-700)">NTPN / Biling</label>
-            <input type="text" name="ntpn" class="input" placeholder="No. Biling/NTPN" style="font-size:12px;padding:4px 8px">
-          </div>
-          <div class="field" style="margin:0">
-            <label style="font-size:11px;font-weight:700;color:var(--slate-700)">Keterangan Tambahan</label>
-            <input type="text" name="keterangan" class="input" placeholder="Catatan bukti SPJ" style="font-size:12px;padding:4px 8px">
-          </div>
-        </div>
-      </form>
+        </form>
+      </div>
+      <?php endif; ?>
     </div>
 
     <!-- Kesimpulan & Sumber Data -->
@@ -595,85 +638,107 @@
 <!-- Modal Edit Rincian -->
 <div id="modalEditRincian" class="kka-modal" role="dialog" aria-modal="true" aria-labelledby="modalEditTitle" hidden>
   <div class="kka-modal__backdrop" data-close-modal></div>
-  <div class="kka-modal__box">
-    <div class="kka-modal__head">
-      <h3 id="modalEditTitle"><i class="fa-solid fa-pen-to-square"></i> Edit Rincian Belanja</h3>
+  <div class="kka-modal__box" style="max-width:720px">
+    <div class="kka-modal__head" style="background:linear-gradient(90deg,#f0fdf4,#ecfeff)">
+      <h3 id="modalEditTitle" style="color:#065f46"><i class="fa-solid fa-file-pen"></i> Pemeriksaan &amp; Edit Rincian Belanja</h3>
       <button type="button" class="kka-modal__x" data-close-modal aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <form method="post" action="<?= url('rincian/update') ?>" id="formEditRincian">
       <?= csrf_field() ?>
       <input type="hidden" name="id" id="er-id">
       <input type="hidden" name="sesi_id" value="<?= (int)$sesi['id'] ?>">
-      <div class="kka-modal__body">
+      <div class="kka-modal__body" style="max-height:75vh">
+        
+        <div style="font-weight:700;color:var(--slate-700);font-size:12px;border-bottom:1px solid #e2e8f0;padding-bottom:5px;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">
+          1. Data Kegiatan &amp; Verifikasi Anggaran
+        </div>
+
         <div class="field">
           <label>Uraian Belanja <span class="req">*</span></label>
-          <input type="text" name="uraian" id="er-uraian" required class="input" data-testid="er-uraian">
+          <input type="text" name="uraian" id="er-uraian" required class="input" style="font-weight:600" data-testid="er-uraian">
         </div>
+
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
           <div class="field">
             <label>Pagu Anggaran (Rp)</label>
             <input type="text" name="pagu_anggaran" id="er-pagu" class="input" data-money placeholder="0" data-testid="er-pagu">
           </div>
           <div class="field">
-            <label>Realisasi (Rp)</label>
+            <label>Realisasi Fisik (Rp)</label>
             <input type="text" name="realisasi" id="er-real" class="input" data-money placeholder="0" data-testid="er-real">
           </div>
           <div class="field">
-            <label>Biaya Dikwitansi (Rp)</label>
-            <input type="text" name="biaya_dikwitansi" id="er-kwi" class="input" data-money placeholder="0" data-testid="er-kwi">
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div class="field">
-            <label>Penerima</label>
-            <input type="text" name="penerima" id="er-penerima" class="input" placeholder="Nama penerima">
-          </div>
-          <div class="field">
-            <label>Keterangan</label>
-            <input type="text" name="keterangan" id="er-keterangan" class="input" placeholder="-">
+            <label>Biaya di Kwitansi / SPJ (Rp) <span class="req">*</span></label>
+            <input type="text" name="biaya_dikwitansi" id="er-kwi" class="input" data-money placeholder="0" style="border-color:#10b981;background:#f0fdf4;font-weight:700" data-testid="er-kwi">
           </div>
         </div>
 
-        <div style="margin-top:12px;background:#f8fafc;border:1px solid #e2e8f0;padding:12px;border-radius:8px">
-          <div style="font-weight:700;font-size:12px;color:var(--slate-700);margin-bottom:8px">
-            <i class="fa-solid fa-receipt" style="color:#059669"></i> Uji Kepatuhan Pajak Belanja
+        <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:12px">
+          <div class="field">
+            <label>Nama Rekanan / Toko / Penerima</label>
+            <input type="text" name="penerima" id="er-penerima" class="input" placeholder="Cth: Toko Berkah Mandiri / Bendahara Desa">
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+          <div class="field">
+            <label>Catatan Bukti SPJ / Keterangan</label>
+            <input type="text" name="keterangan" id="er-keterangan" class="input" placeholder="Cth: Kwitansi No. 15, BAST, foto fisik ada">
+          </div>
+        </div>
+
+        <div style="font-weight:700;color:var(--slate-700);font-size:12px;border-bottom:1px solid #e2e8f0;padding-bottom:5px;margin:18px 0 12px;text-transform:uppercase;letter-spacing:0.5px">
+          2. Uji Kepatuhan Pajak Belanja
+        </div>
+
+        <!-- Smart Tax Suggestion Banner (Edit Modal) -->
+        <div id="erSmartTaxBanner" style="display:none;background:#ecfdf5;border:1px solid #10b981;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12.5px;color:#065f46;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:10px">
+            <i class="fa-solid fa-wand-magic-sparkles" style="color:#059669;font-size:16px"></i>
+            <div>
+              <span id="erSmartTaxTitle" style="font-weight:700">Rekomendasi Pajak:</span>
+              <span id="erSmartTaxDesc" style="color:#047857;margin-left:4px"></span>
+            </div>
+          </div>
+          <button type="button" id="btnApplyErSmartTax" class="btn btn-sm" style="background:#059669;color:#fff;border:none;padding:5px 12px;font-size:11.5px;font-weight:600;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:5px">
+            <i class="fa-solid fa-check-double"></i> Terapkan Otomatis
+          </button>
+        </div>
+
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:14px;border-radius:8px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
             <div class="field" style="margin:0">
-              <label style="font-size:11.5px">Status Setor Pajak</label>
+              <label style="font-size:12px;font-weight:600">Status Setor Pajak</label>
               <select name="status_pajak" id="er-status-pajak" class="input">
                 <option value="TIDAK_TERUTANG">Tidak Terutang</option>
-                <option value="BELUM_SETOR">⚠️ Belum Disetor</option>
+                <option value="BELUM_SETOR">⚠️ Belum Disetor (Temuan Pajak)</option>
                 <option value="SUDAH_SETOR">✓ Sudah Disetor</option>
               </select>
             </div>
             <div class="field" style="margin:0">
-              <label style="font-size:11.5px">Nomor NTPN / Biling</label>
-              <input type="text" name="ntpn" id="er-ntpn" class="input" placeholder="No. NTPN">
+              <label style="font-size:12px;font-weight:600">Nomor Bukti Setor NTPN / Kode Billing</label>
+              <input type="text" name="ntpn" id="er-ntpn" class="input" placeholder="Masukkan No. NTPN valid">
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1.2fr 1.2fr 1.2fr;gap:8px;align-items:end">
+          <div style="display:grid;grid-template-columns:1fr 1.3fr 1.3fr 1.3fr;gap:10px;align-items:end">
             <div class="field" style="margin:0">
-              <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer">
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;height:36px;font-weight:600">
                 <input type="checkbox" name="potong_ppn" id="er-potong-ppn" value="1"> PPN (11%)
               </label>
             </div>
             <div class="field" style="margin:0">
-              <label style="font-size:11px">Nominal PPN (Rp)</label>
+              <label style="font-size:11.5px">Nominal PPN (Rp)</label>
               <input type="text" name="nominal_ppn" id="er-nom-ppn" class="input" data-money placeholder="0">
             </div>
             <div class="field" style="margin:0">
-              <label style="font-size:11px">Jenis PPh</label>
+              <label style="font-size:11.5px">Jenis PPh</label>
               <select name="potong_pph" id="er-potong-pph" class="input">
                 <option value="">- Tanpa PPh -</option>
-                <option value="PPh 21">PPh 21 (Honor)</option>
-                <option value="PPh 22">PPh 22 (Barang)</option>
-                <option value="PPh 23">PPh 23 (Sewa/Jasa)</option>
-                <option value="PPh 4(2)">PPh Final 4(2)</option>
+                <option value="PPh 21">PPh 21 (Honor/Upah 5%)</option>
+                <option value="PPh 22">PPh 22 (Barang 1.5%)</option>
+                <option value="PPh 23">PPh 23 (Sewa/Jasa 2%)</option>
+                <option value="PPh 4(2)">PPh Final 4(2) (Konstruksi 2%)</option>
               </select>
             </div>
             <div class="field" style="margin:0">
-              <label style="font-size:11px">Nominal PPh (Rp)</label>
+              <label style="font-size:11.5px">Nominal PPh (Rp)</label>
               <input type="text" name="nominal_pph" id="er-nom-pph" class="input" data-money placeholder="0">
             </div>
           </div>
@@ -681,7 +746,7 @@
       </div>
       <div class="kka-modal__foot">
         <button type="button" class="btn btn-ghost" data-close-modal>Batal</button>
-        <button type="submit" class="btn btn-primary" data-testid="er-save"><i class="fa-solid fa-check"></i> Simpan Perubahan</button>
+        <button type="submit" class="btn btn-primary" data-testid="er-save" style="background:#059669;border-color:#059669"><i class="fa-solid fa-check"></i> Simpan Hasil Pemeriksaan</button>
       </div>
     </form>
   </div>
@@ -798,12 +863,12 @@
   </div>
 </div>
 
-<!-- Modal Impor Excel -->
+<!-- Modal Impor LRA (PDF / Excel) -->
 <div id="modalImportExcel" class="kka-modal" role="dialog" aria-modal="true" hidden>
   <div class="kka-modal__backdrop" data-close-modal></div>
-  <div class="kka-modal__box" style="max-width:540px">
+  <div class="kka-modal__box" style="max-width:560px">
     <div class="kka-modal__head" style="background:#ecfdf5">
-      <h3 style="color:#065f46"><i class="fa-solid fa-file-excel"></i> Impor Rincian Belanja dari Excel / CSV</h3>
+      <h3 style="color:#065f46"><i class="fa-solid fa-file-invoice"></i> Impor Dokumen LRA Kepenghuluan (PDF / Excel)</h3>
       <button type="button" class="kka-modal__x" data-close-modal aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <form method="post" enctype="multipart/form-data" action="<?= url('rincian/import') ?>">
@@ -811,15 +876,15 @@
       <input type="hidden" name="sesi_id" value="<?= (int)$sesi['id'] ?>">
       <div class="kka-modal__body">
         <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;margin-bottom:14px;color:#166534;font-size:12.5px;line-height:1.5">
-          <i class="fa-solid fa-circle-info"></i> <b>Solusi Audit Offline di Desa:</b><br>
-          Gunakan fitur ini jika pemeriksaan dilakukan di lokasi tanpa internet. Isi data SPJ &amp; Kwitansi di file Excel/CSV secara offline, lalu unggah file tersebut di sini saat sudah online.
+          <i class="fa-solid fa-wand-magic-sparkles"></i> <b>Ekstraksi Otomatis Dokumen LRA Kepenghuluan:</b><br>
+          Unggah file dokumen <b>PDF LRA Siskeudes / APBDesa</b> atau file <b>Excel (.xlsx/.csv)</b>. Sistem akan mengekstrak nama kegiatan belanja, pagu anggaran, dan nilai realisasi secara otomatis ke KKA. Auditor tidak perlu lagi mengetik manual dan cukup memverifikasi kesesuaian fisik kwitansi serta pajaknya.
         </div>
 
         <div class="field">
-          <label>Pilih File Excel (.xlsx) atau CSV <span class="req">*</span></label>
-          <input type="file" name="file_excel" accept=".xlsx, .csv, .xls" required class="input" style="padding:8px" id="inputExcelFile">
+          <label>Pilih File Dokumen PDF LRA atau Excel (.xlsx/.csv) <span class="req">*</span></label>
+          <input type="file" name="file_excel" accept=".pdf, .xlsx, .csv, .xls" required class="input" style="padding:8px" id="inputExcelFile">
           <small style="color:var(--slate-500);font-size:11.5px;margin-top:4px;display:block">
-            Mendukung file Microsoft Excel <code>.xlsx</code> dan <code>.csv</code>. Belum punya formatnya? <a href="<?= url('rincian/template?sesi_id='.$sesi['id']) ?>" style="color:#059669;font-weight:600"><i class="fa-solid fa-download"></i> Unduh Template di sini</a>.
+            Mendukung <b>Dokumen PDF LRA Siskeudes</b>, serta Microsoft Excel <code>.xlsx</code> dan <code>.csv</code>. Belum punya format Excel? <a href="<?= url('rincian/template?sesi_id='.$sesi['id']) ?>" style="color:#059669;font-weight:600"><i class="fa-solid fa-download"></i> Unduh Template di sini</a>.
           </small>
         </div>
 
@@ -828,7 +893,7 @@
             <input type="checkbox" name="mode_replace" value="1" style="margin-top:3px;accent-color:#059669">
             <div>
               <strong>Timpa / Ganti data rincian yang sudah ada</strong>
-              <div style="font-size:11.5px;color:var(--slate-500);margin-top:2px">Jika dicentang, rincian belanja lama pada sesi ini akan dihapus dan diganti dengan isi file Excel baru. Jika tidak dicentang, data baru akan ditambahkan (append).</div>
+              <div style="font-size:11.5px;color:var(--slate-500);margin-top:2px">Jika dicentang, rincian belanja lama pada sesi ini akan dihapus dan diganti dengan hasil ekstraksi file baru. Jika tidak dicentang, data baru akan ditambahkan (append).</div>
             </div>
           </label>
         </div>
@@ -996,8 +1061,239 @@
   var bRoutingSlip = document.getElementById('btnBukaRoutingSlip');
   if (bRoutingSlip) bRoutingSlip.addEventListener('click', function(){ showModal('modalEditRoutingSlip'); });
 
+  var bToggleAdd = document.getElementById('btnToggleAddManual');
+  var boxAddManual = document.getElementById('containerAddManual');
+  if (bToggleAdd && boxAddManual) {
+    bToggleAdd.addEventListener('click', function(){
+      if (boxAddManual.style.display === 'none' || boxAddManual.style.display === '') {
+        boxAddManual.style.display = 'block';
+        bToggleAdd.innerHTML = '<i class="fa-solid fa-xmark"></i> Tutup Form Manual';
+        var inp = document.getElementById('add-uraian');
+        if (inp) inp.focus();
+      } else {
+        boxAddManual.style.display = 'none';
+        bToggleAdd.innerHTML = '<i class="fa-solid fa-plus"></i> Tambah Belanja Manual';
+      }
+    });
+  }
+
   // Format angka jadi format ID (titik ribuan)
   function fmt(v){ v = Math.round(Number(v)||0); return v.toLocaleString('id-ID'); }
+  function parseVal(v){
+    if (typeof v === 'number') return v;
+    if (!v) return 0;
+    var s = String(v).replace(/[^\d]/g, '');
+    return parseInt(s, 10) || 0;
+  }
+
+  // ========================================================
+  // SMART TAX DETECTOR (Pendeteksi Otomatis Sumber & Nilai Pajak)
+  // ========================================================
+  function detectTax(uraian, amount) {
+    uraian = (uraian || '').toLowerCase();
+    amount = parseVal(amount);
+
+    var res = {
+      detected: false,
+      title: '',
+      desc: '',
+      statusPajak: 'BELUM_SETOR',
+      potongPpn: false,
+      nomPpn: 0,
+      potongPph: '',
+      nomPph: 0,
+      keterangan: ''
+    };
+
+    if (!uraian || amount <= 0) return res;
+
+    // 1. PB1 / Pajak Restoran (10%)
+    var rePB1 = /\b(makan|minum|konsumsi|snack|katering|prasmanan|nasi kotak|kue|kopi|snack box)\b/i;
+    // 2. PPh 21 (Honor/Upah 5%)
+    var rePPh21 = /\b(honor|honorarium|narasumber|pemateri|insentif|uang lelah|uang saku|upah|tukang|pekerja|gaji|tunjangan|transport)\b/i;
+    // 3. PPh 23 (Sewa/Jasa 2%)
+    var rePPh23 = /\b(sewa|rental|sound system|tenda|panggung|mobil|genset|kursi|terop|jasa|servis|reparasi|pemeliharaan|kebersihan)\b/i;
+    // 4. PPh Final 4(2) Konstruksi (2%) & PPN 11% jika >= 2jt
+    var reKonstruksi = /\b(konstruksi|semenisasi|drainase|box culvert|jembatan|jalan|turap|rabat beton|gedung|rehab|paving|pembangunan)\b/i;
+    // 5. Belanja Barang / Material: PPN 11% & PPh 22 (1.5%) jika >= 2jt
+    var reBarang = /\b(semen|pasir|batu|kerikil|besi|kayu|material|bahan|atk|laptop|komputer|printer|pengadaan|pembelian|meja|lemari|spanduk|baliho|cetak|buku)\b/i;
+
+    if (rePB1.test(uraian)) {
+      var pb1 = Math.round(amount * 0.10);
+      res.detected = true;
+      res.title = 'PB1 / Pajak Restoran (10%)';
+      res.desc = 'Rp ' + fmt(pb1) + ' (Tarif 10% atas belanja makan/minum/katering)';
+      res.statusPajak = 'BELUM_SETOR';
+      res.potongPpn = false;
+      res.nomPpn = 0;
+      res.potongPph = 'PPh 23';
+      res.nomPph = pb1;
+      res.keterangan = 'PB1 / Pajak Restoran 10% (Rp ' + fmt(pb1) + ')';
+    } else if (rePPh21.test(uraian)) {
+      var pph21 = Math.round(amount * 0.05);
+      res.detected = true;
+      res.title = 'PPh 21 Honor/Upah (5%)';
+      res.desc = 'Rp ' + fmt(pph21) + ' (Tarif 5% atas honor/upah/insentif)';
+      res.statusPajak = 'BELUM_SETOR';
+      res.potongPpn = false;
+      res.nomPpn = 0;
+      res.potongPph = 'PPh 21';
+      res.nomPph = pph21;
+      res.keterangan = 'PPh 21 (5%) Honor/Upah (Rp ' + fmt(pph21) + ')';
+    } else if (rePPh23.test(uraian)) {
+      var pph23 = Math.round(amount * 0.02);
+      res.detected = true;
+      res.title = 'PPh 23 Sewa/Jasa (2%)';
+      res.desc = 'Rp ' + fmt(pph23) + ' (Tarif 2% atas sewa perlengkapan/jasa)';
+      res.statusPajak = 'BELUM_SETOR';
+      res.potongPpn = false;
+      res.nomPpn = 0;
+      res.potongPph = 'PPh 23';
+      res.nomPph = pph23;
+      res.keterangan = 'PPh 23 (2%) Sewa/Jasa (Rp ' + fmt(pph23) + ')';
+    } else if (reKonstruksi.test(uraian)) {
+      if (amount >= 2000000) {
+        var dpp = amount / 1.11;
+        var ppn = Math.round(dpp * 0.11);
+        var pph42 = Math.round(dpp * 0.02);
+        res.detected = true;
+        res.title = 'PPh Final 4(2) Konstruksi (2%) + PPN 11%';
+        res.desc = 'PPN: Rp ' + fmt(ppn) + ' & PPh Final: Rp ' + fmt(pph42) + ' (Kuitansi >= 2jt)';
+        res.statusPajak = 'BELUM_SETOR';
+        res.potongPpn = true;
+        res.nomPpn = ppn;
+        res.potongPph = 'PPh 4(2)';
+        res.nomPph = pph42;
+        res.keterangan = 'PPN 11% (Rp ' + fmt(ppn) + ') + PPh Final 4(2) 2% (Rp ' + fmt(pph42) + ')';
+      } else {
+        var pph42 = Math.round(amount * 0.02);
+        res.detected = true;
+        res.title = 'PPh Final 4(2) Konstruksi (2%)';
+        res.desc = 'Rp ' + fmt(pph42) + ' (Nilai < 2jt tanpa pungut PPN)';
+        res.statusPajak = 'BELUM_SETOR';
+        res.potongPpn = false;
+        res.nomPpn = 0;
+        res.potongPph = 'PPh 4(2)';
+        res.nomPph = pph42;
+        res.keterangan = 'PPh Final 4(2) Konstruksi 2% (Rp ' + fmt(pph42) + ')';
+      }
+    } else if (reBarang.test(uraian) || amount >= 2000000) {
+      if (amount >= 2000000) {
+        var dpp = amount / 1.11;
+        var ppn = Math.round(dpp * 0.11);
+        var pph22 = Math.round(dpp * 0.015);
+        res.detected = true;
+        res.title = 'PPN (11%) & PPh 22 Barang (1.5%)';
+        res.desc = 'PPN: Rp ' + fmt(ppn) + ' & PPh 22: Rp ' + fmt(pph22) + ' (Kuitansi >= Rp 2.000.000)';
+        res.statusPajak = 'BELUM_SETOR';
+        res.potongPpn = true;
+        res.nomPpn = ppn;
+        res.potongPph = 'PPh 22';
+        res.nomPph = pph22;
+        res.keterangan = 'PPN 11% (Rp ' + fmt(ppn) + ') + PPh 22 1.5% (Rp ' + fmt(pph22) + ')';
+      } else {
+        res.detected = true;
+        res.title = 'Bebas Pungut Pajak Barang';
+        res.desc = 'Belanja barang di bawah Rp 2.000.000 tidak terutang PPN & PPh 22 Pemda/Desa';
+        res.statusPajak = 'TIDAK_TERUTANG';
+        res.potongPpn = false;
+        res.nomPpn = 0;
+        res.potongPph = '';
+        res.nomPph = 0;
+        res.keterangan = 'Bebas PPN & PPh 22 (< Rp 2 Juta)';
+      }
+    }
+
+    return res;
+  }
+
+  // 1. Add Form Smart Tax Handler
+  var addUraian = document.getElementById('add-uraian');
+  var addKwi = document.getElementById('add-kwi');
+  var smartTaxBanner = document.getElementById('smartTaxBanner');
+  var smartTaxTitle = document.getElementById('smartTaxTitle');
+  var smartTaxDesc = document.getElementById('smartTaxDesc');
+  var btnApplySmartTax = document.getElementById('btnApplySmartTax');
+  var lastAddTax = null;
+
+  function checkAddTax() {
+    if (!addUraian || !addKwi || !smartTaxBanner) return;
+    var tax = detectTax(addUraian.value, addKwi.value);
+    if (tax && tax.detected) {
+      lastAddTax = tax;
+      smartTaxTitle.textContent = tax.title + ':';
+      smartTaxDesc.textContent = tax.desc;
+      smartTaxBanner.style.display = 'flex';
+    } else {
+      smartTaxBanner.style.display = 'none';
+      lastAddTax = null;
+    }
+  }
+
+  if (addUraian) addUraian.addEventListener('input', checkAddTax);
+  if (addKwi) addKwi.addEventListener('input', checkAddTax);
+
+  if (btnApplySmartTax) {
+    btnApplySmartTax.addEventListener('click', function(){
+      if (!lastAddTax) return;
+      var elStatus = document.getElementById('add-status-pajak');
+      if (elStatus) elStatus.value = lastAddTax.statusPajak;
+      var elPpn = document.getElementById('add-potong-ppn');
+      if (elPpn) elPpn.checked = lastAddTax.potongPpn;
+      var elNomPpn = document.getElementById('add-nominal-ppn');
+      if (elNomPpn) elNomPpn.value = lastAddTax.nomPpn ? fmt(lastAddTax.nomPpn) : '0';
+      var elPph = document.getElementById('add-potong-pph');
+      if (elPph) elPph.value = lastAddTax.potongPph;
+      var elNomPph = document.getElementById('add-nominal-pph');
+      if (elNomPph) elNomPph.value = lastAddTax.nomPph ? fmt(lastAddTax.nomPph) : '0';
+      var elKet = document.getElementById('add-keterangan');
+      if (elKet && !elKet.value) elKet.value = lastAddTax.keterangan;
+    });
+  }
+
+  // 2. Edit Modal Smart Tax Handler
+  var erUraian = document.getElementById('er-uraian');
+  var erKwi = document.getElementById('er-kwi');
+  var erTaxBanner = document.getElementById('erSmartTaxBanner');
+  var erTaxTitle = document.getElementById('erSmartTaxTitle');
+  var erTaxDesc = document.getElementById('erSmartTaxDesc');
+  var btnApplyErTax = document.getElementById('btnApplyErSmartTax');
+  var lastErTax = null;
+
+  function checkErTax() {
+    if (!erUraian || !erKwi || !erTaxBanner) return;
+    var tax = detectTax(erUraian.value, erKwi.value);
+    if (tax && tax.detected) {
+      lastErTax = tax;
+      erTaxTitle.textContent = tax.title + ':';
+      erTaxDesc.textContent = tax.desc;
+      erTaxBanner.style.display = 'flex';
+    } else {
+      erTaxBanner.style.display = 'none';
+      lastErTax = null;
+    }
+  }
+
+  if (erUraian) erUraian.addEventListener('input', checkErTax);
+  if (erKwi) erKwi.addEventListener('input', checkErTax);
+
+  if (btnApplyErTax) {
+    btnApplyErTax.addEventListener('click', function(){
+      if (!lastErTax) return;
+      var elStatus = document.getElementById('er-status-pajak');
+      if (elStatus) elStatus.value = lastErTax.statusPajak;
+      var elPpn = document.getElementById('er-potong-ppn');
+      if (elPpn) elPpn.checked = lastErTax.potongPpn;
+      var elNomPpn = document.getElementById('er-nom-ppn');
+      if (elNomPpn) elNomPpn.value = lastErTax.nomPpn ? fmt(lastErTax.nomPpn) : '0';
+      var elPph = document.getElementById('er-potong-pph');
+      if (elPph) elPph.value = lastErTax.potongPph;
+      var elNomPph = document.getElementById('er-nom-pph');
+      if (elNomPph) elNomPph.value = lastErTax.nomPph ? fmt(lastErTax.nomPph) : '0';
+      var elKet = document.getElementById('er-keterangan');
+      if (elKet && !elKet.value) elKet.value = lastErTax.keterangan;
+    });
+  }
 
   document.querySelectorAll('.js-edit-rincian').forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -1023,6 +1319,8 @@
       if (elPotongPph) elPotongPph.value = tr.dataset.potongPph || '';
       var elNomPph = document.getElementById('er-nom-pph');
       if (elNomPph) elNomPph.value = fmt(tr.dataset.nominalPph);
+
+      checkErTax();
 
       openModal();
       setTimeout(function(){ document.getElementById('er-uraian').focus(); }, 50);
