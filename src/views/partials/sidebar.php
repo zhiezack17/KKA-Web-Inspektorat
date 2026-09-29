@@ -177,6 +177,9 @@ $isPengaturanActive = str_contains($current, '/panduan-workflow')
         <a href="<?= url('panduan-workflow') ?>" class="nav-subitem<?= nav_active('/panduan-workflow', $current) ?>" data-testid="nav-workflow">
           <i class="fa-solid fa-diagram-project"></i><span>SOP &amp; Workflow</span>
         </a>
+        <a href="<?= asset('assets/docs/BUKU_PANDUAN_KKA_DIGITAL_2026.pdf') ?>" target="_blank" class="nav-subitem" data-testid="nav-buku-panduan" style="color:#fbbf24">
+          <i class="fa-solid fa-book-bookmark" style="color:#fbbf24"></i><span>Buku Panduan (PDF)</span>
+        </a>
         <a href="<?= url('desa') ?>" class="nav-subitem<?= nav_active('/desa', $current) ?>" data-testid="nav-desa">
           <i class="fa-solid fa-building-columns"></i><span>Master Wilayah Desa</span>
         </a>

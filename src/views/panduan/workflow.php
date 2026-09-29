@@ -415,8 +415,8 @@ $auth  = $GLOBALS['auth'];
     </div>
     <div class="actions">
       <a href="<?= url('dashboard') ?>" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
-      <a href="<?= asset('assets/docs/BLUEPRINT_WORKFLOW_KKA_DIGITAL_2026.pdf') ?>" download class="btn btn-download" title="Unduh Berkas PDF Resmi Siap Arsip">
-        <i class="fa-solid fa-file-pdf"></i> Unduh File PDF
+      <a href="<?= asset('assets/docs/BUKU_PANDUAN_KKA_DIGITAL_2026.pdf') ?>" target="_blank" download class="btn btn-download" title="Unduh Buku Panduan PDF Lengkap Bergambar">
+        <i class="fa-solid fa-file-pdf"></i> Unduh Buku Panduan PDF Lengkap
       </a>
       <button onclick="window.print()" class="btn btn-primary" title="Cetak atau Simpan sebagai PDF melalui dialog peramban">
         <i class="fa-solid fa-print"></i> Cetak / Simpan PDF
