@@ -14,7 +14,8 @@
       <a href="<?= url('print/routing-slip?id='.$sesi['id']) ?>" class="btn btn-outline btn-sm" target="_blank" style="border-color:#f59e0b;color:#b45309;background:#fffbeb;font-weight:700" data-testid="btn-print-routing-slip"><i class="fa-solid fa-folder-open"></i> Routing Slip LHA</a>
       <button type="button" class="btn btn-outline btn-sm" id="btnBukaRoutingSlip" style="border-color:#d97706;color:#b45309;background:#fff;font-weight:600" data-testid="btn-edit-routing-slip"><i class="fa-solid fa-pen-to-square"></i> Kelola Routing Slip</button>
       <a href="<?= url('print/reviu?id='.$sesi['id']) ?>" class="btn btn-outline btn-sm" target="_blank" style="border-color:#6366f1;color:#4f46e5;font-weight:600" data-testid="btn-print-reviu"><i class="fa-solid fa-clipboard-check"></i> Lembar Reviu KKA</a>
-      <a href="<?= url('print/sesi?id='.$sesi['id']) ?>" class="btn btn-outline btn-sm" target="_blank" data-testid="btn-print"><i class="fa-solid fa-print"></i> Cetak / Preview</a>
+      <a href="<?= url('print/sesi?id='.$sesi['id']) ?>" class="btn btn-outline btn-sm" target="_blank" data-testid="btn-print"><i class="fa-solid fa-print"></i> Cetak KKA</a>
+      <a href="<?= url('print/nhp?desa_id='.$sesi['desa_id'].'&tahun='.$sesi['tahun_anggaran']) ?>" class="btn btn-outline btn-sm" target="_blank" style="border-color:#0284c7;color:#0284c7;background:#f0f9ff;font-weight:700"><i class="fa-solid fa-file-contract"></i> Notisi (NHP)</a>
       <a href="<?= url('export/sesi?id='.$sesi['id']) ?>" class="btn btn-accent btn-sm" data-testid="btn-export"><i class="fa-solid fa-file-excel"></i> Export Excel</a>
       <a href="<?= url('gdrive/sync-kka?id='.$sesi['id']) ?>" class="btn btn-outline btn-sm" style="border-color:#0284c7;color:#0284c7;background:#f0f9ff;font-weight:600" title="Cadangkan KKA ke Google Drive" onclick="this.innerHTML='<i class=\'fa-solid fa-spinner fa-spin\'></i> Menyimpan...'">
         <i class="fa-brands fa-google-drive"></i> Simpan ke Drive
@@ -346,6 +347,84 @@
       </div>
     </div>
     <?php endif; ?>
+
+    <!-- KUESIONER CHECKLIST PENGUJIAN STANDAR BPKP (SISWASKEUDES) -->
+    <div class="card" style="margin-bottom:20px;border:1px solid #bfdbfe;background:#f0f9ff;box-shadow:0 2px 8px rgba(2,132,199,0.06)">
+      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleBpkpChecklist()">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:8px;background:#0284c7;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px">
+            <i class="fa-solid fa-list-check"></i>
+          </div>
+          <div>
+            <h3 style="margin:0;font-size:14.5px;font-weight:700;color:#0369a1">
+              Checklist Kuesioner Pengujian Kepatuhan Standar BPKP
+            </h3>
+            <p style="margin:2px 0 0;font-size:12px;color:#0284c7">
+              10 Butir Pengujian Ketaatan Regulasi Pengelolaan Keuangan Desa. Klik untuk membuka/menutup lembar pengujian.
+            </p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="badge" id="bpkpProgressBadge" style="background:#0284c7;color:#fff;font-size:11.5px;font-weight:700">0 / 10 Diuji</span>
+          <i class="fa-solid fa-chevron-down" id="bpkpChevron" style="color:#0284c7;transition:transform 0.2s"></i>
+        </div>
+      </div>
+
+      <div id="bpkpChecklistBody" style="display:none;margin-top:16px;border-top:1px solid #bae6fd;padding-top:14px">
+        <div style="font-size:12px;color:#0369a1;margin-bottom:12px;display:flex;align-items:center;gap:6px">
+          <i class="fa-solid fa-circle-info"></i>
+          Bila ada butir yang bertanda <b>"Tidak Memenuhi"</b>, Anda dapat langsung mengklik tombol <b>"Jadikan KTP"</b> untuk mencatat temuan ke Bank Temuan BPKP.
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px" id="bpkpQuestionsContainer">
+          <?php
+            $bpkpQuestions = [
+              ['id' => 'q1', 'cat' => 'Perencanaan & APBDes', 't' => 'Apakah rancangan Peraturan Desa APBDesa telah dievaluasi oleh Camat / Pemkab Rokan Hilir sebelum ditetapkan?'],
+              ['id' => 'q2', 'cat' => 'Perencanaan & APBDes', 't' => 'Apakah seluruh realisasi belanja yang dilaksanakan telah dianggarkan dalam APBDesa definitif atau perubahan?'],
+              ['id' => 'q3', 'cat' => 'Bukti Belanja / SPJ', 't' => 'Apakah Surat Permintaan Pembayaran (SPP) diverifikasi oleh Sekretaris Desa sebelum disetujui Pj. Penghulu?'],
+              ['id' => 'q4', 'cat' => 'Bukti Belanja / SPJ', 't' => 'Apakah setiap kuitansi pengeluaran didukung nota riil toko/rekanan yang sah, bertanggal, berstempel, dan bermaterai cukup?'],
+              ['id' => 'q5', 'cat' => 'Perpajakan', 't' => 'Apakah kewajiban PPN dan PPh Pasal 21/22/23 atas seluruh belanja kena pajak telah dipotong dan disetorkan ke Kas Negara dengan NTPN sah?'],
+              ['id' => 'q6', 'cat' => 'Perpajakan', 't' => 'Apakah Pajak Daerah (PB1 Restoran 10% dan Retribusi MBLB Galian C) telah disetorkan ke Bapenda Rohil?'],
+              ['id' => 'q7', 'cat' => 'Fisik & Konstruksi', 't' => 'Apakah hasil pekerjaan fisik di lapangan sesuai dengan spesifikasi teknis dan volume (P x L x T) pada gambar/RAB?'],
+              ['id' => 'q8', 'cat' => 'Fisik & Konstruksi', 't' => 'Apakah pembayaran upah padat karya tunai (HOK) didukung daftar hadir riil dan tanda terima penerima manfaat setempat?'],
+              ['id' => 'q9', 'cat' => 'Kas & Bank', 't' => 'Apakah saldo kas tunai pada brankas bendahara cocok 100% dengan Buku Kas Umum (BKU) tanpa adanya selisih tekor kas?'],
+              ['id' => 'q10', 'cat' => 'Aset Desa', 't' => 'Apakah barang hasil pengadaan belanja modal aset telah dibukukan ke dalam Buku Inventaris Aset Desa (KIB) & diberi label nomor register?'],
+            ];
+            foreach ($bpkpQuestions as $idx => $bq):
+          ?>
+            <div class="bpkp-q-row" data-qid="<?= $bq['id'] ?>" style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+                <div style="flex:1">
+                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+                    <span class="badge" style="background:#f1f5f9;color:#475569;font-size:10.5px">No. <?= $idx + 1 ?> · <?= e($bq['cat']) ?></span>
+                  </div>
+                  <div style="font-size:13px;font-weight:600;color:var(--slate-800);line-height:1.4">
+                    <?= e($bq['t']) ?>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                  <button type="button" class="btn-bpkp-ans btn-yes" onclick="setBpkpAns(<?= (int)$sesi['id'] ?>, '<?= $bq['id'] ?>', 'YES', this)" style="border:1px solid #cbd5e1;background:#fff;color:#16a34a;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">
+                    <i class="fa-solid fa-check"></i> Memenuhi
+                  </button>
+                  <button type="button" class="btn-bpkp-ans btn-no" onclick="setBpkpAns(<?= (int)$sesi['id'] ?>, '<?= $bq['id'] ?>', 'NO', this)" style="border:1px solid #cbd5e1;background:#fff;color:#dc2626;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">
+                    <i class="fa-solid fa-xmark"></i> Tidak Sesuai
+                  </button>
+                </div>
+              </div>
+              <!-- Action if NO -->
+              <div class="bpkp-temuan-box" style="display:none;background:#fef2f2;border:1px solid #fecdd3;border-radius:6px;padding:8px 12px;align-items:center;justify-content:space-between;gap:10px">
+                <span style="font-size:12px;color:#991b1b">
+                  <i class="fa-solid fa-triangle-exclamation"></i> Indikasi ketidakpatuhan ditemukan pada butir ini.
+                </span>
+                <a href="<?= url('temuan/create?desa_id=' . (int)$sesi['desa_id'] . '&tahun=' . (int)$sesi['tahun_anggaran'] . '&sesi_id=' . (int)$sesi['id']) ?>" class="btn btn-sm" style="background:#dc2626;color:#fff;border:none;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:4px;display:inline-flex;align-items:center;gap:4px">
+                  <i class="fa-solid fa-file-circle-plus"></i> Jadikan Temuan KTP
+                </a>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    </div>
 
     <!-- RINCIAN -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 10px;flex-wrap:wrap;gap:10px">
@@ -1335,6 +1414,120 @@
     if (e.key === 'Escape' && !modal.hidden) closeModal();
   });
 })();
+
+// BPKP Compliance Checklist Interactive Logic
+function toggleBpkpChecklist() {
+  var body = document.getElementById('bpkpChecklistBody');
+  var chev = document.getElementById('bpkpChevron');
+  if (!body) return;
+  if (body.style.display === 'none' || !body.style.display) {
+    body.style.display = 'block';
+    if (chev) chev.style.transform = 'rotate(180deg)';
+  } else {
+    body.style.display = 'none';
+    if (chev) chev.style.transform = 'rotate(0deg)';
+  }
+}
+
+function setBpkpAns(sesiId, qid, val, btn) {
+  var row = document.querySelector('.bpkp-q-row[data-qid="' + qid + '"]');
+  if (!row) return;
+
+  var btnYes = row.querySelector('.btn-yes');
+  var btnNo = row.querySelector('.btn-no');
+  var temuanBox = row.querySelector('.bpkp-temuan-box');
+
+  if (val === 'YES') {
+    if (btnYes) {
+      btnYes.style.background = '#16a34a';
+      btnYes.style.color = '#fff';
+      btnYes.style.borderColor = '#16a34a';
+    }
+    if (btnNo) {
+      btnNo.style.background = '#fff';
+      btnNo.style.color = '#dc2626';
+      btnNo.style.borderColor = '#cbd5e1';
+    }
+    if (temuanBox) temuanBox.style.display = 'none';
+  } else if (val === 'NO') {
+    if (btnNo) {
+      btnNo.style.background = '#dc2626';
+      btnNo.style.color = '#fff';
+      btnNo.style.borderColor = '#dc2626';
+    }
+    if (btnYes) {
+      btnYes.style.background = '#fff';
+      btnYes.style.color = '#16a34a';
+      btnYes.style.borderColor = '#cbd5e1';
+    }
+    if (temuanBox) temuanBox.style.display = 'flex';
+  }
+
+  // Save to localStorage
+  try {
+    var key = 'bpkp_checklist_' + sesiId;
+    var data = JSON.parse(localStorage.getItem(key) || '{}');
+    data[qid] = val;
+    localStorage.setItem(key, JSON.stringify(data));
+    updateBpkpBadge(data);
+  } catch (e) {
+    console.error('LocalStorage error', e);
+  }
+}
+
+function updateBpkpBadge(data) {
+  var badge = document.getElementById('bpkpProgressBadge');
+  if (!badge) return;
+  var count = Object.keys(data).length;
+  badge.textContent = count + ' / 10 Diuji';
+  if (count === 10) {
+    badge.style.background = '#15803d';
+  } else if (count > 0) {
+    badge.style.background = '#0284c7';
+  } else {
+    badge.style.background = '#64748b';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  var sesiId = <?= (int)$sesi['id'] ?>;
+  var key = 'bpkp_checklist_' + sesiId;
+  try {
+    var raw = localStorage.getItem(key);
+    if (raw) {
+      var data = JSON.parse(raw);
+      for (var qid in data) {
+        if (data.hasOwnProperty(qid)) {
+          var val = data[qid];
+          var row = document.querySelector('.bpkp-q-row[data-qid="' + qid + '"]');
+          if (row) {
+            var btnYes = row.querySelector('.btn-yes');
+            var btnNo = row.querySelector('.btn-no');
+            var temuanBox = row.querySelector('.bpkp-temuan-box');
+            if (val === 'YES') {
+              if (btnYes) {
+                btnYes.style.background = '#16a34a';
+                btnYes.style.color = '#fff';
+                btnYes.style.borderColor = '#16a34a';
+              }
+            } else if (val === 'NO') {
+              if (btnNo) {
+                btnNo.style.background = '#dc2626';
+                btnNo.style.color = '#fff';
+                btnNo.style.borderColor = '#dc2626';
+              }
+              if (temuanBox) temuanBox.style.display = 'flex';
+            }
+          }
+        }
+      }
+      updateBpkpBadge(data);
+    }
+  } catch(e) {
+    console.error(e);
+  }
+});
 </script>
 
 <?php partial('foot'); ?>
+

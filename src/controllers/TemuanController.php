@@ -316,4 +316,25 @@ class TemuanController {
 
         view('print/matriks_temuan', compact('desa', 'tahun', 'spt', 'daftarTemuan'));
     }
+
+    public function nhp(): void {
+        $desaId = (int) input('desa_id');
+        $tahun  = (int) input('tahun', date('Y'));
+
+        $desa = DB::one("SELECT d.*, k.nama AS kecamatan_nama FROM kka_desa d JOIN kka_kecamatan k ON k.id = d.kecamatan_id WHERE d.id = ?", [$desaId]);
+        if (!$desa) {
+            flash('error', 'Pilih desa untuk mencetak Notisi Hasil Pemeriksaan (NHP).');
+            redirect('temuan');
+        }
+
+        $spt = DB::one("SELECT * FROM kka_spt WHERE desa_id = ? AND tahun_anggaran = ? ORDER BY id DESC LIMIT 1", [$desaId, $tahun]);
+
+        $daftarTemuan = DB::all("
+            SELECT * FROM kka_temuan 
+            WHERE desa_id = ? AND tahun_anggaran = ?
+            ORDER BY id ASC
+        ", [$desaId, $tahun]);
+
+        view('print/nhp', compact('desa', 'tahun', 'spt', 'daftarTemuan'));
+    }
 }

@@ -275,7 +275,8 @@ $routes = [
     '/temuan/edit'                    => ['TemuanController', 'edit'],
     '/temuan/update'                  => ['TemuanController', 'update'],
     '/temuan/delete'                  => ['TemuanController', 'delete'],
-    '/print/matriks-temuan'           => ['TemuanController', 'matriks'],
+    '/print/matriks-temuan'           => ['TemuanController', 'matriks'],
+    '/print/nhp'                      => ['TemuanController', 'nhp'],
 
     // Modul Laporan Hasil Pengawasan (LHP) Otomatis Desa
     '/lhp'                            => ['LhpController', 'index'],

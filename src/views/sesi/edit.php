@@ -51,8 +51,24 @@
           <small style="color:var(--slate-500);font-size:12px">Total anggaran untuk kegiatan ini (nilai plafon).</small>
         </div>
         <div class="row">
-          <div class="field"><label>No. KKA</label><input type="text" name="no_kka" class="input" value="<?= e((string)$sesi['no_kka']) ?>"></div>
-          <div class="field"><label>Ref. PKA</label><input type="text" name="ref_kka" class="input" value="<?= e((string)$sesi['ref_kka']) ?>"></div>
+          <div class="field"><label>No. KKA</label><input type="text" name="no_kka" id="f_no_kka" class="input" value="<?= e((string)$sesi['no_kka']) ?>"></div>
+          <div class="field"><label>Ref. PKA / Kode KKA BPKP</label><input type="text" name="ref_kka" id="f_ref_kka" class="input" value="<?= e((string)$sesi['ref_kka']) ?>"></div>
+        </div>
+
+        <!-- Quick BPKP Code Pills -->
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;margin-bottom:16px">
+          <div style="font-size:11.5px;font-weight:700;color:var(--slate-600);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+            <i class="fa-solid fa-tags" style="color:#0284c7"></i> Standar Kodefikasi KKA BPKP (Klik untuk mengisi cepat):
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button type="button" class="btn btn-sm" onclick="setKkaRef('KKA-C05', 'C05 - Penatausahaan Belanja (SPP & Kwitansi)')" style="font-size:11px;padding:3px 8px;background:#fff;border:1px solid #cbd5e1;color:#334155;border-radius:4px">C05 Belanja SPJ</button>
+            <button type="button" class="btn btn-sm" onclick="setKkaRef('KKA-C06', 'C06 - Pemeriksaan Fisik & Volume Konstruksi')" style="font-size:11px;padding:3px 8px;background:#fff;border:1px solid #cbd5e1;color:#334155;border-radius:4px">C06 Fisik Lapangan</button>
+            <button type="button" class="btn btn-sm" onclick="setKkaRef('KKA-C07', 'C07 - Uji Kepatuhan Perpajakan (PPN & PPh)')" style="font-size:11px;padding:3px 8px;background:#fff;border:1px solid #cbd5e1;color:#334155;border-radius:4px">C07 Perpajakan</button>
+            <button type="button" class="btn btn-sm" onclick="setKkaRef('KKA-C04', 'C04 - Pengadaan Barang dan Jasa (PBJ Desa)')" style="font-size:11px;padding:3px 8px;background:#fff;border:1px solid #cbd5e1;color:#334155;border-radius:4px">C04 Pengadaan PBJ</button>
+            <button type="button" class="btn btn-sm" onclick="setKkaRef('KKA-C09', 'C09 - Pengelolaan Aset Desa (SIPADES & KIB)')" style="font-size:11px;padding:3px 8px;background:#fff;border:1px solid #cbd5e1;color:#334155;border-radius:4px">C09 Aset Desa</button>
+            <button type="button" class="btn btn-sm" onclick="setKkaRef('KKA-C03', 'C03 - Pengujian Pendapatan Desa')" style="font-size:11px;padding:3px 8px;background:#fff;border:1px solid #cbd5e1;color:#334155;border-radius:4px">C03 Pendapatan</button>
+            <button type="button" class="btn btn-sm" onclick="setKkaRef('KKA-C08', 'C08 - Pembiayaan Desa & BUMDes')" style="font-size:11px;padding:3px 8px;background:#fff;border:1px solid #cbd5e1;color:#334155;border-radius:4px">C08 Pembiayaan</button>
+          </div>
         </div>
         <div class="row">
           <div class="field"><label>Dibuat Oleh</label><input type="text" name="dibuat_oleh" class="input" value="<?= e((string)$sesi['dibuat_oleh']) ?>"></div>
@@ -131,6 +147,13 @@
   </div>
 </main>
 <script>
+  function setKkaRef(ref, desc) {
+    var elRef = document.getElementById('f_ref_kka');
+    if (elRef) elRef.value = ref;
+    var elKeg = document.querySelector('input[name="kegiatan"]');
+    if (elKeg && !elKeg.value) elKeg.value = desc;
+  }
+
   function autoFillKetua(sel) {
     var opt = sel.options[sel.selectedIndex];
     if (!opt || !opt.value) return;

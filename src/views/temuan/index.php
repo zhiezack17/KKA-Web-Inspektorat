@@ -19,8 +19,11 @@ partial('sidebar');
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <?php if ($desaId > 0): ?>
+          <a href="<?= url('print/nhp?desa_id=' . $desaId . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-outline" style="border-color:#0284c7;color:#0284c7;background:#f0f9ff;font-weight:700">
+            <i class="fa-solid fa-file-contract"></i> Cetak NHP (Notisi)
+          </a>
           <a href="<?= url('print/matriks-temuan?desa_id=' . $desaId . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-outline" style="border-color:#d97706;color:#d97706">
-            <i class="fa-solid fa-print"></i> Cetak Matriks Temuan
+            <i class="fa-solid fa-print"></i> Cetak Matriks KTP
           </a>
         <?php endif; ?>
         <a href="<?= url('temuan/create' . ($desaId > 0 ? '?desa_id=' . $desaId . '&tahun=' . $tahun : '')) ?>" class="btn btn-primary" style="background:#d97706;border-color:#d97706">
