@@ -146,10 +146,12 @@ class TemuanController {
         $countTemuan = (int) DB::scalar("SELECT COUNT(*) FROM kka_temuan WHERE desa_id = ? AND tahun_anggaran = ?", [$desaId ?: 1, $tahun]);
         $nomorTemuan = sprintf("KTP-%02d", $countTemuan + 1);
 
+        $bankTemuan = DB::all("SELECT * FROM kka_bank_temuan ORDER BY kategori ASC, kode ASC");
+
         view('temuan/create', compact(
             'daftarDesa', 'desaId', 'tahun', 'sesiId', 'rincianId', 'nomorTemuan',
             'autoJudul', 'bidangNama', 'autoNominal', 'autoKondisi', 'autoKriteria',
-            'autoSebab', 'autoAkibat', 'autoRekomendasi'
+            'autoSebab', 'autoAkibat', 'autoRekomendasi', 'bankTemuan'
         ));
     }
 
@@ -226,8 +228,9 @@ class TemuanController {
         }
 
         $daftarDesa = DB::all("SELECT d.id, d.nama, k.nama AS kecamatan FROM kka_desa d JOIN kka_kecamatan k ON k.id = d.kecamatan_id ORDER BY k.nama ASC, d.nama ASC");
+        $bankTemuan = DB::all("SELECT * FROM kka_bank_temuan ORDER BY kategori ASC, kode ASC");
 
-        view('temuan/edit', compact('temuan', 'daftarDesa'));
+        view('temuan/edit', compact('temuan', 'daftarDesa', 'bankTemuan'));
     }
 
     public function update(): void {
