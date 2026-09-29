@@ -206,7 +206,7 @@
             <td class="num bold" style="color:<?= (float)$it['sisa_kerugian'] > 0 ? '#dc2626' : '#000' ?>"><?= rupiah($it['sisa_kerugian']) ?></td>
             <td class="center">
               <?= tgl_id($it['batas_waktu_tl']) ?><br>
-              <?php if ($it['status'] === 'TUNTAS'): ?>
+              <?php if (in_array($it['status'], ['S', 'TUNTAS'])): ?>
                 <span style="color:#059669;font-weight:bold">[ Selesai ]</span>
               <?php elseif ($sisaHari >= 0): ?>
                 <span style="color:#0284c7">[ Sisa <?= $sisaHari ?> hr ]</span>
@@ -215,16 +215,29 @@
               <?php endif; ?>
             </td>
             <td class="center">
-              <b><?= e($it['status']) ?></b><br>
-              <span style="font-size:7.5pt">
+              <?php
+                $stCode = strtoupper((string)$it['status']);
+                if ($stCode === 'TUNTAS' || $stCode === 'S') {
+                    echo '<b style="color:#15803d">[S] Sesuai</b>';
+                } elseif ($stCode === 'PROSES' || $stCode === 'BS') {
+                    echo '<b style="color:#b45309">[BS] Blm Sesuai</b>';
+                } elseif ($stCode === 'TDTD') {
+                    echo '<b style="color:#475569">[TDTD]</b>';
+                } else {
+                    echo '<b style="color:#b91c1c">[BD] Belum</b>';
+                }
+              ?>
+              <div style="font-size:7.5pt;margin-top:2px">
                 <?php if ($it['verifikasi_apip'] === 'SESUAI'): ?>
-                  (Verif: Sesuai)
+                  <span style="color:#15803d;font-weight:bold">(Verif: Sesuai)</span>
                 <?php elseif ($it['verifikasi_apip'] === 'BELUM_SESUAI'): ?>
-                  (Verif: Blm Sesuai)
+                  <span style="color:#dc2626">(Verif: Blm Sesuai)</span>
+                <?php elseif ($it['verifikasi_apip'] === 'TDTD'): ?>
+                  <span style="color:#475569">(Verif: TDTD)</span>
                 <?php else: ?>
-                  (Blm Verif)
+                  <span style="color:#777">(Blm Verif)</span>
                 <?php endif; ?>
-              </span>
+              </div>
             </td>
           </tr>
         <?php endforeach; endif; ?>
@@ -243,6 +256,14 @@
         </tr>
       </tfoot>
     </table>
+
+    <div style="font-size:7.5pt;color:#475569;margin-bottom:14px;line-height:1.4">
+      <b>Keterangan Status Tindak Lanjut Rekomendasi (Standar APIP / BPKP):</b><br>
+      <b>[S] Sesuai</b> : Rekomendasi telah selesai dan tuntas ditindaklanjuti secara fisik/administrasi/setoran kas 100%. &bull; 
+      <b>[BS] Belum Sesuai</b> : Tindak lanjut telah dimulai/disetor sebagian namun belum tuntas. &bull; 
+      <b>[BD] Belum Ditindaklanjuti</b> : Belum ada upaya atau bukti tindak lanjut. &bull; 
+      <b>[TDTD] Tidak Dapat Ditindaklanjuti</b> : Rekomendasi tidak dapat dilaksanakan karena alasan hukum/force majeure yang sah.
+    </div>
 
     <!-- LEMBAR PENGESAHAN -->
     <table style="width:100%;font-size:9.5pt;margin-top:20px;border-collapse:collapse">

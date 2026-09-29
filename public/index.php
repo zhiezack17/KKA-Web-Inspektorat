@@ -308,7 +308,8 @@ $routes = [
     // Modul Pemantauan Tindak Lanjut LHP (TLHP 60 Hari) & Rekap Kerugian
     '/tlhp'                           => ['TlhpController', 'index'],
     '/tlhp/update'                    => ['TlhpController', 'update'],
-    '/print/matriks-tlhp'             => ['TlhpController', 'matriks'],
+    '/print/matriks-tlhp'             => ['TlhpController', 'matriks'],
+    '/print/rekap-pengawasan'         => ['TlhpController', 'rekap'],
 
     // Modul Integrasi Google Drive
     '/gdrive'                         => ['GoogleDriveController', 'index'],

@@ -52,20 +52,46 @@ class TlhpController {
             ORDER BY tl.status ASC, tl.batas_waktu_tl ASC, tl.id ASC
         ", $params);
 
-        // Rekapitulasi Statistik Eksekutif
+        // Rekapitulasi Statistik Eksekutif (Standar BPKP: S, BS, BD, TDTD)
         $summary = DB::one("
             SELECT 
                 COUNT(*) AS total_rekomendasi,
                 COALESCE(SUM(nominal_rekomendasi), 0) AS sum_rekomendasi,
                 COALESCE(SUM(nominal_disetor), 0) AS sum_disetor,
                 COALESCE(SUM(sisa_kerugian), 0) AS sum_sisa,
-                COUNT(CASE WHEN status = 'TUNTAS' THEN 1 END) AS count_tuntas,
-                COUNT(CASE WHEN status = 'PROSES' THEN 1 END) AS count_proses,
-                COUNT(CASE WHEN status = 'BELUM' THEN 1 END) AS count_belum,
-                COUNT(CASE WHEN status != 'TUNTAS' AND DATEDIFF(batas_waktu_tl, CURRENT_DATE) < 0 THEN 1 END) AS count_terlambat
+                COUNT(CASE WHEN status IN ('S', 'TUNTAS') THEN 1 END) AS count_s,
+                COUNT(CASE WHEN status IN ('BS', 'PROSES') THEN 1 END) AS count_bs,
+                COUNT(CASE WHEN status IN ('BD', 'BELUM') THEN 1 END) AS count_bd,
+                COUNT(CASE WHEN status = 'TDTD' THEN 1 END) AS count_tdtd,
+                COUNT(CASE WHEN status NOT IN ('S', 'TUNTAS', 'TDTD') AND DATEDIFF(batas_waktu_tl, CURRENT_DATE) < 0 THEN 1 END) AS count_terlambat
             FROM kka_tindak_lanjut tl
             WHERE tl.tahun_anggaran = ? $whereDesa
         ", $params);
+
+        // Rekapitulasi Komprehensif Antar Kepenghuluan se-Kabupaten
+        $rekapDesa = DB::all("
+            SELECT 
+                d.id AS desa_id,
+                d.nama AS desa_nama,
+                k.nama AS kecamatan_nama,
+                (SELECT COUNT(*) FROM kka_sesi s WHERE s.desa_id = d.id AND s.tahun_anggaran = ?) AS total_sesi_kka,
+                (SELECT COUNT(*) FROM kka_temuan t WHERE t.desa_id = d.id AND t.tahun_anggaran = ?) AS total_temuan,
+                (SELECT COALESCE(SUM(t.nominal), 0) FROM kka_temuan t WHERE t.desa_id = d.id AND t.tahun_anggaran = ?) AS sum_temuan,
+                COUNT(tl.id) AS total_rekomendasi,
+                COALESCE(SUM(tl.nominal_rekomendasi), 0) AS sum_rekomendasi,
+                COALESCE(SUM(tl.nominal_disetor), 0) AS sum_disetor,
+                COALESCE(SUM(tl.sisa_kerugian), 0) AS sum_sisa,
+                COUNT(CASE WHEN tl.status IN ('S', 'TUNTAS') THEN 1 END) AS count_s,
+                COUNT(CASE WHEN tl.status IN ('BS', 'PROSES') THEN 1 END) AS count_bs,
+                COUNT(CASE WHEN tl.status IN ('BD', 'BELUM') THEN 1 END) AS count_bd,
+                COUNT(CASE WHEN tl.status = 'TDTD' THEN 1 END) AS count_tdtd
+            FROM kka_desa d
+            JOIN kka_kecamatan k ON k.id = d.kecamatan_id
+            LEFT JOIN kka_tindak_lanjut tl ON tl.desa_id = d.id AND tl.tahun_anggaran = ?
+            GROUP BY d.id, d.nama, k.nama
+            HAVING (total_sesi_kka > 0 OR total_temuan > 0 OR total_rekomendasi > 0)
+            ORDER BY k.nama ASC, d.nama ASC
+        ", [$tahun, $tahun, $tahun, $tahun]);
 
         $desaList = DB::all("
             SELECT d.id, d.nama, k.nama AS kecamatan_nama
@@ -78,7 +104,7 @@ class TlhpController {
         $totalDisetor     = (float)($summary['sum_disetor'] ?? 0);
         $persenPulih      = $totalRekomendasi > 0 ? round(($totalDisetor / $totalRekomendasi) * 100, 1) : 100.0;
 
-        view('tlhp/index', compact('list', 'summary', 'desaList', 'tahun', 'desaId', 'persenPulih'));
+        view('tlhp/index', compact('list', 'summary', 'rekapDesa', 'desaList', 'tahun', 'desaId', 'persenPulih'));
     }
 
     /**
@@ -105,7 +131,7 @@ class TlhpController {
                     'temuan_id'           => $t['id'],
                     'desa_id'             => $t['desa_id'],
                     'tahun_anggaran'      => $t['tahun_anggaran'],
-                    'status'              => 'BELUM',
+                    'status'              => 'BD',
                     'tgl_lhp'             => $tglLhp,
                     'batas_waktu_tl'      => $batasWaktu,
                     'rekomendasi_teks'    => $t['rekomendasi'],
@@ -125,7 +151,11 @@ class TlhpController {
         csrf_check();
 
         $id                  = (int) input('id');
-        $status              = trim((string) input('status', 'BELUM'));
+        $status              = trim((string) input('status', 'BD'));
+        if ($status === 'TUNTAS') $status = 'S';
+        if ($status === 'PROSES') $status = 'BS';
+        if ($status === 'BELUM')  $status = 'BD';
+
         $uraianTindakLanjut  = trim((string) input('uraian_tindak_lanjut'));
         $nominalDisetor      = parse_money(input('nominal_disetor', 0));
         $noBuktiSetor        = trim((string) input('no_bukti_setor'));
@@ -142,13 +172,13 @@ class TlhpController {
         $nominalRekomendasi = (float)$row['nominal_rekomendasi'];
         $sisaKerugian = max(0.0, $nominalRekomendasi - $nominalDisetor);
 
-        // Auto tuntas jika nominal pulih 100% atau temuan non-finansial dengan verifikasi sesuai
-        if ($nominalRekomendasi > 0 && $sisaKerugian <= 0 && $verifikasiApip === 'SESUAI') {
-            $status = 'TUNTAS';
+        // Auto S jika nominal pulih 100% atau verifikasi sesuai
+        if (($nominalRekomendasi > 0 && $sisaKerugian <= 0 && $verifikasiApip === 'SESUAI') || ($nominalRekomendasi == 0 && $verifikasiApip === 'SESUAI')) {
+            $status = 'S';
         }
 
         $userId = $this->auth->user()['id'] ?? null;
-        $tglVerif = in_array($verifikasiApip, ['SESUAI', 'BELUM_SESUAI']) ? date('Y-m-d H:i:s') : null;
+        $tglVerif = in_array($verifikasiApip, ['SESUAI', 'BELUM_SESUAI', 'TDTD']) ? date('Y-m-d H:i:s') : null;
 
         DB::update('kka_tindak_lanjut', [
             'status'              => $status,
@@ -209,5 +239,45 @@ class TlhpController {
         ];
 
         view('print/matriks_tlhp', compact('list', 'desa', 'tahun', 'inspektur'));
+    }
+
+    /**
+     * Cetak Rekapitulasi Hasil Pengawasan & Pemantauan TLHP Se-Kabupaten Rokan Hilir (A4 Landscape)
+     */
+    public function rekap(): void {
+        $tahun = (int) input('tahun', date('Y'));
+        
+        $this->syncTemuanToTlhp($tahun);
+
+        $rekapDesa = DB::all("
+            SELECT 
+                d.id AS desa_id,
+                d.nama AS desa_nama,
+                k.nama AS kecamatan_nama,
+                (SELECT COUNT(*) FROM kka_sesi s WHERE s.desa_id = d.id AND s.tahun_anggaran = ?) AS total_sesi_kka,
+                (SELECT COUNT(*) FROM kka_temuan t WHERE t.desa_id = d.id AND t.tahun_anggaran = ?) AS total_temuan,
+                (SELECT COALESCE(SUM(t.nominal), 0) FROM kka_temuan t WHERE t.desa_id = d.id AND t.tahun_anggaran = ?) AS sum_temuan,
+                COUNT(tl.id) AS total_rekomendasi,
+                COALESCE(SUM(tl.nominal_rekomendasi), 0) AS sum_rekomendasi,
+                COALESCE(SUM(tl.nominal_disetor), 0) AS sum_disetor,
+                COALESCE(SUM(tl.sisa_kerugian), 0) AS sum_sisa,
+                COUNT(CASE WHEN tl.status IN ('S', 'TUNTAS') THEN 1 END) AS count_s,
+                COUNT(CASE WHEN tl.status IN ('BS', 'PROSES') THEN 1 END) AS count_bs,
+                COUNT(CASE WHEN tl.status IN ('BD', 'BELUM') THEN 1 END) AS count_bd,
+                COUNT(CASE WHEN tl.status = 'TDTD' THEN 1 END) AS count_tdtd
+            FROM kka_desa d
+            JOIN kka_kecamatan k ON k.id = d.kecamatan_id
+            LEFT JOIN kka_tindak_lanjut tl ON tl.desa_id = d.id AND tl.tahun_anggaran = ?
+            GROUP BY d.id, d.nama, k.nama
+            HAVING (total_sesi_kka > 0 OR total_temuan > 0 OR total_rekomendasi > 0)
+            ORDER BY k.nama ASC, d.nama ASC
+        ", [$tahun, $tahun, $tahun, $tahun]);
+
+        $inspektur = DB::one("SELECT * FROM kka_users WHERE role = 'inspektur' OR username = 'inspektur' LIMIT 1") ?: [
+            'nama' => 'H. SARMAN SYAHRONI, ST., M.IP., CGCAE',
+            'nip'  => '19760810 200312 1 004',
+        ];
+
+        view('print/rekap_pengawasan', compact('rekapDesa', 'tahun', 'inspektur'));
     }
 }

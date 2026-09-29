@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS `kka_tindak_lanjut` (
   `temuan_id` INT UNSIGNED NOT NULL,
   `desa_id` INT UNSIGNED NOT NULL,
   `tahun_anggaran` SMALLINT NOT NULL,
-  `status` ENUM('BELUM', 'PROSES', 'TUNTAS') NOT NULL DEFAULT 'BELUM',
+  `status` VARCHAR(20) NOT NULL DEFAULT 'BD',
   `tgl_lhp` DATE DEFAULT NULL,
   `batas_waktu_tl` DATE DEFAULT NULL,
   `rekomendasi_teks` TEXT DEFAULT NULL,

@@ -1,6 +1,23 @@
 <?php
 partial('head', ['title' => 'Pemantauan Tindak Lanjut LHP (TLHP 60 Hari) - Inspektorat Rokan Hilir']);
 partial('sidebar');
+
+function badgeStatusTl($st) {
+    switch(strtoupper((string)$st)) {
+        case 'S':
+        case 'TUNTAS':
+            return '<span class="badge" style="background:#dcfce7;color:#15803d;font-weight:700"><i class="fa-solid fa-circle-check"></i> [S] Sesuai</span>';
+        case 'BS':
+        case 'PROSES':
+            return '<span class="badge" style="background:#fef3c7;color:#b45309;font-weight:700"><i class="fa-solid fa-hourglass-half"></i> [BS] Belum Sesuai</span>';
+        case 'TDTD':
+            return '<span class="badge" style="background:#f1f5f9;color:#475569;font-weight:700"><i class="fa-solid fa-ban"></i> [TDTD]</span>';
+        case 'BD':
+        case 'BELUM':
+        default:
+            return '<span class="badge" style="background:#fee2e2;color:#b91c1c;font-weight:700"><i class="fa-solid fa-circle-xmark"></i> [BD] Belum</span>';
+    }
+}
 ?>
 
 <main class="main">
@@ -15,14 +32,17 @@ partial('sidebar');
           <i class="fa-solid fa-clock-rotate-left" style="color:#d97706"></i>
           Pemantauan Tindak Lanjut LHP (TLHP 60 Hari) &amp; Rekap Pemulihan Kas
         </h2>
-        <p>Instrumen pengawasan kepatuhan penyelesaian rekomendasi audit 60 hari kalender &bull; Rekonsiliasi setoran kas ke Bank Riau Kepri Syariah.</p>
+        <p>Instrumen pengawasan kepatuhan tindak lanjut APIP standar Siswaskeudes (S, BS, BD, TDTD) &bull; Rekonsiliasi setoran kas ke Bank Riau Kepri Syariah.</p>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <a href="<?= url('temuan') ?>" class="btn btn-outline" style="color:#0284c7;border-color:#0284c7">
           <i class="fa-solid fa-file-circle-plus"></i> Kelola / Input Temuan (KTP)
         </a>
-        <a href="<?= url('print/matriks-tlhp?tahun=' . $tahun . ($desaId ? '&desa_id=' . $desaId : '')) ?>" target="_blank" class="btn btn-outline" style="color:#059669;border-color:#059669">
-          <i class="fa-solid fa-print"></i> Cetak Matriks TLHP (A4 Landscape)
+        <a href="<?= url('print/rekap-pengawasan?tahun=' . $tahun) ?>" target="_blank" class="btn btn-outline" style="color:#4f46e5;border-color:#4f46e5;background:#eef2ff">
+          <i class="fa-solid fa-file-invoice"></i> Cetak Rekapitulasi Desa (A4)
+        </a>
+        <a href="<?= url('print/matriks-tlhp?tahun=' . $tahun . ($desaId ? '&desa_id=' . $desaId : '')) ?>" target="_blank" class="btn btn-outline" style="color:#059669;border-color:#059669;background:#f0fdf4">
+          <i class="fa-solid fa-print"></i> Cetak Matriks TLHP (A4)
         </a>
       </div>
     </div>
@@ -90,11 +110,14 @@ partial('sidebar');
       </div>
 
       <div class="card" style="padding:14px 18px;border-left:4px solid #f59e0b">
-        <div style="font-size:11px;color:var(--slate-500);font-weight:700;text-transform:uppercase">STATUS PENYELESAIAN</div>
-        <div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap">
-          <span class="badge" style="background:#dcfce7;color:#15803d;font-weight:700"><?= (int)($summary['count_tuntas'] ?? 0) ?> Tuntas</span>
-          <span class="badge" style="background:#fef3c7;color:#b45309;font-weight:700"><?= (int)($summary['count_proses'] ?? 0) ?> Proses</span>
-          <span class="badge" style="background:#fee2e2;color:#b91c1c;font-weight:700"><?= (int)($summary['count_belum'] ?? 0) ?> Belum</span>
+        <div style="font-size:11px;color:var(--slate-500);font-weight:700;text-transform:uppercase">STATUS REKOMENDASI (BPKP)</div>
+        <div style="display:flex;gap:4px;align-items:center;margin-top:6px;flex-wrap:wrap">
+          <span class="badge" style="background:#dcfce7;color:#15803d;font-weight:700" title="Sesuai">[S] <?= (int)($summary['count_s'] ?? 0) ?></span>
+          <span class="badge" style="background:#fef3c7;color:#b45309;font-weight:700" title="Belum Sesuai">[BS] <?= (int)($summary['count_bs'] ?? 0) ?></span>
+          <span class="badge" style="background:#fee2e2;color:#b91c1c;font-weight:700" title="Belum Ditindaklanjuti">[BD] <?= (int)($summary['count_bd'] ?? 0) ?></span>
+          <?php if ((int)($summary['count_tdtd'] ?? 0) > 0): ?>
+            <span class="badge" style="background:#f1f5f9;color:#475569;font-weight:700" title="Tidak Dapat Ditindaklanjuti">[TDTD] <?= (int)($summary['count_tdtd'] ?? 0) ?></span>
+          <?php endif; ?>
         </div>
         <?php if ((int)($summary['count_terlambat'] ?? 0) > 0): ?>
           <div style="font-size:10.5px;color:#dc2626;font-weight:700;margin-top:6px">
@@ -128,8 +151,20 @@ partial('sidebar');
       </div>
     </div>
 
-    <!-- Tabel Daftar Tindak Lanjut -->
-    <div class="card" style="padding:0;overflow:hidden">
+    <!-- TABS SELECTOR -->
+    <div style="display:flex;gap:10px;margin-bottom:16px;border-bottom:2px solid #e2e8f0;padding-bottom:2px">
+      <button type="button" id="tabBtnMatriks" onclick="switchTlTab('matriks')" style="padding:10px 18px;font-size:13px;font-weight:700;border:none;border-bottom:3px solid #0284c7;background:none;color:#0284c7;cursor:pointer;display:flex;align-items:center;gap:8px">
+        <i class="fa-solid fa-table-list"></i> Matriks Tindak Lanjut Detail (60 Hari)
+        <span class="badge" style="background:#e0f2fe;color:#0369a1;font-size:11px"><?= count($list) ?></span>
+      </button>
+      <button type="button" id="tabBtnRekap" onclick="switchTlTab('rekap')" style="padding:10px 18px;font-size:13px;font-weight:700;border:none;border-bottom:3px solid transparent;background:none;color:#64748b;cursor:pointer;display:flex;align-items:center;gap:8px">
+        <i class="fa-solid fa-chart-column"></i> Rekapitulasi Pengawasan Seluruh Desa
+        <span class="badge" style="background:#f1f5f9;color:#475569;font-size:11px"><?= count($rekapDesa) ?></span>
+      </button>
+    </div>
+
+    <!-- PANEL 1: MATRIKS DETAIL TLHP -->
+    <div id="panelMatriks" class="card" style="padding:0;overflow:hidden">
       <div style="padding:14px 18px;border-bottom:1px solid var(--slate-200);display:flex;justify-content:space-between;align-items:center;background:#f8fafc">
         <h3 style="margin:0;font-size:14px;font-weight:700;color:var(--slate-800)">
           <i class="fa-solid fa-table-list" style="color:#d97706;margin-right:6px"></i>
@@ -171,7 +206,7 @@ partial('sidebar');
               </tr>
             <?php else: $no=1; foreach ($list as $item): 
               $sisaHari = (int)$item['sisa_hari'];
-              $isTuntas = ($item['status'] === 'TUNTAS');
+              $isS = in_array($item['status'], ['S', 'TUNTAS']);
             ?>
               <tr>
                 <td style="text-align:center"><?= $no++ ?></td>
@@ -204,9 +239,9 @@ partial('sidebar');
                   <?= rupiah($item['sisa_kerugian']) ?>
                 </td>
                 <td style="text-align:center">
-                  <?php if ($isTuntas): ?>
+                  <?php if ($isS): ?>
                     <span class="badge" style="background:#dcfce7;color:#15803d;font-weight:700">
-                      <i class="fa-solid fa-circle-check"></i> Tuntas
+                      <i class="fa-solid fa-circle-check"></i> Selesai
                     </span>
                   <?php elseif ($sisaHari > 15): ?>
                     <span class="badge" style="background:#e0f2fe;color:#0369a1;font-weight:700">
@@ -226,13 +261,7 @@ partial('sidebar');
                   <?php endif; ?>
                 </td>
                 <td style="text-align:center">
-                  <?php if ($item['status'] === 'TUNTAS'): ?>
-                    <span class="badge" style="background:#dcfce7;color:#15803d;font-weight:700">Tuntas</span>
-                  <?php elseif ($item['status'] === 'PROSES'): ?>
-                    <span class="badge" style="background:#fef3c7;color:#b45309;font-weight:700">Proses</span>
-                  <?php else: ?>
-                    <span class="badge" style="background:#fee2e2;color:#b91c1c;font-weight:700">Belum</span>
-                  <?php endif; ?>
+                  <?= badgeStatusTl($item['status']) ?>
 
                   <div style="margin-top:4px">
                     <?php if ($item['verifikasi_apip'] === 'SESUAI'): ?>
@@ -256,6 +285,92 @@ partial('sidebar');
       </div>
     </div>
 
+    <!-- PANEL 2: REKAPITULASI PENGAWASAN SELURUH DESA (SISWASKEUDES MULTI-DESA) -->
+    <div id="panelRekap" class="card" style="padding:0;overflow:hidden;display:none">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--slate-200);display:flex;justify-content:space-between;align-items:center;background:#f8fafc">
+        <div>
+          <h3 style="margin:0;font-size:14px;font-weight:700;color:var(--slate-800)">
+            <i class="fa-solid fa-chart-column" style="color:#4f46e5;margin-right:6px"></i>
+            Rekapitulasi Pengawasan Dana Desa Se-Kabupaten Rokan Hilir (TA <?= $tahun ?>)
+          </h3>
+          <p style="margin:2px 0 0;font-size:11.5px;color:var(--slate-500)">
+            Matriks konsolidasi pengujian KKA, temuan pemeriksaan, dan rasio penyelesaian tindak lanjut per Kepenghuluan.
+          </p>
+        </div>
+        <a href="<?= url('print/rekap-pengawasan?tahun=' . $tahun) ?>" target="_blank" class="btn btn-primary btn-sm" style="background:#4f46e5;border-color:#4f46e5">
+          <i class="fa-solid fa-print"></i> Cetak Rekapitulasi (A4 Landscape)
+        </a>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table" style="margin:0;font-size:12px">
+          <thead>
+            <tr style="background:#f1f5f9;color:var(--slate-700)">
+              <th style="width:30px;text-align:center" rowspan="2">No</th>
+              <th rowspan="2">Kepenghuluan</th>
+              <th rowspan="2">Kecamatan</th>
+              <th style="text-align:center" rowspan="2">KKA Diuji</th>
+              <th colspan="2" style="text-align:center">Temuan Pemeriksaan</th>
+              <th colspan="4" style="text-align:center">Status Rekomendasi (BPKP)</th>
+              <th colspan="2" style="text-align:center">Pemulihan Kas Desa</th>
+              <th style="text-align:center" rowspan="2">% Pulih</th>
+              <th style="text-align:center;padding-right:16px" rowspan="2">Aksi</th>
+            </tr>
+            <tr style="background:#e2e8f0;color:var(--slate-700)">
+              <th class="center" style="font-size:11px">Butir</th>
+              <th class="num" style="font-size:11px">Nilai (Rp)</th>
+              <th class="center" style="font-size:11px;color:#15803d" title="Sesuai">S</th>
+              <th class="center" style="font-size:11px;color:#b45309" title="Belum Sesuai">BS</th>
+              <th class="center" style="font-size:11px;color:#b91c1c" title="Belum TL">BD</th>
+              <th class="center" style="font-size:11px;color:#475569" title="Tidak Dapat TL">TDTD</th>
+              <th class="num" style="font-size:11px">Disetor STS</th>
+              <th class="num" style="font-size:11px">Sisa Kerugian</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php if (empty($rekapDesa)): ?>
+              <tr>
+                <td colspan="14" style="text-align:center;padding:36px;color:var(--slate-400)">
+                  Belum ada data kegiatan pengawasan pada tahun anggaran <?= $tahun ?>.
+                </td>
+              </tr>
+            <?php else: $no=1; foreach ($rekapDesa as $rd): 
+              $rdRekVal = (float)$rd['sum_rekomendasi'];
+              $rdSetVal = (float)$rd['sum_disetor'];
+              $rdPersen = $rdRekVal > 0 ? round(($rdSetVal / $rdRekVal) * 100, 1) : 100.0;
+            ?>
+              <tr>
+                <td style="text-align:center"><?= $no++ ?></td>
+                <td>
+                  <div style="font-weight:700;color:#0f766e"><?= e($rd['desa_nama']) ?></div>
+                </td>
+                <td><?= e($rd['kecamatan_nama']) ?></td>
+                <td style="text-align:center;font-weight:600"><?= (int)$rd['total_sesi_kka'] ?></td>
+                <td style="text-align:center;font-weight:700;color:<?= (int)$rd['total_temuan'] > 0 ? '#b45309' : '#15803d' ?>">
+                  <?= (int)$rd['total_temuan'] ?>
+                </td>
+                <td class="num" style="font-weight:600"><?= rupiah($rd['sum_temuan']) ?></td>
+                <td style="text-align:center;font-weight:700;color:#15803d;background:#f0fdf4"><?= (int)$rd['count_s'] ?></td>
+                <td style="text-align:center;font-weight:700;color:#b45309;background:#fefce8"><?= (int)$rd['count_bs'] ?></td>
+                <td style="text-align:center;font-weight:700;color:#b91c1c;background:#fef2f2"><?= (int)$rd['count_bd'] ?></td>
+                <td style="text-align:center;color:#64748b"><?= (int)$rd['count_tdtd'] ?></td>
+                <td class="num" style="font-weight:700;color:#15803d"><?= rupiah($rd['sum_disetor']) ?></td>
+                <td class="num" style="font-weight:700;color:<?= (float)$rd['sum_sisa'] > 0 ? '#dc2626' : '#15803d' ?>"><?= rupiah($rd['sum_sisa']) ?></td>
+                <td style="text-align:center;font-weight:700;color:<?= $rdPersen >= 100 ? '#15803d' : ($rdPersen > 50 ? '#b45309' : '#dc2626') ?>">
+                  <?= $rdPersen ?>%
+                </td>
+                <td style="text-align:center;padding-right:16px">
+                  <a href="<?= url('tlhp?tahun=' . $tahun . '&desa_id=' . $rd['desa_id']) ?>" class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 8px">
+                    <i class="fa-solid fa-arrow-right"></i> Buka TL
+                  </a>
+                </td>
+              </tr>
+            <?php endforeach; endif; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </main>
 
@@ -266,7 +381,7 @@ partial('sidebar');
     <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;background:#f8fafc">
       <h3 style="margin:0;font-size:14.5px;font-weight:700;color:#0f172a" id="modalTlTitle">
         <i class="fa-solid fa-file-pen" style="color:#0284c7;margin-right:6px"></i>
-        Update Progres Tindak Lanjut Rekomendasi
+        Update Progres Tindak Lanjut Rekomendasi (Standar BPKP)
       </h3>
       <button type="button" onclick="closeModalTl()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#64748b">&times;</button>
     </div>
@@ -282,11 +397,12 @@ partial('sidebar');
       </div>
 
       <div style="margin-bottom:14px">
-        <label class="form-label" style="font-weight:700">Status Tindak Lanjut Auditi <span style="color:#dc2626">*</span></label>
+        <label class="form-label" style="font-weight:700">Status Tindak Lanjut Rekomendasi (Standar BPKP) <span style="color:#dc2626">*</span></label>
         <select name="status" id="m_status" class="form-control" required>
-          <option value="BELUM">BELUM (Belum ada penyelesaian)</option>
-          <option value="PROSES">PROSES (Dalam proses penyetoran/penyusunan bukti)</option>
-          <option value="TUNTAS">TUNTAS (Rekomendasi selesai 100%)</option>
+          <option value="S">S - Sesuai Rekomendasi (Tuntas 100% / Selesai)</option>
+          <option value="BS">BS - Belum Sesuai Rekomendasi (Dalam Proses / Baru Disetor Sebagian)</option>
+          <option value="BD">BD - Belum Ditindaklanjuti (Belum Ada Upaya Penyelesaian)</option>
+          <option value="TDTD">TDTD - Tidak Dapat Ditindaklanjuti (Alasan Sah / Force Majeure)</option>
         </select>
       </div>
 
@@ -325,6 +441,7 @@ partial('sidebar');
               <option value="BELUM_VERIFIKASI">BELUM DIVERIFIKASI</option>
               <option value="SESUAI">SESUAI (Bukti Sah &amp; Valid)</option>
               <option value="BELUM_SESUAI">BELUM SESUAI (Perlu Dilengkapi)</option>
+              <option value="TDTD">TDTD (Disetujui Tidak Dapat TL)</option>
             </select>
           </div>
 
@@ -347,6 +464,37 @@ partial('sidebar');
 </div>
 
 <script>
+function switchTlTab(tab) {
+  var pMatriks = document.getElementById('panelMatriks');
+  var pRekap   = document.getElementById('panelRekap');
+  var bMatriks = document.getElementById('tabBtnMatriks');
+  var bRekap   = document.getElementById('tabBtnRekap');
+
+  if (tab === 'rekap') {
+    if (pMatriks) pMatriks.style.display = 'none';
+    if (pRekap)   pRekap.style.display   = 'block';
+    if (bRekap) {
+      bRekap.style.color = '#0284c7';
+      bRekap.style.borderBottomColor = '#0284c7';
+    }
+    if (bMatriks) {
+      bMatriks.style.color = '#64748b';
+      bMatriks.style.borderBottomColor = 'transparent';
+    }
+  } else {
+    if (pRekap)   pRekap.style.display   = 'none';
+    if (pMatriks) pMatriks.style.display = 'block';
+    if (bMatriks) {
+      bMatriks.style.color = '#0284c7';
+      bMatriks.style.borderBottomColor = '#0284c7';
+    }
+    if (bRekap) {
+      bRekap.style.color = '#64748b';
+      bRekap.style.borderBottomColor = 'transparent';
+    }
+  }
+}
+
 function formatMoneyInput(el) {
   let val = el.value.replace(/[^0-9]/g, '');
   let num = parseInt(val) || 0;
@@ -361,7 +509,12 @@ function openModalTl(item) {
   let targetNum = parseFloat(item.nominal_rekomendasi) || 0;
   document.getElementById('m_target').textContent = 'Rp ' + Math.round(targetNum).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
-  document.getElementById('m_status').value = item.status || 'BELUM';
+  let st = item.status || 'BD';
+  if (st === 'TUNTAS') st = 'S';
+  if (st === 'PROSES') st = 'BS';
+  if (st === 'BELUM')  st = 'BD';
+  document.getElementById('m_status').value = st;
+
   document.getElementById('m_uraian').value = item.uraian_tindak_lanjut || '';
 
   let disetorNum = parseFloat(item.nominal_disetor) || 0;
