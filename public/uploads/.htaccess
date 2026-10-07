@@ -1,4 +1,16 @@
+# ============================================================
+# KKA Digital - Keamanan Berkas Lampiran & Bukti Pemeriksaan
+# Menolak semua akses unduhan langsung ke folder public/uploads
+# Seluruh unduhan WAJIB melalui controller resmi terautentikasi:
+#   - Web App: /lampiran/download?id=X
+#   - Mobile App: /api/lampiran/X/download
+# ============================================================
 Options -Indexes
-<FilesMatch "\.(php|phtml|phar)$">
-  Require all denied
-</FilesMatch>
+
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Deny from all
+</IfModule>
+

@@ -145,55 +145,87 @@ class TlhpController {
 
     /**
      * Update Progres Tindak Lanjut & Validasi Bukti Setor
+     * F03: Pemisahan wewenang operator input bukti dan pejabat verifikator APIP
      */
     public function update(): void {
         only_post();
         csrf_check();
 
-        $id                  = (int) input('id');
-        $status              = trim((string) input('status', 'BD'));
-        if ($status === 'TUNTAS') $status = 'S';
-        if ($status === 'PROSES') $status = 'BS';
-        if ($status === 'BELUM')  $status = 'BD';
+        $id = (int) input('id');
+        $row = DB::one("SELECT * FROM kka_tindak_lanjut WHERE id = ?", [$id]);
+        if (!$row) {
+            flash('error', 'Data Tindak Lanjut tidak ditemukan.');
+            redirect('tlhp');
+            return;
+        }
+
+        $userId = $this->auth->user()['id'] ?? null;
+        $isVerifier = $this->auth->isDalnis() || $this->auth->isIrban() || $this->auth->isInspektur() || $this->auth->isAdmin();
+
+        $statusInput         = trim((string) input('status', 'BD'));
+        if ($statusInput === 'TUNTAS') $statusInput = 'S';
+        if ($statusInput === 'PROSES') $statusInput = 'BS';
+        if ($statusInput === 'BELUM')  $statusInput = 'BD';
 
         $uraianTindakLanjut  = trim((string) input('uraian_tindak_lanjut'));
         $nominalDisetor      = parse_money(input('nominal_disetor', 0));
         $noBuktiSetor        = trim((string) input('no_bukti_setor'));
         $tglSetor            = trim((string) input('tgl_setor')) ?: null;
-        $verifikasiApip      = trim((string) input('verifikasi_apip', 'BELUM_VERIFIKASI'));
-        $catatanApip         = trim((string) input('catatan_apip'));
 
-        $row = DB::one("SELECT * FROM kka_tindak_lanjut WHERE id = ?", [$id]);
-        if (!$row) {
-            flash('error', 'Data Tindak Lanjut tidak ditemukan.');
-            redirect('tlhp');
+        $nominalRekomendasi  = (float)$row['nominal_rekomendasi'];
+        $sisaKerugian        = max(0.0, $nominalRekomendasi - $nominalDisetor);
+
+        if ($isVerifier) {
+            // Pejabat berwenang (Dalnis / Irban / Inspektur / Admin) berhak memvalidasi
+            $verifikasiApip = trim((string) input('verifikasi_apip', $row['verifikasi_apip']));
+            $catatanApip    = trim((string) input('catatan_apip'));
+
+            $status = in_array($statusInput, ['S', 'BS', 'BD', 'TDTD']) ? $statusInput : 'BS';
+
+            // Auto S jika nominal pulih 100% dan verifikasi SESUAI
+            if (($nominalRekomendasi > 0 && $sisaKerugian <= 0 && $verifikasiApip === 'SESUAI') || ($nominalRekomendasi == 0 && $verifikasiApip === 'SESUAI')) {
+                $status = 'S';
+            }
+
+            $tglVerif = in_array($verifikasiApip, ['SESUAI', 'BELUM_SESUAI', 'TDTD']) ? date('Y-m-d H:i:s') : null;
+
+            DB::update('kka_tindak_lanjut', [
+                'status'              => $status,
+                'uraian_tindak_lanjut'=> $uraianTindakLanjut ?: null,
+                'nominal_disetor'     => $nominalDisetor,
+                'sisa_kerugian'       => $sisaKerugian,
+                'no_bukti_setor'      => $noBuktiSetor ?: null,
+                'tgl_setor'           => $tglSetor,
+                'verifikasi_apip'     => $verifikasiApip,
+                'catatan_apip'        => $catatanApip ?: null,
+                'diverifikasi_oleh'   => $tglVerif ? $userId : $row['diverifikasi_oleh'],
+                'tgl_verifikasi'      => $tglVerif ?: $row['tgl_verifikasi'],
+            ], ['id' => $id]);
+
+            AuditTrail::record('tlhp', $id, 'VERIFIKASI_APIP', $row['verifikasi_apip'], $verifikasiApip, 'Verifikasi TLHP oleh ' . ($this->auth->user()['nama'] ?? 'Pejabat APIP'));
+            flash('success', 'Status verifikasi APIP dan tindak lanjut berhasil diperbarui.');
+
+        } else {
+            // Operator / Auditor hanya berhak input bukti dan uraian setor fisik
+            // Status verifikasi APIP dipertahankan seperti semula
+            $status = ($statusInput === 'S' || $statusInput === 'TDTD') ? 'BS' : (in_array($statusInput, ['BS', 'BD']) ? $statusInput : 'BS');
+            if ($nominalDisetor > 0 && $status === 'BD') {
+                $status = 'BS';
+            }
+
+            DB::update('kka_tindak_lanjut', [
+                'status'              => $status,
+                'uraian_tindak_lanjut'=> $uraianTindakLanjut ?: null,
+                'nominal_disetor'     => $nominalDisetor,
+                'sisa_kerugian'       => $sisaKerugian,
+                'no_bukti_setor'      => $noBuktiSetor ?: null,
+                'tgl_setor'           => $tglSetor,
+            ], ['id' => $id]);
+
+            AuditTrail::record('tlhp', $id, 'INPUT_BUKTI_TL', $row['status'], $status, 'Input bukti setor TLHP: Rp ' . number_format($nominalDisetor, 0, ',', '.'));
+            flash('success', 'Uraian dan bukti setor tindak lanjut tersimpan. Status verifikasi menunggu validasi resmi dari Dalnis/Irban.');
         }
 
-        $nominalRekomendasi = (float)$row['nominal_rekomendasi'];
-        $sisaKerugian = max(0.0, $nominalRekomendasi - $nominalDisetor);
-
-        // Auto S jika nominal pulih 100% atau verifikasi sesuai
-        if (($nominalRekomendasi > 0 && $sisaKerugian <= 0 && $verifikasiApip === 'SESUAI') || ($nominalRekomendasi == 0 && $verifikasiApip === 'SESUAI')) {
-            $status = 'S';
-        }
-
-        $userId = $this->auth->user()['id'] ?? null;
-        $tglVerif = in_array($verifikasiApip, ['SESUAI', 'BELUM_SESUAI', 'TDTD']) ? date('Y-m-d H:i:s') : null;
-
-        DB::update('kka_tindak_lanjut', [
-            'status'              => $status,
-            'uraian_tindak_lanjut'=> $uraianTindakLanjut ?: null,
-            'nominal_disetor'     => $nominalDisetor,
-            'sisa_kerugian'       => $sisaKerugian,
-            'no_bukti_setor'      => $noBuktiSetor ?: null,
-            'tgl_setor'           => $tglSetor,
-            'verifikasi_apip'     => $verifikasiApip,
-            'catatan_apip'        => $catatanApip ?: null,
-            'diverifikasi_oleh'   => $tglVerif ? $userId : $row['diverifikasi_oleh'],
-            'tgl_verifikasi'      => $tglVerif ?: $row['tgl_verifikasi'],
-        ], ['id' => $id]);
-
-        flash('success', 'Data pemantauan tindak lanjut berhasil disimpan.');
         redirect('tlhp?tahun=' . $row['tahun_anggaran'] . '&desa_id=' . $row['desa_id']);
     }
 

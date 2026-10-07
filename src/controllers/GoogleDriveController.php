@@ -163,6 +163,13 @@ class GoogleDriveController
                 return;
             }
 
+            // F05: LHP WAJIB berstatus DISAHKAN_INSPEKTUR sebelum masuk folder arsip resmi LHP Final
+            $statusLhp = $data['narasi']['status_lhp'] ?? 'DRAFT';
+            if ($statusLhp !== 'DISAHKAN_INSPEKTUR' && !$this->auth->isAdmin()) {
+                $this->responseError('LHP belum dapat diarsipkan ke folder resmi LHP Final karena belum disahkan oleh Inspektur Daerah (Status saat ini: ' . $statusLhp . ').', $isAjax);
+                return;
+            }
+
             // Render HTML Naskah LHP Lengkap (Cover, Bab I s.d IV, Matriks & TTD)
             $htmlContent = view_render('print/lhp', $data);
 
@@ -419,12 +426,13 @@ class GoogleDriveController
         $tahun = (int)input('tahun', (int)date('Y'));
 
         try {
+            // F05: Hanya sinkronkan LHP yang telah berstatus resmi DISAHKAN_INSPEKTUR
             $desaList = DB::all("
                 SELECT DISTINCT d.id, d.nama
                 FROM kka_desa d
-                WHERE EXISTS (SELECT 1 FROM kka_sesi s WHERE s.desa_id = d.id AND s.tahun_anggaran = ?)
-                   OR EXISTS (SELECT 1 FROM kka_temuan t WHERE t.desa_id = d.id AND t.tahun_anggaran = ?)
-            ", [$tahun, $tahun]);
+                JOIN kka_lhp_narasi n ON n.desa_id = d.id AND n.tahun_anggaran = ?
+                WHERE n.status_lhp = 'DISAHKAN_INSPEKTUR'
+            ", [$tahun]);
 
             $syncedCount = 0;
             $lhpCtrl = new LhpController($this->auth);
@@ -547,6 +555,13 @@ class GoogleDriveController
      */
     public function auth(): void
     {
+        // F05: Hanya Administrator yang berwenang menghubungkan akun Google Drive
+        if (!$this->auth->isAdmin()) {
+            flash('error', 'Akses ditolak: Hanya Administrator yang berwenang mengelola koneksi Google Drive.');
+            redirect('gdrive');
+            return;
+        }
+
         $cfg = $GLOBALS['cfg'] ?? [];
         $clientId = $cfg['gdrive_client_id'] ?? '';
         $appUrl = rtrim($cfg['app_url'] ?? 'https://kka.arsipdigital-inspektorat.com', '/');
@@ -558,6 +573,10 @@ class GoogleDriveController
             return;
         }
 
+        // F05: Buat OAuth state CSRF acak dan simpan di sesi
+        $state = bin2hex(random_bytes(16));
+        $_SESSION['gdrive_oauth_state'] = $state;
+
         $params = [
             'client_id'     => $clientId,
             'redirect_uri'  => $redirectUri,
@@ -565,6 +584,7 @@ class GoogleDriveController
             'scope'         => 'https://www.googleapis.com/auth/drive',
             'access_type'   => 'offline',
             'prompt'        => 'consent',
+            'state'         => $state,
         ];
 
         $authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query($params);
@@ -577,8 +597,25 @@ class GoogleDriveController
      */
     public function callback(): void
     {
+        // F05: Hanya Administrator yang berwenang
+        if (!$this->auth->isAdmin()) {
+            flash('error', 'Akses ditolak: Hanya Administrator yang berwenang.');
+            redirect('gdrive');
+            return;
+        }
+
         $code  = trim((string)input('code', ''));
         $error = trim((string)input('error', ''));
+        $state = trim((string)input('state', ''));
+
+        // F05: Verifikasi parameter state CSRF
+        $expectedState = $_SESSION['gdrive_oauth_state'] ?? '';
+        unset($_SESSION['gdrive_oauth_state']);
+        if (empty($state) || empty($expectedState) || !hash_equals($expectedState, $state)) {
+            flash('error', 'Validasi OAuth state gagal (indikasi pemalsuan request / CSRF). Otorisasi dibatalkan.');
+            redirect('gdrive');
+            return;
+        }
 
         if (!empty($error)) {
             flash('error', 'Otorisasi Google Drive dibatalkan atau gagal: ' . htmlspecialchars($error));
@@ -628,6 +665,8 @@ class GoogleDriveController
                 'GOOGLE_DRIVE_ACCOUNT_EMAIL' => 'teamirban4@gmail.com',
             ]);
 
+            AuditTrail::record('gdrive', 0, 'OAUTH_CONNECT', null, 'CONNECTED', 'Google Drive OAuth berhasil dihubungkan oleh Admin');
+
             flash('success', 'Akun Google Drive berhasil dihubungkan! Semua dokumen KKA sekarang tersimpan di Drive teamirban4@gmail.com.');
         } else {
             $msg = $tokenData['error_description'] ?? ($tokenData['error'] ?? 'Gagal menukar kode otorisasi.');
@@ -642,6 +681,13 @@ class GoogleDriveController
      */
     public function saveToken(): void
     {
+        // F05: Hanya Administrator
+        if (!$this->auth->isAdmin()) {
+            flash('error', 'Akses ditolak: Hanya Administrator yang berwenang menyimpan token.');
+            redirect('gdrive');
+            return;
+        }
+
         csrf_check();
         $token = trim((string)input('refresh_token', ''));
         if (empty($token)) {

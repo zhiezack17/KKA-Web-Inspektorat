@@ -7,3 +7,18 @@ Thumbs.db
 *.tar.gz
 *.zip
 
+# Pengamanan Berkas Unggahan & Arsip Pemeriksaan (P0 - F01)
+/public/uploads/*
+!/public/uploads/.htaccess
+!/public/uploads/.gitkeep
+
+# Local scratch and diagnostic scripts
+*.ps1
+*.sh
+*.bak
+*.tmp
+telaah_content.txt
+sesi3_*.txt
+fix.sql
+
+

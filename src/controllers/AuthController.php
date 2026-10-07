@@ -44,6 +44,7 @@ class AuthController {
 
     public function logout(): void {
         unset($_SESSION['is_admin_master']);
+        unset($_SESSION['original_admin_id']);
         $this->auth->logout();
         flash('success', 'Anda telah keluar.');
         redirect('login');
@@ -52,20 +53,43 @@ class AuthController {
     public function switchUser(): void {
         $this->auth->require();
         $curUser = $this->auth->user();
+
+        // F04: Lacak ID administrator asli dan cegah eskalasi sesi non-admin
+        $origAdminId = $_SESSION['original_admin_id'] ?? null;
         if (($curUser['role'] ?? '') === 'admin') {
+            if (!$origAdminId) {
+                $_SESSION['original_admin_id'] = (int)$curUser['id'];
+            }
             $_SESSION['is_admin_master'] = true;
-        }
-        if (empty($_SESSION['is_admin_master'])) {
-            flash('error', 'Akses ditolak: Fitur simulasi 1-klik hanya dapat digunakan melalui akun Administrator.');
+        } elseif (!$origAdminId) {
+            flash('error', 'Akses ditolak: Fitur simulasi peran hanya dapat diakses melalui akun Administrator.');
             $redirect = $_SERVER['HTTP_REFERER'] ?? url('dashboard');
             header('Location: ' . $redirect);
             exit;
         }
+
+        // Validasi token CSRF bila tersedia
+        $csrfToken = input('csrf') ?: (input('_csrf') ?: (input('csrf_token') ?: ''));
+        if ($csrfToken !== '' && !csrf_valid($csrfToken)) {
+            flash('error', 'Token keamanan simulasi tidak valid.');
+            $redirect = $_SERVER['HTTP_REFERER'] ?? url('dashboard');
+            header('Location: ' . $redirect);
+            exit;
+        }
+
         $target = trim((string)input('user', ''));
-        if ($target !== '') {
+        if ($target === 'restore' || $target === 'admin_master') {
+            if ($origAdminId) {
+                $_SESSION['uid'] = $origAdminId;
+                unset($_SESSION['original_admin_id']);
+                AuditTrail::record('user_switch', $origAdminId, 'RESTORE_ADMIN', 'simulation', 'admin', 'Kembali ke sesi Administrator asli');
+                flash('success', 'Kembali ke akun Administrator utama.');
+            }
+        } elseif ($target !== '') {
             $u = DB::one("SELECT id, nama, role, jabatan FROM kka_users WHERE username = ? AND is_active = 1", [$target]);
             if ($u) {
                 $_SESSION['uid'] = (int)$u['id'];
+                AuditTrail::record('user_switch', (int)$u['id'], 'SIMULASI_PERAN', $curUser['role'] ?? 'unknown', $u['role'], 'Simulasi peran: ' . $u['nama'] . ' (' . $u['role'] . ') oleh Admin ID ' . ($origAdminId ?: $curUser['id']));
                 flash('success', "Beralih peran ke: {$u['nama']} (" . strtoupper($u['role']) . " - " . ($u['jabatan'] ?? '') . ")");
             } else {
                 flash('error', "Pengguna '$target' tidak ditemukan.");

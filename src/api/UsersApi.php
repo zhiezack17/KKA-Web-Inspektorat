@@ -72,40 +72,66 @@ if ($resource === 'users') {
 }
 
 if ($resource === 'profile') {
-    if ($method === 'GET' || $method === 'POST') {
-        $profile = DB::one('
-            SELECT id, nama, email, role, nip, jabatan, is_active, created_at
-            FROM kka_users WHERE id = ?
-        ', [(int)$apiAuth->id()]);
-        if ($subRes1 === 'password') {
-            if ($method !== 'PUT') api_response(405, false, 'Method harus PUT');
-            $oldPass = (string)($input['old_password'] ?? '');
-            $newPass = (string)($input['new_password'] ?? '');
-            if ($newPass === '' || strlen($newPass) < 6) {
-                api_response(422, false, 'Password baru minimal 6 karakter');
-            }
-            $u = DB::one('SELECT password_hash FROM kka_users WHERE id = ?', [(int)$apiAuth->id()]);
-            if (!password_verify($oldPass, $u['password_hash'])) {
-                api_response(422, false, 'Password lama salah');
-            }
-            DB::update('kka_users', [
-                'password_hash' => password_hash($newPass, PASSWORD_BCRYPT),
-            ], ['id' => (int)$apiAuth->id()]);
-            api_response(200, true, 'Password diperbarui');
+    $profile = DB::one('
+        SELECT id, nama, email, role, nip, jabatan, is_active, created_at
+        FROM kka_users WHERE id = ?
+    ', [(int)$apiAuth->id()]);
+
+    if (!$profile) {
+        api_response(404, false, 'Profil pengguna tidak ditemukan');
+    }
+
+    // Endpoint: PUT /profile/password atau POST /profile/password
+    if ($subRes1 === 'password') {
+        if ($method !== 'PUT' && $method !== 'POST') {
+            api_response(405, false, 'Method harus PUT atau POST');
         }
-        if ($method === 'PUT' && $subRes1 === null) {
+
+        $oldPass = (string)($input['old_password'] ?? '');
+        $newPass = (string)($input['new_password'] ?? '');
+
+        if ($oldPass === '') {
+            api_response(422, false, 'Password lama wajib diisi');
+        }
+        if ($newPass === '' || strlen($newPass) < 6) {
+            api_response(422, false, 'Password baru minimal 6 karakter');
+        }
+
+        $u = DB::one('SELECT password_hash FROM kka_users WHERE id = ?', [(int)$apiAuth->id()]);
+        if (!$u || !password_verify($oldPass, (string)$u['password_hash'])) {
+            api_response(422, false, 'Password lama yang Anda masukkan tidak sesuai');
+        }
+
+        DB::update('kka_users', [
+            'password_hash' => password_hash($newPass, PASSWORD_BCRYPT),
+        ], ['id' => (int)$apiAuth->id()]);
+
+        api_response(200, true, 'Password akun berhasil diperbarui');
+    }
+
+    // Endpoint: GET /profile atau PUT /profile atau POST /profile
+    if ($subRes1 === null) {
+        if ($method === 'GET') {
+            api_response(200, true, 'Data profil', $profile);
+        }
+
+        if ($method === 'PUT' || $method === 'POST') {
             $data = [
                 'nama'    => trim((string)($input['nama'] ?? $profile['nama'])),
                 'nip'     => !empty($input['nip']) ? trim((string)$input['nip']) : null,
                 'jabatan' => !empty($input['jabatan']) ? trim((string)$input['jabatan']) : null,
             ];
             DB::update('kka_users', $data, ['id' => (int)$apiAuth->id()]);
-            $profile = DB::one('
+
+            $updatedProfile = DB::one('
                 SELECT id, nama, email, role, nip, jabatan, is_active, created_at
                 FROM kka_users WHERE id = ?
             ', [(int)$apiAuth->id()]);
+
+            api_response(200, true, 'Data profil berhasil diperbarui', $updatedProfile);
         }
-        api_response(200, true, 'Data profil', $profile);
+
+        api_response(405, false, 'Method tidak diizinkan untuk /profile');
     }
 }
 

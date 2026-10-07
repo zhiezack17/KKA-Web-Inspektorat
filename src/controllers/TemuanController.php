@@ -242,13 +242,28 @@ class TemuanController {
             redirect('temuan');
         }
 
+        // F03: Kunci temuan yang telah berstatus FINAL_LHP
+        if (($temuan['status'] ?? '') === 'FINAL_LHP' && !$this->auth->isAdmin()) {
+            flash('error', 'Akses ditolak: Temuan ' . e($temuan['nomor_temuan']) . ' berstatus FINAL LHP dan telah dikunci. Perubahan data memerlukan otorisasi Administrator.');
+            redirect('temuan?desa_id=' . $temuan['desa_id'] . '&tahun=' . $temuan['tahun_anggaran']);
+            return;
+        }
+
+        // F03: Kunci jika LHP naskah desa ini telah disahkan Inspektur
+        $lhpNarasi = DB::one("SELECT status_lhp FROM kka_lhp_narasi WHERE desa_id = ? AND tahun_anggaran = ?", [$temuan['desa_id'], $temuan['tahun_anggaran']]);
+        if (($lhpNarasi['status_lhp'] ?? '') === 'DISAHKAN_INSPEKTUR' && !$this->auth->isAdmin()) {
+            flash('error', 'Laporan Hasil Pengawasan (LHP) untuk kepenghuluan ini telah resmi DISAHKAN oleh Inspektur Daerah. Seluruh temuan dikunci secara permanen.');
+            redirect('temuan?desa_id=' . $temuan['desa_id'] . '&tahun=' . $temuan['tahun_anggaran']);
+            return;
+        }
+
         $desaId      = (int) input('desa_id', $temuan['desa_id']);
         $tahun       = (int) input('tahun_anggaran', $temuan['tahun_anggaran']);
         $nomorTemuan = trim((string) input('nomor_temuan', $temuan['nomor_temuan']));
         $judul       = trim((string) input('judul'));
         $nominal     = parse_money(input('nominal', 0));
         $bidangNama  = trim((string) input('bidang_nama')) ?: null;
-        $status      = trim((string) input('status', 'DRAFT'));
+        $statusInput = trim((string) input('status', 'DRAFT'));
 
         $kondisi     = trim((string) input('kondisi'));
         $kriteria    = trim((string) input('kriteria'));
@@ -260,6 +275,15 @@ class TemuanController {
         if ($judul === '' || $kondisi === '' || $rekomendasi === '') {
             flash('error', 'Judul Temuan, Kondisi, dan Rekomendasi wajib diisi.');
             redirect('temuan/edit?id=' . $id);
+            return;
+        }
+
+        // Hanya Dalnis/Irban/Inspektur/Admin yang boleh menetapkan status FINAL_LHP
+        $canFinalize = $this->auth->isDalnis() || $this->auth->isIrban() || $this->auth->isInspektur() || $this->auth->isAdmin();
+        if ($statusInput === 'FINAL_LHP' && !$canFinalize) {
+            $status = ($temuan['status'] === 'DIBAHAS') ? 'DIBAHAS' : 'DRAFT';
+        } else {
+            $status = in_array($statusInput, ['DRAFT', 'DIBAHAS', 'FINAL_LHP']) ? $statusInput : 'DRAFT';
         }
 
         DB::update('kka_temuan', [
@@ -275,8 +299,10 @@ class TemuanController {
             'akibat'          => $akibat,
             'rekomendasi'     => $rekomendasi,
             'tanggapan_auditi'=> $tanggapan,
-            'status'          => in_array($status, ['DRAFT', 'DIBAHAS', 'FINAL_LHP']) ? $status : 'DRAFT',
+            'status'          => $status,
         ], ['id' => $id]);
+
+        AuditTrail::record('temuan', $id, 'UPDATE_TEMUAN', $temuan['status'], $status, 'Pembaruan konsep temuan ' . $nomorTemuan);
 
         flash('success', "Konsep Temuan {$nomorTemuan} diperbarui.");
         redirect('temuan?desa_id=' . $desaId . '&tahun=' . $tahun);
@@ -285,11 +311,28 @@ class TemuanController {
     public function delete(): void {
         only_post(); csrf_check();
         $id = (int) input('id');
-        $temuan = DB::one("SELECT desa_id, tahun_anggaran, nomor_temuan FROM kka_temuan WHERE id = ?", [$id]);
+        $temuan = DB::one("SELECT id, desa_id, tahun_anggaran, nomor_temuan, status FROM kka_temuan WHERE id = ?", [$id]);
         if (!$temuan) {
             flash('error', 'Temuan tidak ditemukan.');
             redirect('temuan');
+            return;
         }
+
+        // F03: Larang penghapusan jika temuan FINAL_LHP atau LHP sudah disahkan
+        if (($temuan['status'] ?? '') === 'FINAL_LHP' && !$this->auth->isAdmin()) {
+            flash('error', 'Akses ditolak: Temuan ' . e($temuan['nomor_temuan']) . ' berstatus FINAL LHP dan tidak boleh dihapus.');
+            redirect('temuan?desa_id=' . $temuan['desa_id'] . '&tahun=' . $temuan['tahun_anggaran']);
+            return;
+        }
+
+        $lhpNarasi = DB::one("SELECT status_lhp FROM kka_lhp_narasi WHERE desa_id = ? AND tahun_anggaran = ?", [$temuan['desa_id'], $temuan['tahun_anggaran']]);
+        if (($lhpNarasi['status_lhp'] ?? '') === 'DISAHKAN_INSPEKTUR' && !$this->auth->isAdmin()) {
+            flash('error', 'Laporan Hasil Pengawasan (LHP) telah resmi DISAHKAN oleh Inspektur Daerah. Temuan tidak dapat dihapus.');
+            redirect('temuan?desa_id=' . $temuan['desa_id'] . '&tahun=' . $temuan['tahun_anggaran']);
+            return;
+        }
+
+        AuditTrail::record('temuan', $id, 'DELETE_TEMUAN', $temuan['status'], null, 'Penghapusan temuan ' . $temuan['nomor_temuan']);
 
         DB::delete('kka_temuan', ['id' => $id]);
         flash('success', "Konsep Temuan {$temuan['nomor_temuan']} dihapus.");

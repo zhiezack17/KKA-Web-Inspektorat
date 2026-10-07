@@ -7,6 +7,17 @@ declare(strict_types=1);
 
 require __DIR__ . '/../src/bootstrap.php';
 
+// F04: Batasi akses installer hanya via CLI server atau sesi Administrator terautentikasi
+if (php_sapi_name() !== 'cli') {
+    $auth = new Auth();
+    if (!$auth->check() || !$auth->isAdmin()) {
+        http_response_code(403);
+        echo "<h2 style='font-family:sans-serif;color:#b91c1c'>403 Forbidden - Akses Ditolak</h2>";
+        echo "<p style='font-family:sans-serif'>Skrip migrasi/installer ini dilindungi dan hanya dapat dijalankan melalui CLI server atau oleh Administrator terautentikasi.</p>";
+        exit;
+    }
+}
+
 echo "<pre style='font-family:monospace;font-size:14px;line-height:1.8;'>";
 echo str_repeat("=", 60) . "\n";
 echo "   INSTALLER TABEL KKA MOBILE API\n";

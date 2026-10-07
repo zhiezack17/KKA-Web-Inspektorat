@@ -42,23 +42,16 @@ Dibangun dengan PHP 8.1+ native dan MySQL/MariaDB agar **kompatibel penuh dengan
 - Menu **Select PHP Version** → pilih **PHP 8.1** atau **PHP 8.2**
 - Ekstensi yang HARUS aktif: `pdo_mysql`, `mbstring`, `fileinfo`, `gd` (opsional, untuk thumbnail)
 
-### 5. Jalankan Installer
-Buka di browser: **https://arsipdigital-inspektorat.com/install.php**
+### 5. Inisialisasi Database
+Jalankan migrasi database via CLI server untuk lingkungan produksi:
+```bash
+php -r "require 'src/bootstrap.php'; /* jalankan migrasi database */"
+```
+Atau jika menggunakan installer awal, pastikan file installer (`install.php`) dihapus segera setelah inisialisasi selesai.
 
-Installer akan:
-- Membuat seluruh tabel database
-- Mengisi data master: **18 Kecamatan + ~180 Desa** Rokan Hilir
-- Mengisi **5 Bidang + 27 Sub Bidang** sesuai data Dana Desa
-- Membuat akun admin pertama
-
-### 6. ⚠️ HAPUS file `install.php` setelah selesai!
-Demi keamanan, hapus `public/install.php` dari server lewat File Manager cPanel.
-
-### 7. Login
-- URL: `https://arsipdigital-inspektorat.com/login`
-- Email: `admin@inspektorat-rohil.go.id`
-- Password: `Admin@2026` (sesuai `.env`)
-- **Segera ganti password** lewat menu Profil.
+### 6. Kredensial Administrator
+- Kredensial awal ditentukan secara unik melalui file `.env` (`ADMIN_EMAIL` dan `ADMIN_PASSWORD`).
+- **PENTING**: Gunakan kata sandi kuat dan segera perbarui secara berkala melalui menu Profil. Jangan gunakan kata sandi default pada lingkungan produksi.
 
 ---
 

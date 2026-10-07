@@ -206,8 +206,9 @@ $isPengaturanActive = str_contains($current, '/panduan-workflow')
       </span>
       <span style="font-size:9px;background:#b45309;color:#fff;padding:1px 5px;border-radius:4px;font-weight:700">1-Klik</span>
     </div>
-    <select onchange="if(this.value) window.location.href='<?= url('switch-role?user=') ?>' + this.value" style="width:100%;font-size:11px;font-weight:700;padding:5px 7px;border-radius:6px;background:#022c22;color:#f8fafc;border:1px solid #1e3a8a;cursor:pointer;outline:none">
+    <select onchange="if(this.value) window.location.href='<?= url('switch-role?csrf=' . csrf_token() . '&user=') ?>' + this.value" style="width:100%;font-size:11px;font-weight:700;padding:5px 7px;border-radius:6px;background:#022c22;color:#f8fafc;border:1px solid #1e3a8a;cursor:pointer;outline:none">
       <option value="">-- Ganti Akun Pejabat --</option>
+      <option value="restore" style="font-weight:bold;color:#f59e0b">🔙 Akun Administrator Utama</option>
       <option value="inspektur" <?= ($user['username'] ?? '') === 'inspektur' ? 'selected' : '' ?>>👤 Inspektur (H. Sarman Syahroni)</option>
       <option value="marwan" <?= ($user['username'] ?? '') === 'marwan' ? 'selected' : '' ?>>👤 Irban IV (Marwan, M.T)</option>
       <option value="operator_spt" <?= ($user['username'] ?? '') === 'operator_spt' ? 'selected' : '' ?>>👤 Bag. Perencanaan (SPT)</option>

@@ -430,6 +430,8 @@ class SesiController {
             'tgl_reviu_ketua' => null,
         ], ['id' => $id]);
 
+        AuditTrail::record('kka', $id, 'AJUKAN_KETUA', $st, 'REVIEW_KETUA', 'Pengajuan KKA ke Ketua Tim oleh Auditor');
+
         flash('success', 'KKA berhasil diajukan ke Ketua Tim untuk direviu.');
         redirect('sesi/show?id=' . $id);
     }
@@ -448,6 +450,14 @@ class SesiController {
         $isAdmin   = $this->auth->isAdmin();
         $ketuaId   = (int) ($sesi['ketua_tim_id'] ?? 0);
 
+        // F02: Kunci status asal (KKA harus dalam tahap REVIEW_KETUA)
+        $st = $sesi['status'] ?? 'DRAFT';
+        if ($st !== 'REVIEW_KETUA' && !$isAdmin) {
+            flash('error', 'Status KKA tidak valid untuk Reviu Ketua Tim (Status saat ini: ' . $st . '). KKA harus dalam status REVIEW_KETUA.');
+            redirect('sesi/show?id=' . $id);
+            return;
+        }
+
         $matchKetuaName = ($currNama !== '' && !empty($sesi['direview_oleh']) && (
             stripos($sesi['direview_oleh'], $currNama) !== false ||
             stripos($currNama, trim($sesi['direview_oleh'])) !== false ||
@@ -459,6 +469,7 @@ class SesiController {
         if (!$isAuthorizedKetua) {
             flash('error', 'Hanya Ketua Tim yang ditugaskan (' . e($sesi['ketua_nama'] ?: ($sesi['direview_oleh'] ?: 'Ketua Tim')) . ') atau Administrator yang berhak melakukan Reviu Ketua Tim.');
             redirect('sesi/show?id=' . $id);
+            return;
         }
 
         $aksi = (string) input('aksi');
@@ -482,17 +493,20 @@ class SesiController {
                 $update['tanggal_review'] = date('Y-m-d');
             }
             DB::update('kka_sesi', $update, ['id' => $id]);
+            AuditTrail::record('kka', $id, 'SETUJU_KETUA', $st, 'REVIEW_DALNIS', $catatan ?: 'KKA disetujui Ketua Tim');
             flash('success', 'KKA disetujui Ketua Tim dan diteruskan ke Pengendali Teknis (Dalnis).');
         } elseif ($aksi === 'revisi') {
             if ($catatan === '') {
                 flash('error', 'Harap isi catatan reviu/arahan revisi untuk auditor.');
                 redirect('sesi/show?id=' . $id);
+                return;
             }
             DB::update('kka_sesi', [
                 'status' => 'PERLU_REVISI',
                 'catatan_reviu_ketua' => $catatan,
                 'ketua_tim_id' => ($ketuaId > 0) ? $ketuaId : $currUid,
             ], ['id' => $id]);
+            AuditTrail::record('kka', $id, 'REVISI_KETUA', $st, 'PERLU_REVISI', $catatan);
             flash('warning', 'KKA dikembalikan ke Auditor dengan catatan revisi.');
         }
 
@@ -514,6 +528,14 @@ class SesiController {
         $dalnisId  = (int) ($sesi['dalnis_id'] ?? 0);
         $isMadya   = $this->auth->isDalnis();
 
+        // F02: Kunci status asal (KKA harus dalam tahap REVIEW_DALNIS)
+        $st = $sesi['status'] ?? 'DRAFT';
+        if ($st !== 'REVIEW_DALNIS' && !$isAdmin) {
+            flash('error', 'Status KKA tidak valid untuk Pengesahan Dalnis (Status saat ini: ' . $st . '). KKA harus dalam status REVIEW_DALNIS.');
+            redirect('sesi/show?id=' . $id);
+            return;
+        }
+
         $matchDalnisName = ($currNama !== '' && !empty($sesi['dievaluasi_oleh']) && (
             stripos($sesi['dievaluasi_oleh'], $currNama) !== false ||
             stripos($currNama, trim($sesi['dievaluasi_oleh'])) !== false ||
@@ -525,11 +547,13 @@ class SesiController {
         if (!$isAdmin && !$isMadya && $dalnisId !== $currUid && !$matchDalnisName) {
             flash('error', 'Akses ditolak. Pengesahan KKA pada tahap Dalnis hanya dapat dilakukan oleh Auditor Madya / Pengendali Teknis (Dalnis).');
             redirect('sesi/show?id=' . $id);
+            return;
         }
         // 2. Jika Dalnis sudah ditugaskan secara spesifik pada sesi ini (id > 0), harus Dalnis bersangkutan atau Admin
         if (!$isAdmin && $dalnisId > 0 && $dalnisId !== $currUid) {
             flash('error', 'Hanya Pengendali Teknis yang ditugaskan (' . e($sesi['dalnis_nama'] ?: ($sesi['dievaluasi_oleh'] ?: 'Dalnis')) . ') atau Administrator yang berhak mengesahkan KKA ini.');
             redirect('sesi/show?id=' . $id);
+            return;
         }
 
         $aksi = (string) input('aksi');
@@ -553,17 +577,20 @@ class SesiController {
                 $update['tanggal_evaluasi'] = date('Y-m-d');
             }
             DB::update('kka_sesi', $update, ['id' => $id]);
+            AuditTrail::record('kka', $id, 'SAHKAN_DALNIS', $st, 'SELESAI_FINAL', $catatan ?: 'Pengesahan final KKA oleh Dalnis');
             flash('success', 'KKA berhasil disahkan oleh Pengendali Teknis (Dalnis). Dokumen KKA telah Sah/Final.');
         } elseif ($aksi === 'revisi') {
             if ($catatan === '') {
                 flash('error', 'Harap isi catatan arahan perbaikan dari Dalnis.');
                 redirect('sesi/show?id=' . $id);
+                return;
             }
             DB::update('kka_sesi', [
                 'status' => 'PERLU_REVISI',
                 'catatan_reviu_dalnis' => $catatan,
                 'dalnis_id' => ($dalnisId > 0) ? $dalnisId : $currUid,
             ], ['id' => $id]);
+            AuditTrail::record('kka', $id, 'REVISI_DALNIS', $st, 'PERLU_REVISI', $catatan);
             flash('warning', 'KKA dikembalikan dengan catatan arahan perbaikan dari Dalnis.');
         }
 

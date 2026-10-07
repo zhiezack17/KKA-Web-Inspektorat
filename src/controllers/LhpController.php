@@ -279,13 +279,16 @@ class LhpController {
     /**
      * Pengesahan LHP 1-Klik oleh Inspektur Daerah
      */
+    /**
+     * Pengesahan LHP 1-Klik oleh Inspektur Daerah
+     */
     public function sahkan(): void {
         only_post();
         csrf_check();
 
         if (!$this->auth->isInspektur() && !$this->auth->isAdmin()) {
             http_response_code(403);
-            exit('Hanya Inspektur Daerah atau Administrator yang berwenang mengesahkan LHP.');
+            exit('Akses ditolak: Hanya Inspektur Daerah atau Administrator yang berwenang mengesahkan LHP.');
         }
 
         $desaId = (int) input('desa_id');
@@ -293,7 +296,22 @@ class LhpController {
         $u      = $this->auth->user();
         $now    = date('Y-m-d H:i:s');
 
-        $existing = DB::one("SELECT id FROM kka_lhp_narasi WHERE desa_id = ? AND tahun_anggaran = ?", [$desaId, $tahun]);
+        $existing = DB::one("SELECT id, status_lhp FROM kka_lhp_narasi WHERE desa_id = ? AND tahun_anggaran = ?", [$desaId, $tahun]);
+        $currentStatus = $existing['status_lhp'] ?? 'DRAFT';
+
+        // F02: Validasi status asal LHP sebelum pengesahan
+        if ($currentStatus === 'DISAHKAN_INSPEKTUR') {
+            flash('warning', 'Laporan Hasil Pengawasan (LHP) untuk kepenghuluan ini sudah berstatus DISAHKAN.');
+            redirect('lhp/show?desa_id=' . $desaId . '&tahun=' . $tahun);
+            return;
+        }
+
+        if ($currentStatus !== 'TELAAH_IRBAN' && !$this->auth->isAdmin()) {
+            flash('error', 'LHP belum dapat disahkan karena belum melewati tahap telaah Inspektur Pembantu (Irban). Status saat ini: ' . $currentStatus);
+            redirect('lhp/show?desa_id=' . $desaId . '&tahun=' . $tahun);
+            return;
+        }
+
         if ($existing) {
             DB::update('kka_lhp_narasi', [
                 'status_lhp'              => 'DISAHKAN_INSPEKTUR',
@@ -301,8 +319,9 @@ class LhpController {
                 'disahkan_oleh_nama'      => $u['nama'],
                 'updated_by'              => $u['id'] ?? null,
             ], ['id' => $existing['id']]);
+            $lhpId = (int)$existing['id'];
         } else {
-            DB::insert('kka_lhp_narasi', [
+            $lhpId = DB::insert('kka_lhp_narasi', [
                 'desa_id'                 => $desaId,
                 'tahun_anggaran'          => $tahun,
                 'status_lhp'              => 'DISAHKAN_INSPEKTUR',
@@ -312,8 +331,11 @@ class LhpController {
             ]);
         }
 
+        // Catat jejak audit pengesahan resmi
+        AuditTrail::record('lhp', $lhpId, 'SAHKAN_INSPEKTUR', $currentStatus, 'DISAHKAN_INSPEKTUR', 'Pengesahan Naskah LHP oleh ' . ($u['nama'] ?? 'Inspektur Daerah'));
+
         $desaNama = DB::val("SELECT nama FROM kka_desa WHERE id = ?", [$desaId]) ?: 'Desa';
-        flash('success', 'Laporan Hasil Pengawasan (LHP) Kepenghuluan ' . $desaNama . ' TA ' . $tahun . ' telah resmi DISAHKAN oleh Inspektur Daerah pada ' . tgl_id($now) . ' pukul ' . date('H:i', strtotime($now)) . ' WIB. Notifikasi telah dikirimkan ke meja Ketua Tim untuk pencetakan naskah fisik.');
+        flash('success', 'Laporan Hasil Pengawasan (LHP) Kepenghuluan ' . $desaNama . ' TA ' . $tahun . ' telah resmi DISAHKAN oleh Inspektur Daerah pada ' . tgl_id($now) . ' WIB.');
         redirect('lhp/show?desa_id=' . $desaId . '&tahun=' . $tahun);
     }
 
@@ -327,22 +349,76 @@ class LhpController {
         $desaId = (int) input('desa_id');
         $tahun  = (int) input('tahun_anggaran', date('Y'));
         $tahap  = (string) input('tahap');
+        $catatan = trim((string) input('catatan', ''));
         $u      = $this->auth->user();
 
-        $statusMap = [
-            'dalnis'    => 'REVIU_DALNIS',
-            'irban'     => 'TELAAH_IRBAN',
-        ];
-        $targetStatus = $statusMap[$tahap] ?? 'REVIU_DALNIS';
+        $existing = DB::one("SELECT id, status_lhp FROM kka_lhp_narasi WHERE desa_id = ? AND tahun_anggaran = ?", [$desaId, $tahun]);
+        $currentStatus = $existing['status_lhp'] ?? 'DRAFT';
 
-        $existing = DB::one("SELECT id FROM kka_lhp_narasi WHERE desa_id = ? AND tahun_anggaran = ?", [$desaId, $tahun]);
+        // Cegah perubahan status bila sudah disahkan final
+        if ($currentStatus === 'DISAHKAN_INSPEKTUR' && !$this->auth->isAdmin()) {
+            flash('error', 'LHP telah berstatus DISAHKAN oleh Inspektur Daerah dan terkunci secara permanen.');
+            redirect('lhp/show?desa_id=' . $desaId . '&tahun=' . $tahun);
+            return;
+        }
+
+        // F02: Penegakan matriks peran dan status asal
+        if ($tahap === 'dalnis') {
+            // Hanya Ketua Tim, Auditor atau Admin yang berhak mengajukan ke Dalnis
+            $canSubmit = $this->auth->isKetua() || $this->auth->isAuditor() || $this->auth->isAdmin();
+            if (!$canSubmit) {
+                flash('error', 'Akses ditolak: Hanya Ketua Tim atau Auditor penyusun yang berwenang mengajukan naskah LHP ke Dalnis.');
+                redirect('lhp/show?desa_id=' . $desaId . '&tahun=' . $tahun);
+                return;
+            }
+            if (!in_array($currentStatus, ['DRAFT', 'PERLU_REVISI'])) {
+                flash('error', 'Naskah LHP saat ini tidak dalam status Draft/Perlu Revisi (Status: ' . $currentStatus . ').');
+                redirect('lhp/show?desa_id=' . $desaId . '&tahun=' . $tahun);
+                return;
+            }
+            $targetStatus = 'REVIU_DALNIS';
+            $labelTarget  = 'Pengendali Teknis (Dalnis)';
+
+        } elseif ($tahap === 'irban') {
+            // Hanya Dalnis atau Admin yang berhak meneruskan ke Irban
+            $canSubmit = $this->auth->isDalnis() || $this->auth->isAdmin();
+            if (!$canSubmit) {
+                flash('error', 'Akses ditolak: Hanya Pengendali Teknis (Dalnis) atau Admin yang berwenang meneruskan naskah LHP ke Irban.');
+                redirect('lhp/show?desa_id=' . $desaId . '&tahun=' . $tahun);
+                return;
+            }
+            if ($currentStatus !== 'REVIU_DALNIS' && !$this->auth->isAdmin()) {
+                flash('error', 'Naskah LHP harus melalui telaah Dalnis terlebih dahulu sebelum diajukan ke Irban (Status: ' . $currentStatus . ').');
+                redirect('lhp/show?desa_id=' . $desaId . '&tahun=' . $tahun);
+                return;
+            }
+            $targetStatus = 'TELAAH_IRBAN';
+            $labelTarget  = 'Inspektur Pembantu (Irban)';
+
+        } elseif ($tahap === 'revisi_ketua') {
+            // Dalnis atau Irban meminta perbaikan/revisi naskah LHP
+            $canRevise = $this->auth->isDalnis() || $this->auth->isIrban() || $this->auth->isAdmin();
+            if (!$canRevise) {
+                flash('error', 'Akses ditolak: Anda tidak memiliki wewenang untuk mengembalikan naskah LHP untuk revisi.');
+                redirect('lhp/show?desa_id=' . $desaId . '&tahun=' . $tahun);
+                return;
+            }
+            $targetStatus = 'PERLU_REVISI';
+            $labelTarget  = 'Ketua Tim (Perlu Revisi)';
+        } else {
+            flash('error', 'Tahap pengajuan LHP tidak valid.');
+            redirect('lhp/show?desa_id=' . $desaId . '&tahun=' . $tahun);
+            return;
+        }
+
         if ($existing) {
             DB::update('kka_lhp_narasi', [
                 'status_lhp' => $targetStatus,
                 'updated_by' => $u['id'] ?? null,
             ], ['id' => $existing['id']]);
+            $lhpId = (int)$existing['id'];
         } else {
-            DB::insert('kka_lhp_narasi', [
+            $lhpId = DB::insert('kka_lhp_narasi', [
                 'desa_id'        => $desaId,
                 'tahun_anggaran' => $tahun,
                 'status_lhp'     => $targetStatus,
@@ -350,11 +426,9 @@ class LhpController {
             ]);
         }
 
-        $labelMap = [
-            'dalnis' => 'Pengendali Teknis (Dalnis)',
-            'irban'  => 'Inspektur Pembantu (Irban)',
-        ];
-        flash('success', 'Naskah LHP & Routing Slip berhasil diajukan ke ' . ($labelMap[$tahap] ?? 'tahap berikutnya') . '.');
+        AuditTrail::record('lhp', $lhpId, 'AJUKAN_' . strtoupper($tahap), $currentStatus, $targetStatus, $catatan ?: ("Transisi LHP ke " . $labelTarget));
+
+        flash('success', 'Naskah LHP & Routing Slip berhasil dialihkan ke ' . $labelTarget . '.');
         redirect('lhp/show?desa_id=' . $desaId . '&tahun=' . $tahun);
     }
 

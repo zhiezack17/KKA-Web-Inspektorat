@@ -19,11 +19,11 @@ if ($subRes2 === null && $subRes1 !== null && ctype_digit((string)$subRes1)) {
         $lampiran = DB::all("
             SELECT l.id, l.nama_asli, l.nama_file, l.mime_type, l.ukuran,
                    l.keterangan, l.created_at, u.nama AS uploader_nama,
-                   CONCAT(?, '/', l.nama_file) AS file_url
+                   CONCAT(?, '/api/lampiran/', l.id, '/download') AS file_url
             FROM kka_lampiran l
             LEFT JOIN kka_users u ON u.id = l.uploaded_by
             WHERE l.sesi_id = ? ORDER BY l.created_at DESC
-        ", [rtrim($GLOBALS['cfg']['app_url'], '/') . '/uploads', $sesiId]);
+        ", [rtrim($GLOBALS['cfg']['app_url'], '/'), $sesiId]);
         foreach ($lampiran as &$l) {
             $l['ukuran_formatted'] = $l['ukuran'] < 1024 ? $l['ukuran'] . ' B' :
                 ($l['ukuran'] < 1048576 ? round($l['ukuran']/1024, 1) . ' KB' :
@@ -102,19 +102,40 @@ if ($subRes2 === null && $subRes1 !== null && ctype_digit((string)$subRes1)) {
         api_response(201, true, 'Lampiran diupload', [
             'id'        => $id,
             'nama_file' => $namaFile,
-            'file_url'  => rtrim($GLOBALS['cfg']['app_url'], '/') . '/uploads/' . $namaFile,
+            'file_url'  => rtrim($GLOBALS['cfg']['app_url'], '/') . '/api/lampiran/' . $id . '/download',
         ]);
     }
 }
 
-if ($subRes1 !== null && ctype_digit((string)$subRes1) && !isset($subRes2)) {
+if ($subRes1 !== null && ctype_digit((string)$subRes1)) {
     $lampId = (int)$subRes1;
-    $lamp = DB::one('SELECT l.*, s.created_by AS sesi_creator FROM kka_lampiran l
+    $lamp = DB::one('SELECT l.*, s.created_by AS sesi_creator, s.desa_id, s.tahun_anggaran FROM kka_lampiran l
                      JOIN kka_sesi s ON s.id = l.sesi_id WHERE l.id = ?', [$lampId]);
     if (!$lamp) api_response(404, false, 'Lampiran tidak ditemukan');
-    if (!$apiAuth->isAdmin() && (int)$lamp['sesi_creator'] !== (int)$apiAuth->id() && (int)$lamp['uploaded_by'] !== (int)$apiAuth->id()) {
-        api_response(403, false, 'Akses ditolak');
+
+    // Cek izin akses: admin, pembuat sesi, atau uploader
+    $sesiRow = [
+        'id'             => (int)$lamp['sesi_id'],
+        'created_by'     => (int)$lamp['sesi_creator'],
+        'desa_id'        => (int)$lamp['desa_id'],
+        'tahun_anggaran' => (int)$lamp['tahun_anggaran'],
+    ];
+    if (!api_sesi_is_owned($apiAuth, $sesiRow) && (int)$lamp['uploaded_by'] !== (int)$apiAuth->id()) {
+        api_response(403, false, 'Akses ditolak ke berkas lampiran ini');
     }
+
+    // Endpoint download streaming aman untuk Mobile App
+    if ($subRes2 === 'download' || (isset($_GET['download']) && $_GET['download'] === '1')) {
+        $target = $GLOBALS['cfg']['upload_dir'] . '/' . $lamp['nama_file'];
+        if (!is_file($target)) api_response(404, false, 'File fisik lampiran tidak ditemukan di server');
+        if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
+        header('Content-Type: ' . $lamp['mime_type']);
+        header('Content-Disposition: inline; filename="' . addslashes($lamp['nama_asli']) . '"');
+        header('Content-Length: ' . filesize($target));
+        readfile($target);
+        exit;
+    }
+
     if ($method === 'DELETE') {
         $target = $GLOBALS['cfg']['upload_dir'] . '/' . $lamp['nama_file'];
         if (is_file($target)) @unlink($target);
@@ -122,6 +143,7 @@ if ($subRes1 !== null && ctype_digit((string)$subRes1) && !isset($subRes2)) {
         api_response(200, true, 'Lampiran dihapus');
     }
     if ($method === 'GET') {
+        $lamp['file_url'] = rtrim($GLOBALS['cfg']['app_url'], '/') . '/api/lampiran/' . $lampId . '/download';
         api_response(200, true, 'Detail lampiran', $lamp);
     }
 }

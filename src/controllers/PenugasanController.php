@@ -789,6 +789,21 @@ class PenugasanController {
             redirect('penugasan/pka');
         }
 
+        // F02: Kunci peran penyusun (hanya Ketua Tim penugasan atau Admin)
+        $isKetuaTim = ($this->auth->id() === (int)$pka['ketua_tim_id']) || $this->auth->isKetua() || $this->auth->isAdmin();
+        if (!$isKetuaTim) {
+            flash('error', 'Hanya Ketua Tim atau Administrator yang berwenang menyusun alokasi tugas PKA.');
+            redirect('penugasan/pka/show?id=' . $id);
+            return;
+        }
+
+        // F02: Larang perubahan jika PKA sudah disetujui (kecuali Admin)
+        if (($pka['status'] ?? '') === 'DISETUJUI' && !$this->auth->isAdmin()) {
+            flash('error', 'PKA telah berstatus DISETUJUI dan dikunci. Perubahan alokasi harus melalui Administrator.');
+            redirect('penugasan/pka/show?id=' . $id);
+            return;
+        }
+
         $langkahData = (array) (input('langkah') ?? []);
         $submitAction = trim((string) input('action', 'save'));
 
@@ -821,7 +836,9 @@ class PenugasanController {
         }
 
         if ($submitAction === 'ajukan') {
+            $oldSt = $pka['status'] ?? 'DRAFT';
             DB::update('kka_pka', ['status' => 'REVIEW_DALNIS'], 'id = ?', [$id]);
+            AuditTrail::record('pka', $id, 'AJUKAN_DALNIS', $oldSt, 'REVIEW_DALNIS', 'Pengajuan PKA ke Dalnis oleh ' . ($this->auth->user()['nama'] ?? 'Ketua Tim'));
             flash('success', 'Program Kerja Audit (PKA) berhasil diajukan ke Pengendali Teknis (Dalnis).');
         } else {
             flash('success', 'Alokasi tugas pelaksana PKA berhasil diperbarui.');
@@ -836,6 +853,7 @@ class PenugasanController {
 
         $id = (int) input('id');
         $catatan = trim((string) input('catatan_dalnis', 'Disetujui untuk dilaksanakan sesuai alokasi prosedur audit.'));
+        $aksi    = trim((string) input('aksi', 'setuju'));
 
         $pka = DB::one('SELECT * FROM kka_pka WHERE id = ?', [$id]);
         if (!$pka) {
@@ -843,11 +861,43 @@ class PenugasanController {
             redirect('penugasan/pka');
         }
 
+        // F02: Kunci wewenang persetujuan Dalnis
+        $isDalnis = ($this->auth->id() === (int)$pka['dalnis_id']) || $this->auth->isDalnis() || $this->auth->isAdmin();
+        if (!$isDalnis) {
+            flash('error', 'Akses ditolak: Hanya Pengendali Teknis (Dalnis) atau Administrator yang berwenang memvalidasi PKA.');
+            redirect('penugasan/pka/show?id=' . $id);
+            return;
+        }
+
+        if (($pka['status'] ?? '') === 'DISETUJUI') {
+            flash('warning', 'PKA ini sudah berstatus DISETUJUI sebelumnya.');
+            redirect('penugasan/pka/show?id=' . $id);
+            return;
+        }
+
+        if ($aksi === 'revisi') {
+            if ($catatan === '') {
+                flash('error', 'Harap isi catatan arahan perbaikan saat meminta revisi PKA.');
+                redirect('penugasan/pka/show?id=' . $id);
+                return;
+            }
+            DB::update('kka_pka', [
+                'status'         => 'PERLU_REVISI',
+                'catatan_dalnis' => $catatan,
+            ], 'id = ?', [$id]);
+            AuditTrail::record('pka', $id, 'REVISI_DALNIS', $pka['status'], 'PERLU_REVISI', $catatan);
+            flash('warning', 'PKA dikembalikan ke Ketua Tim dengan catatan arahan perbaikan Dalnis.');
+            redirect('penugasan/pka/show?id=' . $id);
+            return;
+        }
+
         DB::update('kka_pka', [
             'status'           => 'DISETUJUI',
             'catatan_dalnis'   => $catatan,
             'tgl_reviu_dalnis' => date('Y-m-d H:i:s'),
         ], 'id = ?', [$id]);
+
+        AuditTrail::record('pka', $id, 'SETUJU_DALNIS', $pka['status'], 'DISETUJUI', $catatan);
 
         flash('success', 'Program Kerja Audit (PKA) telah DISETUJUI oleh Pengendali Teknis.');
         redirect('penugasan/pka/show?id=' . $id);

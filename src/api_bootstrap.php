@@ -77,7 +77,7 @@ function api_input(): array {
     $raw = file_get_contents('php://input');
     if ($raw === false || trim($raw) === '') return is_array($_POST) ? $_POST : [];
     if (str_contains($contentType, 'application/json')) {
-        try { $json = json_decode($raw, true, 512, JSON_THROW_ON_ERROR); } catch (Throwable $e) { api_response(400, false, 'Body JSON tidak valid.'); }
+        try { $json = json_decode($raw, true, 512, JSON_THROW_ON_ERROR); } catch (Throwable $e) { api_response(400, false, 'Body JSON tidak valid: ' . $e->getMessage()); }
         if (!is_array($json)) api_response(400, false, 'Body JSON harus berupa object.');
         return $json;
     }
@@ -107,7 +107,8 @@ final class ApiAuth {
         if (!preg_match('/^Bearer[[:space:]]+([A-Za-z0-9]{40,160})$/D', $header, $match)) return null;
         $token = $match[1];
         $this->token = $token;
-        $row = DB::one('SELECT t.*, u.id AS user_id, u.nama, u.email, u.role, u.nip, u.jabatan, u.is_active FROM kka_api_tokens t JOIN kka_users u ON u.id = t.user_id WHERE t.token = ? LIMIT 1', [$token]);
+        $hashed = hash('sha256', $token);
+        $row = DB::one('SELECT t.*, u.id AS user_id, u.nama, u.email, u.role, u.nip, u.jabatan, u.is_active FROM kka_api_tokens t JOIN kka_users u ON u.id = t.user_id WHERE (t.token = ? OR t.token = ?) LIMIT 1', [$hashed, $token]);
         if (!$row || !(bool)$row['is_active']) return null;
         if ($row['expires_at'] !== null && strtotime((string)$row['expires_at']) <= time()) { DB::delete('kka_api_tokens', ['id' => (int)$row['id']]); return null; }
         DB::update('kka_api_tokens', ['last_used_at' => date('Y-m-d H:i:s')], ['id' => (int)$row['id']]);
@@ -120,9 +121,25 @@ final class ApiAuth {
     public function token(): ?string { return $this->token; }
     public function require(): array { if (!$this->user) api_response(401, false, 'Autentikasi diperlukan. Silakan login.'); return $this->user; }
     public function requireAdmin(): void { $this->require(); if (!$this->isAdmin()) api_response(403, false, 'Akses ditolak. Hanya Administrator.'); }
-    public function createToken(int $userId, string $deviceName = 'mobile'): string { $token = bin2hex(random_bytes(40)); $ttl = max(900, min((int)($GLOBALS['cfg']['mobile_api_access_ttl'] ?? self::DEFAULT_ACCESS_TOKEN_TTL), 3600)); DB::insert('kka_api_tokens', ['user_id' => $userId, 'token' => $token, 'device_name' => substr(trim($deviceName) ?: 'mobile', 0, 100), 'expires_at' => date('Y-m-d H:i:s', time() + $ttl)]); return $token; }
+    public function createToken(int $userId, string $deviceName = 'mobile'): string {
+        $plainToken = bin2hex(random_bytes(40));
+        $hashedToken = hash('sha256', $plainToken);
+        $ttl = max(900, min((int)($GLOBALS['cfg']['mobile_api_access_ttl'] ?? self::DEFAULT_ACCESS_TOKEN_TTL), 3600));
+        DB::insert('kka_api_tokens', [
+            'user_id'     => $userId,
+            'token'       => $hashedToken,
+            'device_name' => substr(trim($deviceName) ?: 'mobile', 0, 100),
+            'expires_at'  => date('Y-m-d H:i:s', time() + $ttl)
+        ]);
+        return $plainToken;
+    }
     public function tokenExpiresAt(): string { $ttl = max(900, min((int)($GLOBALS['cfg']['mobile_api_access_ttl'] ?? self::DEFAULT_ACCESS_TOKEN_TTL), 3600)); return date('Y-m-d H:i:s', time() + $ttl); }
-    public function revokeToken(string $token): void { if ($token !== '') DB::delete('kka_api_tokens', ['token' => $token]); }
+    public function revokeToken(string $token): void {
+        if ($token !== '') {
+            $hashed = hash('sha256', $token);
+            DB::q('DELETE FROM kka_api_tokens WHERE token = ? OR token = ?', [$hashed, $token]);
+        }
+    }
     public function revokeAllTokens(int $userId): void { DB::delete('kka_api_tokens', ['user_id' => $userId]); }
     public function attempt(string $identifier, string $password, string $deviceName = 'mobile'): ?array {
         $identifier = trim($identifier);

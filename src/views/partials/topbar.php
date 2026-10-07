@@ -41,7 +41,8 @@ $canSwitchRole = !empty($_SESSION['is_admin_master']);
         <?php endif; ?>
 
         <span class="hide-mobile" style="font-size:11px;font-weight:700;color:#0f172a">Peran Demo:</span>
-        <select onchange="if(this.value) window.location.href='<?= url('switch-role?user=') ?>' + this.value" style="font-size:11.5px;font-weight:700;border:none;background:transparent;color:#1e293b;cursor:pointer;outline:none;padding:2px 0">
+        <select onchange="if(this.value) window.location.href='<?= url('switch-role?csrf=' . csrf_token() . '&user=') ?>' + this.value" style="font-size:11.5px;font-weight:700;border:none;background:transparent;color:#1e293b;cursor:pointer;outline:none;padding:2px 0">
+          <option value="restore" style="font-weight:bold;color:#b45309">🔙 Akun Administrator</option>
           <option value="inspektur" <?= $curUname === 'inspektur' ? 'selected' : '' ?>>👤 Inspektur (H. Sarman Syahroni)</option>
           <option value="marwan" <?= $curUname === 'marwan' ? 'selected' : '' ?>>👤 Irban IV (Marwan, M.T)</option>
           <option value="operator_spt" <?= $curUname === 'operator_spt' ? 'selected' : '' ?>>👤 Bag. Perencanaan (SPT)</option>
