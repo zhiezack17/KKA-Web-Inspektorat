@@ -64,13 +64,13 @@ $isPengaturanActive = str_contains($current, '/panduan-workflow')
       <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
     </a>
 
-    <!-- 2. SUBMENU: PRA-AUDIT & PENUGASAN (Admin, Inspektur, Irban, Dalnis, Ketua, Auditor, Operator SPT) -->
+    <!-- 2. TAHAP PERSIAPAN / PRA-AUDIT (Sesuai Diagram Alur Inspektorat) -->
     <?php if (!$isTl): ?>
       <div class="nav-group <?= $isPraAuditActive ? 'open' : '' ?>">
         <div class="nav-group-header" onclick="toggleNavGroup(this)">
           <div class="nav-group-title">
-            <i class="fa-solid fa-envelope-open-text" style="color:#6366f1"></i>
-            <span>Pra-Audit &amp; SPT</span>
+            <i class="fa-solid fa-file-signature" style="color:#6366f1"></i>
+            <span>Tahap Persiapan (Pra-Audit)</span>
           </div>
           <div style="display:flex;align-items:center;gap:6px">
             <?php if ($badgeDisposisi > 0): ?>
@@ -80,40 +80,40 @@ $isPengaturanActive = str_contains($current, '/panduan-workflow')
           </div>
         </div>
         <div class="nav-submenu">
-          <a href="<?= url('penugasan/nota-dinas') ?>" class="nav-subitem<?= nav_active('/penugasan/nota-dinas', $current) ?>" data-testid="nav-nota-dinas">
-            <i class="fa-solid fa-file-pen"></i><span>Nota Dinas (ND)</span>
-            <?php if ($badgeDisposisi > 0): ?>
-              <span class="badge" style="background:#ef4444;color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:auto"><?= $badgeDisposisi ?></span>
-            <?php endif; ?>
-          </a>
-          <a href="<?= url('penugasan/spt') ?>" class="nav-subitem<?= nav_active('/penugasan/spt', $current) ?>" data-testid="nav-spt">
-            <i class="fa-solid fa-file-signature"></i><span>Surat Tugas (SPT)</span>
-          </a>
-          <a href="<?= url('penugasan/pka') ?>" class="nav-subitem<?= nav_active('/penugasan/pka', $current) ?>" data-testid="nav-pka">
-            <i class="fa-solid fa-list-check"></i><span>Matriks PKA</span>
-          </a>
           <?php if (!$isSpt || $isAdmin): ?>
             <a href="<?= url('pia/nota-dinas') ?>" class="nav-subitem<?= nav_active('/pia/nota-dinas', $current) ?>" data-testid="nav-pia-nd">
-              <i class="fa-solid fa-file-lines" style="color:#0ea5e9"></i><span>ND Pra-Audit (PIA)</span>
+              <i class="fa-solid fa-file-pen" style="color:#0ea5e9"></i><span>Nota Dinas PIA</span>
             </a>
             <a href="<?= url('pia/spt') ?>" class="nav-subitem<?= nav_active('/pia/spt', $current) ?>">
               <i class="fa-solid fa-signature" style="color:#0ea5e9"></i><span>SPT PIA</span>
             </a>
             <a href="<?= url('pia/lhp') ?>" class="nav-subitem<?= nav_active('/pia/lhp', $current) ?>">
-              <i class="fa-solid fa-clipboard-check" style="color:#0ea5e9"></i><span>KKA &amp; DPP PIA</span>
+              <i class="fa-solid fa-clipboard-check" style="color:#0ea5e9"></i><span>KKA &amp; DPPA PIA</span>
             </a>
           <?php endif; ?>
+          <a href="<?= url('penugasan/nota-dinas') ?>" class="nav-subitem<?= nav_active('/penugasan/nota-dinas', $current) ?>" data-testid="nav-nota-dinas">
+            <i class="fa-solid fa-envelope-open-text" style="color:#6366f1"></i><span>Nota Dinas ADTT</span>
+            <?php if ($badgeDisposisi > 0): ?>
+              <span class="badge" style="background:#ef4444;color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:auto"><?= $badgeDisposisi ?></span>
+            <?php endif; ?>
+          </a>
+          <a href="<?= url('penugasan/spt') ?>" class="nav-subitem<?= nav_active('/penugasan/spt', $current) ?>" data-testid="nav-spt">
+            <i class="fa-solid fa-stamp" style="color:#6366f1"></i><span>SPT ADTT</span>
+          </a>
+          <a href="<?= url('penugasan/pka') ?>" class="nav-subitem<?= nav_active('/penugasan/pka', $current) ?>" data-testid="nav-pka">
+            <i class="fa-solid fa-list-check" style="color:#6366f1"></i><span>Matriks PKA ADTT</span>
+          </a>
         </div>
       </div>
     <?php endif; ?>
 
-    <!-- 3. SUBMENU: PELAKSANAAN AUDIT (KKA ADTT) (Admin, Irban, Dalnis, Ketua, Auditor) -->
+    <!-- 3. TAHAP PELAKSANAAN / AUDIT (KKA, Kas, Aspek Keuangan, Temuan) -->
     <?php if ((!$isSpt && !$isTl) || $isAdmin): ?>
       <div class="nav-group <?= $isKkaActive ? 'open' : '' ?>">
         <div class="nav-group-header" onclick="toggleNavGroup(this)">
           <div class="nav-group-title">
             <i class="fa-solid fa-clipboard-list" style="color:#0284c7"></i>
-            <span>Pelaksanaan KKA</span>
+            <span>Tahap Pelaksanaan (Audit)</span>
           </div>
           <i class="fa-solid fa-chevron-down nav-group-chevron"></i>
         </div>
@@ -122,40 +122,37 @@ $isPengaturanActive = str_contains($current, '/panduan-workflow')
             <i class="fa-solid fa-folder-open"></i><span>Kertas Kerja (KKA)</span>
           </a>
           <a href="<?= url('opname-kas') ?>" class="nav-subitem<?= nav_active('/opname-kas', $current) ?>" data-testid="nav-opname">
-            <i class="fa-solid fa-money-bill-transfer" style="color:#34d399"></i><span>Pemeriksaan Kas</span>
+            <i class="fa-solid fa-money-bill-transfer" style="color:#10b981"></i><span>Pemeriksaan Kas (Opname)</span>
           </a>
           <a href="<?= url('aspek-keuangan') ?>" class="nav-subitem<?= nav_active('/aspek-keuangan', $current) ?>" data-testid="nav-aspek-keuangan">
-            <i class="fa-solid fa-calculator" style="color:#38bdf8"></i><span>Aspek Keuangan</span>
+            <i class="fa-solid fa-calculator" style="color:#38bdf8"></i><span>Pengujian Aspek Keuangan</span>
           </a>
           <a href="<?= url('rekap') ?>" class="nav-subitem<?= nav_active('/rekap', $current) ?>" data-testid="nav-rekap">
-            <i class="fa-solid fa-chart-column"></i><span>Rekap Belanja</span>
+            <i class="fa-solid fa-chart-column"></i><span>Rekapitulasi Belanja</span>
           </a>
-          <a href="<?= url('master') ?>" class="nav-subitem<?= nav_active('/master', $current) ?>" data-testid="nav-master">
-            <i class="fa-solid fa-folder-tree"></i><span>Master KKA Fisik</span>
+          <a href="<?= url('temuan') ?>" class="nav-subitem<?= nav_active('/temuan', $current) ?>" data-testid="nav-temuan">
+            <i class="fa-solid fa-file-circle-exclamation" style="color:#fbbf24"></i><span>Konsep Temuan (KTP)</span>
           </a>
         </div>
       </div>
     <?php endif; ?>
 
-    <!-- 4. SUBMENU: HASIL PENGAWASAN & LAPORAN (All, filtered per role) -->
+    <!-- 4. TAHAP PELAPORAN & TINDAK LANJUT (LHP, Routing Slip, TLHP) -->
     <div class="nav-group <?= $isLhpActive ? 'open' : '' ?>">
       <div class="nav-group-header" onclick="toggleNavGroup(this)">
         <div class="nav-group-title">
           <i class="fa-solid fa-file-shield" style="color:#10b981"></i>
-          <span>Hasil &amp; Pelaporan</span>
+          <span>Tahap Pelaporan &amp; TL</span>
         </div>
         <i class="fa-solid fa-chevron-down nav-group-chevron"></i>
       </div>
       <div class="nav-submenu">
         <?php if (!$isTl && (!$isSpt || $isAdmin)): ?>
-          <a href="<?= url('temuan') ?>" class="nav-subitem<?= nav_active('/temuan', $current) ?>" data-testid="nav-temuan">
-            <i class="fa-solid fa-file-circle-exclamation" style="color:#fbbf24"></i><span>Konsep Temuan (KTP)</span>
-          </a>
           <a href="<?= url('lhp') ?>" class="nav-subitem<?= (str_contains($current, '/lhp') && !str_contains($current, '/pia/lhp')) ? ' active' : '' ?>" data-testid="nav-lhp">
             <i class="fa-solid fa-file-shield" style="color:#6ee7b7"></i><span>Laporan Hasil (LHP)</span>
           </a>
           <a href="<?= url('routing-slip') ?>" class="nav-subitem<?= nav_active('/routing-slip', $current) ?>" data-testid="nav-routing-slip">
-            <i class="fa-solid fa-folder-open" style="color:#f59e0b"></i><span>Routing Slip Kendali</span>
+            <i class="fa-solid fa-folder-tree" style="color:#f59e0b"></i><span>Routing Slip Kendali</span>
           </a>
         <?php endif; ?>
         <a href="<?= url('tlhp') ?>" class="nav-subitem<?= nav_active('/tlhp', $current) ?>" data-testid="nav-tlhp">

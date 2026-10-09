@@ -275,24 +275,100 @@ $user = $auth->user();
       </div>
     <?php endif; ?>
 
-    <!-- B. MODUL OPERASIONAL: INSPEKTUR -> ANTREAN KEPUTUSAN & RISIKO TINGGI -->
-    <?php if ($activeRole === 'inspektur'): ?>
-      <div style="background:#ffffff;border:1px solid #e2e8f0;border-left:5px solid #d97706;border-radius:12px;padding:16px 20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.03)">
+    <!-- B. MODUL OPERASIONAL: INSPEKTUR -> PUSAT KOMANDO 5 IRBAN, ANTREAN DISPOSISI & PERINGATAN WAKTU -->
+    <?php if ($activeRole === 'inspektur' || $activeRole === 'admin'): ?>
+      
+      <!-- 1. RADAR MONITORING 5 IRBAN (SESUAI STRUKTUR POHON PENGAWASAN) -->
+      <div style="background:#ffffff;border:1px solid #e2e8f0;border-left:5px solid #d97706;border-radius:14px;padding:18px 20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+          <div>
+            <h3 style="margin:0;font-size:16px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:8px">
+              <i class="fa-solid fa-sitemap" style="color:#d97706"></i>
+              RADAR MONITORING 5 IRBAN &bull; KABUPATEN ROKAN HILIR
+            </h3>
+            <p style="margin:3px 0 0;font-size:12px;color:#64748b">
+              Pemantauan berjenjang progres seluruh tim di bawah kendali Inspektur Pembantu I s.d. V secara langsung.
+            </p>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <span class="badge" style="background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;font-size:11px;font-weight:700">
+              🟢 <?= (int)($warningCounts['aman'] ?? 0) ?> Tepat Waktu
+            </span>
+            <span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-size:11px;font-weight:700">
+              🟡 <?= (int)($warningCounts['waspada'] ?? 0) ?> Waspada (H-3)
+            </span>
+            <span class="badge" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;font-size:11px;font-weight:700">
+              🔴 <?= (int)($warningCounts['overdue'] ?? 0) ?> Lewat Batas (Overdue)
+            </span>
+          </div>
+        </div>
+
+        <!-- GRID 5 IRBAN (Responsive 1-5 Kolom) -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));gap:12px;margin-bottom:16px">
+          <?php foreach ($irbanRadar as $irId => $ir): ?>
+            <div style="background:<?= $ir['bg'] ?>;border:1.5px solid <?= $ir['border'] ?>;border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;justify-content:space-between;transition:transform 0.15s">
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                  <span style="font-size:12px;font-weight:800;color:<?= $ir['warna'] ?>;letter-spacing:0.5px">
+                    <i class="fa-solid fa-user-shield"></i> IRBAN <?= $ir['no'] ?>
+                  </span>
+                  <span class="badge" style="background:#fff;color:<?= $ir['warna'] ?>;border:1px solid <?= $ir['border'] ?>;font-size:10px;font-weight:700">
+                    <?= (int)$ir['total_spt'] ?> SPT
+                  </span>
+                </div>
+                <div style="font-size:11.5px;font-weight:700;color:#0f172a;line-height:1.3;margin-bottom:2px">
+                  <?= e($ir['nama']) ?>
+                </div>
+                <div style="font-size:10.5px;color:#64748b;margin-bottom:10px">
+                  <?= e($ir['jabatan']) ?>
+                </div>
+              </div>
+
+              <div style="border-top:1px dashed <?= $ir['border'] ?>;padding-top:8px">
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:4px">
+                  <span style="color:#64748b">Berjalan:</span>
+                  <strong style="color:#0f172a"><?= (int)$ir['berjalan'] ?> Tim</strong>
+                </div>
+                <div style="display:flex;gap:4px;flex-wrap:wrap">
+                  <?php if ($ir['overdue'] > 0): ?>
+                    <span style="font-size:10px;background:#fee2e2;color:#991b1b;padding:1px 6px;border-radius:4px;font-weight:700">
+                      🔴 <?= $ir['overdue'] ?> Terlambat
+                    </span>
+                  <?php endif; ?>
+                  <?php if ($ir['waspada'] > 0): ?>
+                    <span style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:4px;font-weight:700">
+                      🟡 <?= $ir['waspada'] ?> H-3
+                    </span>
+                  <?php endif; ?>
+                  <?php if ($ir['overdue'] === 0 && $ir['waspada'] === 0): ?>
+                    <span style="font-size:10px;background:#ecfdf5;color:#065f46;padding:1px 6px;border-radius:4px;font-weight:700">
+                      🟢 Semua Aman
+                    </span>
+                  <?php endif; ?>
+                </div>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+
+      <!-- 2. AGENDA KEPUTUSAN & DISPOSISI PIMPINAN (MEJA TTE INSPEKTUR) -->
+      <div style="background:#ffffff;border:1px solid #e2e8f0;border-left:5px solid #0f766e;border-radius:14px;padding:18px 20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
           <div>
             <h3 style="margin:0;font-size:15px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:8px">
-              <i class="fa-solid fa-stamp" style="color:#d97706"></i>
-              AGENDA KEPUTUSAN &amp; DISPOSISI PIMPINAN (Inspektur Daerah)
+              <i class="fa-solid fa-stamp" style="color:#0f766e"></i>
+              MEJA DISPOSISI &amp; TTE DIGITAL INSPEKTUR
             </h3>
-            <p style="margin:2px 0 0;font-size:12px;color:#64748b">Nota Dinas usulan tim pengawasan, pengesahan SPT penugasan, dan pengesahan naskah LHP.</p>
+            <p style="margin:2px 0 0;font-size:12px;color:#64748b">Nota Dinas usulan tim, pengesahan SPT penugasan, dan pengesahan naskah LHP definitif.</p>
           </div>
-          <span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-size:11px;font-weight:700">
-            Kewenangan Disposisi Utama
+          <span class="badge" style="background:#ccfbf1;color:#0f766e;border:1px solid #99f6e4;font-size:11px;font-weight:700">
+            <i class="fa-solid fa-pen-nib"></i> Otoritas Utama
           </span>
         </div>
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:14px">
-          <!-- Kolom 1: Nota Dinas Usulan Tim Menunggu Disposisi -->
+          <!-- Kolom 1: Usulan Nota Dinas Menunggu Disposisi -->
           <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
               <span style="font-size:11px;font-weight:700;color:#b45309;text-transform:uppercase">
@@ -321,7 +397,7 @@ $user = $auth->user();
           <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
               <span style="font-size:11px;font-weight:700;color:#0f766e;text-transform:uppercase">
-                <i class="fa-solid fa-file-signature" style="margin-right:4px"></i> SPT Menunggu Sahkan
+                <i class="fa-solid fa-file-signature" style="margin-right:4px"></i> SPT Menunggu Sahkan (TTE)
               </span>
               <span class="badge" style="background:#ccfbf1;color:#0f766e;font-size:10px"><?= count($inspekturData['pending_spt'] ?? []) ?> Menunggu</span>
             </div>
@@ -368,6 +444,92 @@ $user = $auth->user();
           </div>
         </div>
       </div>
+
+      <!-- 3. RADAR COUNTDOWN PERINGATAN HARI PENUGASAN (PEMANTAUAN SELURUH TIM LAPANGAN - MOBILE FRIENDLY) -->
+      <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px 20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+          <div>
+            <h3 style="margin:0;font-size:15px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:8px">
+              <i class="fa-solid fa-stopwatch" style="color:#2563eb"></i>
+              RADAR STATUS HARI PENUGASAN &amp; PROGRESS TIM LAPANGAN
+            </h3>
+            <p style="margin:2px 0 0;font-size:12px;color:#64748b">
+              Monitoring sisa waktu hari kerja SPT dan peringatan keterlambatan (Overdue) seluruh tim lapangan se-Kabupaten.
+            </p>
+          </div>
+          <span style="font-size:11px;color:#64748b;font-style:italic">
+            Real-time per <?= tgl_id(date('Y-m-d')) ?>
+          </span>
+        </div>
+
+        <?php if (empty($sptMonitoring)): ?>
+          <div style="padding:24px;text-align:center;color:#64748b;font-size:13px">
+            <i class="fa-solid fa-clipboard-check" style="font-size:32px;color:#cbd5e1;margin-bottom:8px;display:block"></i>
+            Belum ada Surat Tugas penugasan yang diterbitkan.
+          </div>
+        <?php else: ?>
+          <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+            <table class="table" style="width:100%;font-size:12.5px;border-collapse:collapse">
+              <thead>
+                <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;text-align:left">
+                  <th style="padding:10px 12px;font-weight:700;color:#334155">No SPT &amp; Lokasi</th>
+                  <th style="padding:10px 12px;font-weight:700;color:#334155">Susunan Tim (Irban / Dalnis / Ketua)</th>
+                  <th style="padding:10px 12px;font-weight:700;color:#334155">Masa Tugas &amp; Peringatan</th>
+                  <th style="padding:10px 12px;font-weight:700;color:#334155">Status Audit</th>
+                  <th style="padding:10px 12px;font-weight:700;color:#334155;text-align:right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php foreach ($sptMonitoring as $sm): ?>
+                  <tr style="border-bottom:1px solid #f1f5f9;transition:background 0.15s">
+                    <td style="padding:10px 12px;vertical-align:middle">
+                      <div style="font-weight:800;color:#0f172a"><?= e($sm['desa_nama']) ?></div>
+                      <div style="font-size:11px;color:#64748b">Kec. <?= e($sm['kecamatan_nama']) ?></div>
+                      <div style="font-size:10.5px;color:#0284c7;font-weight:600;margin-top:2px"><?= e($sm['no_spt']) ?></div>
+                    </td>
+                    <td style="padding:10px 12px;vertical-align:middle">
+                      <div style="font-size:12px;font-weight:700;color:#0f172a">
+                        <i class="fa-solid fa-user-tie" style="color:#d97706;width:14px"></i> <?= e($sm['wakil_pj_nama'] ?: 'Irban') ?>
+                      </div>
+                      <div style="font-size:11px;color:#475569">
+                        <i class="fa-solid fa-user-check" style="color:#0284c7;width:14px"></i> Dalnis: <?= e($sm['dalnis_nama'] ?: '-') ?>
+                      </div>
+                      <div style="font-size:11px;color:#64748b">
+                        <i class="fa-solid fa-user-pen" style="color:#10b981;width:14px"></i> Ketua: <?= e($sm['ketua_tim_nama'] ?: '-') ?>
+                      </div>
+                    </td>
+                    <td style="padding:10px 12px;vertical-align:middle">
+                      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+                        <span class="badge" style="background:<?= $sm['badge_bg'] ?>;color:<?= $sm['badge_color'] ?>;font-weight:800;font-size:11px;padding:3px 8px;border-radius:6px">
+                          <?= $sm['status_waktu'] === 'OVERDUE' ? '🚨 ' : ($sm['status_waktu'] === 'WASPADA' ? '⚠️ ' : '🟢 ') ?>
+                          <?= e($sm['label_waktu']) ?>
+                        </span>
+                      </div>
+                      <div style="font-size:11px;color:#64748b">
+                        Tgl SPT: <?= !empty($sm['tgl_spt']) ? tgl_id($sm['tgl_spt']) : '-' ?> (<?= (int)$sm['lama_hari'] ?> Hari)
+                      </div>
+                    </td>
+                    <td style="padding:10px 12px;vertical-align:middle">
+                      <span class="badge" style="background:<?= $sm['status'] === 'SELESAI' ? '#ecfdf5' : '#eff6ff' ?>;color:<?= $sm['status'] === 'SELESAI' ? '#065f46' : '#1e40af' ?>;font-weight:700;font-size:11px">
+                        <?= e($sm['status']) ?>
+                      </span>
+                      <div style="font-size:10.5px;color:#64748b;margin-top:2px">
+                        <?= (int)$sm['jml_sesi_kka'] ?> Sesi KKA &bull; <?= (int)$sm['jml_temuan'] ?> Temuan
+                      </div>
+                    </td>
+                    <td style="padding:10px 12px;vertical-align:middle;text-align:right">
+                      <a href="<?= url('penugasan/spt') ?>" class="btn btn-sm btn-outline-primary" style="font-size:11px;font-weight:700;padding:3px 8px">
+                        <i class="fa-solid fa-eye"></i> Detail
+                      </a>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+        <?php endif; ?>
+      </div>
+
     <?php endif; ?>
 
     <!-- C. MODUL OPERASIONAL: DALNIS -> REVIEW KKA & SOP KENDALI MUTU -->
@@ -484,6 +646,44 @@ $user = $auth->user();
             <i class="fa-solid fa-plus"></i> Sesi Tim Baru
           </a>
         </div>
+
+        <?php 
+          // Ambil SPT aktif ketua tim
+          $ketuaSptAktif = null;
+          foreach ($sptMonitoring as $sm) {
+            if ($sm['status'] !== 'SELESAI') {
+              $ketuaSptAktif = $sm;
+              break;
+            }
+          }
+          if ($ketuaSptAktif):
+        ?>
+          <!-- PERINGATAN MASA TUGAS LAPANGAN (COUNTDOWN ALERT) -->
+          <div style="background:<?= $ketuaSptAktif['badge_bg'] ?>;border:1.5px solid <?= $ketuaSptAktif['badge_color'] ?>;border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="font-size:24px">
+                <?= $ketuaSptAktif['status_waktu'] === 'OVERDUE' ? '🚨' : ($ketuaSptAktif['status_waktu'] === 'WASPADA' ? '⚠️' : '🟢') ?>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:800;color:<?= $ketuaSptAktif['badge_color'] ?>">
+                  <?= $ketuaSptAktif['status_waktu'] === 'OVERDUE' ? 'PERINGATAN KRITIS: MASA TUGAS LAPANGAN TELAH BERAKHIR' : ($ketuaSptAktif['status_waktu'] === 'WASPADA' ? 'PERINGATAN: MENDEKATI BATAS WAKTU PENUGASAN' : 'STATUS PENUGASAN LAPANGAN AKTIF') ?>
+                </div>
+                <div style="font-size:12px;color:#334155;margin-top:2px">
+                  Surat Tugas: <b><?= e($ketuaSptAktif['no_spt']) ?></b> &bull; Desa <b><?= e($ketuaSptAktif['desa_nama']) ?></b> &bull;
+                  <b><?= e($ketuaSptAktif['label_waktu']) ?></b> (Batas: <?= tgl_id($ketuaSptAktif['tgl_selesai_est']) ?>)
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <a href="<?= url('sesi') ?>" class="btn btn-sm" style="background:#fff;border:1px solid <?= $ketuaSptAktif['badge_color'] ?>;color:<?= $ketuaSptAktif['badge_color'] ?>;font-weight:700">
+                <i class="fa-solid fa-folder-open"></i> Buka KKA
+              </a>
+              <a href="<?= url('temuan') ?>" class="btn btn-sm" style="background:<?= $ketuaSptAktif['badge_color'] ?>;color:#fff;font-weight:700;border:none">
+                <i class="fa-solid fa-file-circle-exclamation"></i> Buat Temuan / BA
+              </a>
+            </div>
+          </div>
+        <?php endif; ?>
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:12px">
           <!-- Sesi Tim Sedang Berjalan -->

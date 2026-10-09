@@ -240,6 +240,102 @@ class DashboardController {
             GROUP BY b.id, b.nama ORDER BY b.urutan
         ", array_merge($op, $filterParams));
 
+        // 7b. DATA MONITORING RADAR 5 IRBAN & PERINGATAN HARI PENUGASAN (Executive Center)
+        $irbanConfig = [
+            1 => ['no' => 'I',   'nama' => 'RIZQIA PUTRI, S.STP.,M.Si.,QRMP', 'jabatan' => 'Inspektur Pembantu I',   'warna' => '#2563eb', 'bg' => '#eff6ff', 'border' => '#bfdbfe'],
+            2 => ['no' => 'II',  'nama' => 'YUNISMAN, S.Pi, M.Si',            'jabatan' => 'Inspektur Pembantu II',  'warna' => '#059669', 'bg' => '#ecfdf5', 'border' => '#a7f3d0'],
+            3 => ['no' => 'III', 'nama' => 'AFRINRA SAPUTRA, ST',             'jabatan' => 'Inspektur Pembantu III', 'warna' => '#7c3aed', 'bg' => '#f5f3ff', 'border' => '#ddd6fe'],
+            4 => ['no' => 'IV',  'nama' => 'MARWAN, M.T',                     'jabatan' => 'Inspektur Pembantu IV',  'warna' => '#d97706', 'bg' => '#fffbeb', 'border' => '#fde68a'],
+            5 => ['no' => 'V',   'nama' => 'RUSMAILIS, SP',                   'jabatan' => 'Inspektur Pembantu V',   'warna' => '#db2777', 'bg' => '#fdf2f8', 'border' => '#fbcfe8'],
+        ];
+
+        $allActiveSpt = DB::all("
+            SELECT s.*, d.nama AS desa_nama, k.nama AS kecamatan_nama,
+                   (SELECT COUNT(*) FROM kka_sesi sesi WHERE sesi.desa_id = s.desa_id) AS jml_sesi_kka,
+                   (SELECT COUNT(*) FROM kka_temuan t WHERE t.desa_id = s.desa_id) AS jml_temuan
+            FROM kka_spt s
+            JOIN kka_desa d ON d.id = s.desa_id
+            JOIN kka_kecamatan k ON k.id = s.kecamatan_id
+            ORDER BY s.id DESC
+        ");
+
+        $sptMonitoring = [];
+        $today = date('Y-m-d');
+        $warningCounts = [
+            'total'   => count($allActiveSpt),
+            'aman'    => 0,
+            'waspada' => 0,
+            'overdue' => 0,
+            'selesai' => 0,
+        ];
+
+        foreach ($allActiveSpt as $s) {
+            $tglMulai = !empty($s['tgl_spt']) ? $s['tgl_spt'] : ($s['created_at'] ? date('Y-m-d', strtotime($s['created_at'])) : $today);
+            $durasiHari = (int)($s['lama_hari'] ?: 10);
+            $tglSelesai = date('Y-m-d', strtotime("$tglMulai + $durasiHari days"));
+            $diffDays = (int) floor((strtotime($tglSelesai) - strtotime($today)) / 86400);
+
+            if ($s['status'] === 'SELESAI') {
+                $statusWaktu = 'SELESAI';
+                $badgeColor = '#10b981';
+                $badgeBg = '#d1fae5';
+                $labelWaktu = 'Selesai';
+                $warningCounts['selesai']++;
+            } elseif ($diffDays < 0) {
+                $statusWaktu = 'OVERDUE';
+                $badgeColor = '#ef4444';
+                $badgeBg = '#fee2e2';
+                $labelWaktu = 'Terlambat ' . abs($diffDays) . ' Hari';
+                $warningCounts['overdue']++;
+            } elseif ($diffDays <= 3) {
+                $statusWaktu = 'WASPADA';
+                $badgeColor = '#d97706';
+                $badgeBg = '#fef3c7';
+                $labelWaktu = 'Sisa ' . $diffDays . ' Hari (H-' . $diffDays . ')';
+                $warningCounts['waspada']++;
+            } else {
+                $statusWaktu = 'AMAN';
+                $badgeColor = '#059669';
+                $badgeBg = '#ecfdf5';
+                $labelWaktu = 'Sisa ' . $diffDays . ' Hari';
+                $warningCounts['aman']++;
+            }
+
+            $s['tgl_selesai_est'] = $tglSelesai;
+            $s['sisa_hari']       = $diffDays;
+            $s['status_waktu']    = $statusWaktu;
+            $s['badge_color']     = $badgeColor;
+            $s['badge_bg']        = $badgeBg;
+            $s['label_waktu']     = $labelWaktu;
+
+            $sptMonitoring[] = $s;
+        }
+
+        $irbanRadar = [];
+        foreach ($irbanConfig as $idx => $cfg) {
+            $sptIrban = array_filter($sptMonitoring, function($row) use ($cfg) {
+                $wpj = $row['wakil_pj_nama'] ?? '';
+                return (stripos($wpj, $cfg['nama']) !== false)
+                    || (stripos($wpj, 'Irban ' . $cfg['no']) !== false)
+                    || (stripos($wpj, 'Pembantu ' . $cfg['no']) !== false);
+            });
+
+            $totalSpt = count($sptIrban);
+            $berjalan = count(array_filter($sptIrban, fn($r) => $r['status'] !== 'SELESAI'));
+            $selesai = count(array_filter($sptIrban, fn($r) => $r['status'] === 'SELESAI'));
+            $overdue = count(array_filter($sptIrban, fn($r) => $r['status_waktu'] === 'OVERDUE'));
+            $waspada = count(array_filter($sptIrban, fn($r) => $r['status_waktu'] === 'WASPADA'));
+
+            $irbanRadar[$idx] = array_merge($cfg, [
+                'total_spt'  => $totalSpt,
+                'berjalan'   => $berjalan,
+                'selesai'    => $selesai,
+                'overdue'    => $overdue,
+                'waspada'    => $waspada,
+                'daftar_spt' => array_slice(array_values($sptIrban), 0, 3)
+            ]);
+        }
+
         // 8. DATASET KHUSUS SESUAI PERAN (Role-Specific Operasional)
 
         // A. DATA UNTUK INSPEKTUR: Antrean Keputusan Pimpinan & Risiko Tinggi
@@ -485,7 +581,8 @@ class DashboardController {
             'activeRole', 'viewAs',
             'daftarTahun', 'daftarKecamatan', 'daftarDesa',
             'filterTahun', 'filterSemester', 'filterKecamatan', 'filterDesa',
-            'inspekturData', 'irbanData', 'dalnisData', 'ketuaData', 'auditorData', 'sptData', 'tlhpData'
+            'inspekturData', 'irbanData', 'dalnisData', 'ketuaData', 'auditorData', 'sptData', 'tlhpData',
+            'irbanRadar', 'sptMonitoring', 'warningCounts'
         ));
     }
 
