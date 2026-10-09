@@ -262,7 +262,8 @@ $routes = [
         '/pia/print-spt'            => ['PiaController', 'printSpt'],
     '/pia/lhp'                  => ['PiaController', 'lhp'],
     '/pia/lhp/edit'             => ['PiaController', 'lhpEdit'],
-    '/pia/lhp/store'            => ['PiaController', 'lhpStore'],
+    '/pia/lhp/store'            => ['PiaController', 'lhpStore'],
+    '/pia/print-lhp'            => ['PiaController', 'printLhp'],
 
     '/print/nota-dinas'               => ['PenugasanController', 'printNotaDinas'],
     '/print/spt'                      => ['PenugasanController', 'printSpt'],

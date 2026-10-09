@@ -990,6 +990,89 @@ class PiaController {
 
         view('print/pka', compact('pka', 'langkah', 'anggotaList'));
     }
+
+    public function lhp(): void {
+        $spts = DB::all('
+            SELECT s.*, d.nama AS desa_nama, k.nama AS kecamatan_nama, nd.tahun_anggaran
+            FROM kka_pia_spt s
+            JOIN kka_desa d ON d.id = s.desa_id
+            JOIN kka_kecamatan k ON k.id = s.kecamatan_id
+            LEFT JOIN kka_pia_nd nd ON nd.id = s.nota_dinas_id
+            WHERE s.status = "DITERBITKAN" OR s.status = "SELESAI"
+            ORDER BY s.id DESC
+        ');
+        view('pia/lhp_index', compact('spts'));
+    }
+
+    public function lhpEdit(): void {
+        $sptId = (int) input('spt_id');
+        $spt = DB::one('
+            SELECT s.*, d.nama AS desa_nama, k.nama AS kecamatan_nama, nd.tahun_anggaran
+            FROM kka_pia_spt s
+            JOIN kka_desa d ON d.id = s.desa_id
+            JOIN kka_kecamatan k ON k.id = s.kecamatan_id
+            LEFT JOIN kka_pia_nd nd ON nd.id = s.nota_dinas_id
+            WHERE s.id = ?', [$sptId]);
+            
+        if (!$spt) {
+            flash('spt_error', 'SPT tidak ditemukan.');
+            redirect('pia/lhp');
+        }
+
+        $lhp = DB::one('SELECT * FROM kka_pia_lhp WHERE spt_id = ?', [$sptId]);
+        view('pia/lhp_form', compact('spt', 'lhp'));
+    }
+
+    public function lhpStore(): void {
+        only_post();
+        csrf_check();
+        $sptId = (int) input('spt_id');
+        $notaDinasId = (int) input('nota_dinas_id');
+        
+        $data = [
+            'daftar_regulasi'      => input('daftar_regulasi'),
+            'indikasi_masalah'     => input('indikasi_masalah'),
+            'titik_kritis_risiko'  => input('titik_kritis_risiko'),
+            'ceklis_data_tambahan' => input('ceklis_data_tambahan'),
+            'hasil_penelaahan'     => input('hasil_penelaahan'),
+            'simpulan_rekomendasi' => input('simpulan_rekomendasi'),
+            'dpp_sasaran'          => input('dpp_sasaran'),
+            'dpp_metodologi'       => input('dpp_metodologi'),
+            'keputusan_inspektur'  => input('keputusan_inspektur') ?? 'BELUM_DIPUTUSKAN',
+            'status'               => 'DIAJUKAN'
+        ];
+
+        $existing = DB::one('SELECT id FROM kka_pia_lhp WHERE spt_id = ?', [$sptId]);
+        if ($existing) {
+            DB::update('kka_pia_lhp', $data, 'id', $existing['id']);
+        } else {
+            $data['spt_id'] = $sptId;
+            $data['nota_dinas_id'] = $notaDinasId;
+            DB::insert('kka_pia_lhp', $data);
+        }
+
+        flash('lhp_success', 'KKA dan LHP PIA berhasil disimpan.');
+        redirect('pia/lhp');
+    }
+
+    public function printLhp(): void {
+        $sptId = (int) input('spt_id');
+        $spt = DB::one('
+            SELECT s.*, d.nama AS desa_nama, k.nama AS kecamatan_nama, nd.tahun_anggaran
+            FROM kka_pia_spt s
+            JOIN kka_desa d ON d.id = s.desa_id
+            JOIN kka_kecamatan k ON k.id = s.kecamatan_id
+            LEFT JOIN kka_pia_nd nd ON nd.id = s.nota_dinas_id
+            WHERE s.id = ?', [$sptId]);
+
+        if (!$spt) {
+            http_response_code(404);
+            exit('Surat Tugas PIA tidak ditemukan.');
+        }
+
+        $lhp = DB::one('SELECT * FROM kka_pia_lhp WHERE spt_id = ?', [$sptId]);
+        view('print/pia_lhp', compact('spt', 'lhp'));
+    }
 }
 
 

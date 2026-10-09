@@ -34,10 +34,16 @@ function csrf_field(): string {
     return '<input type="hidden" name="_csrf" value="' . e(csrf_token()) . '">';
 }
 
+function csrf_valid(?string $token): bool {
+    if (!$token) return false;
+    $sessToken = $_SESSION['_csrf'] ?? '';
+    return !empty($sessToken) && hash_equals($sessToken, (string)$token);
+}
+
 function csrf_check(): void {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
     $token = $_POST['_csrf'] ?? '';
-    if (!hash_equals(csrf_token(), (string)$token)) {
+    if (!csrf_valid((string)$token)) {
         http_response_code(419);
         exit('CSRF token tidak valid. Silakan refresh halaman.');
     }
