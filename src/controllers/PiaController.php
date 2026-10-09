@@ -1044,7 +1044,7 @@ class PiaController {
 
         $existing = DB::one('SELECT id FROM kka_pia_lhp WHERE spt_id = ?', [$sptId]);
         if ($existing) {
-            DB::update('kka_pia_lhp', $data, 'id', $existing['id']);
+            DB::update('kka_pia_lhp', $data, ['id' => $existing['id']]);
         } else {
             $data['spt_id'] = $sptId;
             $data['nota_dinas_id'] = $notaDinasId;
