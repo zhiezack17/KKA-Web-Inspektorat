@@ -127,7 +127,7 @@ $title = 'Lembar Uji Aspek Keuangan - ' . $desa['desa_nama'] . ' TA ' . $tahun;
     </tr>
     <tr>
       <td class="lbl">Ref. BAP Opname Kas</td><td class="sep">:</td><td><?= e($analisis['opname']['no_bap'] ?? 'Belum Ada BAP Kas') ?></td>
-      <td class="lbl">Tanggal Uji</td><td class="sep">:</td><td><?= !empty($analisis['opname']['tgl_pemeriksaan']) ? date('d F Y', strtotime($analisis['opname']['tgl_pemeriksaan'])) : date('d F Y') ?></td>
+      <td class="lbl">Tanggal Uji</td><td class="sep">:</td><td><?= !empty($analisis['opname']['tgl_pemeriksaan']) ? tgl_id($analisis['opname']['tgl_pemeriksaan']) : tgl_id(date('Y-m-d')) ?></td>
     </tr>
   </table>
 

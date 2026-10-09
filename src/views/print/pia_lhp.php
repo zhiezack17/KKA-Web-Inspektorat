@@ -95,7 +95,7 @@
       <tr>
         <td style="width:50%"></td>
         <td class="text-center">
-          Bagansiapiapi, <?= date('d F Y') ?><br>
+          Bagansiapiapi, <?= tgl_id(date('Y-m-d')) ?><br>
           <b>INSPEKTUR DAERAH KABUPATEN ROKAN HILIR</b>
           <br><br><br><br>
           <u><b>H. SARMAN SYAHRONI, ST., M.IP., CGCAE</b></u><br>

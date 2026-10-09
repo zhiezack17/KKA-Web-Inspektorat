@@ -67,7 +67,7 @@ foreach ($daftarTemuan as $t) {
 </div>
 
 <p class="paragraf">
-  Berdasarkan Surat Perintah Tugas Inspektur Kabupaten Rokan Hilir Nomor <b><?= e($spt['no_spt'] ?? '700.1.2.1/SPT/ITKAB-DESA/' . $tahun) ?></b> tanggal <b><?= !empty($spt['tgl_spt']) ? tgl_id($spt['tgl_spt']) : date('d F Y') ?></b>, Tim Pemeriksa APIP Inspektorat Kabupaten Rokan Hilir telah melaksanakan Pemeriksaan Ketaatan atas Pengelolaan Keuangan Kepenghuluan <b><?= e($desa['nama']) ?></b> Kecamatan <b><?= e($desa['kecamatan_nama']) ?></b> Tahun Anggaran <b><?= $tahun ?></b>.
+  Berdasarkan Surat Perintah Tugas Inspektur Kabupaten Rokan Hilir Nomor <b><?= e($spt['no_spt'] ?? '700.1.2.1/SPT/ITKAB-DESA/' . $tahun) ?></b> tanggal <b><?= !empty($spt['tgl_spt']) ? tgl_id($spt['tgl_spt']) : tgl_id(date('Y-m-d')) ?></b>, Tim Pemeriksa APIP Inspektorat Kabupaten Rokan Hilir telah melaksanakan Pemeriksaan Ketaatan atas Pengelolaan Keuangan Kepenghuluan <b><?= e($desa['nama']) ?></b> Kecamatan <b><?= e($desa['kecamatan_nama']) ?></b> Tahun Anggaran <b><?= $tahun ?></b>.
 </p>
 
 <p class="paragraf" style="margin-top:-6px">
@@ -135,7 +135,7 @@ foreach ($daftarTemuan as $t) {
   <table class="ttd-table">
     <tr>
       <td>
-        Bagansiapiapi, <?= date('d F Y') ?><br>
+        Bagansiapiapi, <?= tgl_id(date('Y-m-d')) ?><br>
         <b>Pihak Auditi,</b><br>
         Pj. Penghulu <?= e($desa['nama']) ?>
         <br><br><br><br><br>
@@ -143,7 +143,7 @@ foreach ($daftarTemuan as $t) {
         NIP. -
       </td>
       <td>
-        Bagansiapiapi, <?= date('d F Y') ?><br>
+        Bagansiapiapi, <?= tgl_id(date('Y-m-d')) ?><br>
         <b>Tim Pemeriksa APIP,</b><br>
         Ketua Tim Pemeriksaan
         <br><br><br><br><br>
