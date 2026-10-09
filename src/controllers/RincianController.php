@@ -38,6 +38,10 @@ class RincianController {
             $statusPajak = 'TIDAK_TERUTANG';
         }
         $ntpn = trim((string) input('ntpn')) ?: null;
+        $jenisPenerima = strtoupper(trim((string) input('jenis_penerima', 'PENERIMA')));
+        if (!in_array($jenisPenerima, ['TPK', 'PENERIMA'])) {
+            $jenisPenerima = 'PENERIMA';
+        }
 
         DB::insert('kka_rincian', [
             'sesi_id'         => $sesiId,
@@ -46,6 +50,7 @@ class RincianController {
             'pagu_anggaran'   => parse_money(input('pagu_anggaran', 0)),
             'biaya_dikwitansi'=> parse_money(input('biaya_dikwitansi', 0)),
             'realisasi'       => parse_money(input('realisasi', 0)),
+            'jenis_penerima'  => $jenisPenerima,
             'penerima'        => trim((string) input('penerima')) ?: null,
             'keterangan'      => trim((string) input('keterangan')) ?: null,
             'potong_ppn'      => $potongPpn,
@@ -79,12 +84,17 @@ class RincianController {
             $statusPajak = 'TIDAK_TERUTANG';
         }
         $ntpn = trim((string) input('ntpn')) ?: null;
+        $jenisPenerima = strtoupper(trim((string) input('jenis_penerima', 'PENERIMA')));
+        if (!in_array($jenisPenerima, ['TPK', 'PENERIMA'])) {
+            $jenisPenerima = 'PENERIMA';
+        }
 
         DB::update('kka_rincian', [
             'uraian'          => $uraian,
             'pagu_anggaran'   => parse_money(input('pagu_anggaran', 0)),
             'biaya_dikwitansi'=> parse_money(input('biaya_dikwitansi', 0)),
             'realisasi'       => parse_money(input('realisasi', 0)),
+            'jenis_penerima'  => $jenisPenerima,
             'penerima'        => trim((string) input('penerima')) ?: null,
             'keterangan'      => trim((string) input('keterangan')) ?: null,
             'potong_ppn'      => $potongPpn,

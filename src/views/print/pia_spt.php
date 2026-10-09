@@ -145,7 +145,7 @@
           <tr>
             <td style="width:20px;vertical-align:top">1.</td>
             <td style="vertical-align:top;text-align:justify">
-              Program Kerja Pengawasan Tahunan (PKPT) Tahun <?= (int)$spt['tahun_anggaran'] ?> Inspektorat Kabupaten Rokan Hilir.
+              Program Kerja Pengawasan Tahunan (PKPT) Tahun <?= e($spt['tahun_anggaran']) ?> Inspektorat Kabupaten Rokan Hilir.
             </td>
           </tr>
           <?php 
@@ -313,7 +313,7 @@
           <tr>
             <td style="width:20px;vertical-align:top">1.</td>
             <td style="vertical-align:top;text-align:justify">
-              Melakukan <?= e(!empty($spt['jenis_audit']) ? $spt['jenis_audit'] : 'Audit Dengan Tujuan Tertentu (ADTT)') ?> atas Pengelolaan Keuangan Desa pada Kepenghuluan <b><?= e($spt['desa_nama']) ?></b> Kecamatan <b><?= e($spt['kecamatan_nama']) ?></b> Tahun Anggaran <?= (int)$spt['tahun_anggaran'] ?>.
+              Melakukan <?= e(!empty($spt['jenis_audit']) ? $spt['jenis_audit'] : 'Audit Dengan Tujuan Tertentu (ADTT)') ?> atas Pengelolaan Keuangan Desa pada Kepenghuluan <b><?= e($spt['desa_nama']) ?></b> Kecamatan <b><?= e($spt['kecamatan_nama']) ?></b> Tahun Anggaran <?= e($spt['tahun_anggaran']) ?>.
             </td>
           </tr>
           <tr>

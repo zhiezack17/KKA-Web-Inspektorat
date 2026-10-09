@@ -51,6 +51,13 @@
     <div class="form-group" style="margin-bottom: 20px;"><label class="form-label" style="display: block; font-weight: bold; margin-bottom: 8px;">Metodologi & Langkah Kerja (Jika Lanjut Audit)</label>
       <textarea name="dpp_metodologi" class="form-control" style="width: 100%; border: 1px solid #ced4da; border-radius: 4px; padding: 8px; font-family: inherit;" rows="3" placeholder="Wawancara, Cek Fisik, Analisis Dokumen..."><?= e($lhp['dpp_metodologi'] ?? '') ?></textarea>
     </div>
+    <div class="form-group" style="margin-bottom: 20px; background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:12px;">
+      <label class="form-label" style="display: block; font-weight: bold; margin-bottom: 8px; color:#b45309;">
+        <i class="fa-solid fa-triangle-exclamation"></i> Hambatan / Kendala di Lapangan
+      </label>
+      <textarea name="kendala_lapangan" class="form-control" style="width: 100%; border: 1px solid #fcd34d; border-radius: 4px; padding: 8px; font-family: inherit; background:#fff" rows="3" placeholder="Tuliskan hambatan/kendala saat penelaahan/lapangan (misal: perangkat desa sulit dihubungi, dokumen SPJ belum lengkap, cuaca/akses medan, dll)..."><?= e($lhp['kendala_lapangan'] ?? '') ?></textarea>
+      <small style="color:#78350f;font-size:11.5px;margin-top:4px;display:block">Catatan hambatan ini akan langsung dapat dipantau oleh Irban dan Inspektur.</small>
+    </div>
     <div class="form-group" style="margin-bottom: 20px; padding: 15px; background: #fff5f5; border-left: 4px solid #ef4444; border-radius: 4px;"><label class="form-label" style="display: block; font-weight: bold; margin-bottom: 8px; color: #b91c1c;">Keputusan Final Inspektur</label>
       <select name="keputusan_inspektur" class="form-control" style="width: 100%; border: 1px solid #ced4da; border-radius: 4px; padding: 8px; font-family: inherit;">
         <option value="BELUM_DIPUTUSKAN" <?= ($lhp['keputusan_inspektur'] ?? '') == 'BELUM_DIPUTUSKAN' ? 'selected' : '' ?>>Belum Diputuskan</option>

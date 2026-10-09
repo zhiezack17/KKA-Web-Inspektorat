@@ -44,9 +44,9 @@ class PenugasanController {
             $params[] = $status;
         }
 
-        if ($tahun > 0) {
-            $where .= ' AND nd.tahun_anggaran = ?';
-            $params[] = $tahun;
+        if (!empty($tahun)) {
+            $where .= ' AND nd.tahun_anggaran LIKE ?';
+            $params[] = '%' . $tahun . '%';
         }
 
         $list = DB::all("
@@ -115,7 +115,7 @@ class PenugasanController {
         csrf_check();
 
         $desaId      = (int) input('desa_id');
-        $tahun       = (int) input('tahun_anggaran', date('Y'));
+        $tahun       = trim((string) input('tahun_anggaran', date('Y')));
         $irbanId     = (int) input('irban_id');
         $dalnisId    = (int) input('dalnis_id');
         $ketuaTimId  = (int) input('ketua_tim_id');
@@ -168,7 +168,7 @@ class PenugasanController {
         if ($noNd === '') {
             $romawiBulan = ['', 'I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][(int)date('n')];
             $seq = (int)DB::val("SELECT COUNT(*) FROM kka_nota_dinas WHERE tahun_anggaran = ?", [$tahun]) + 1;
-            $noNd = sprintf("700/ND-IRBAN/%s/%d/%03d", $romawiBulan, $tahun, $seq);
+            $noNd = sprintf("700/ND-IRBAN/%s/%s/%03d", $romawiBulan, date('Y'), $seq);
         }
 
         $status = ($submitAction === 'ajukan') ? 'DIAJUKAN_INSPEKTUR' : 'DRAFT';
@@ -330,7 +330,7 @@ class PenugasanController {
         }
 
         $desaId      = (int) input('desa_id');
-        $tahun       = (int) input('tahun_anggaran', date('Y'));
+        $tahun       = trim((string) input('tahun_anggaran', date('Y')));
         $irbanId     = (int) input('irban_id');
         $dalnisId    = (int) input('dalnis_id');
         $ketuaTimId  = (int) input('ketua_tim_id');
@@ -460,7 +460,7 @@ class PenugasanController {
 
         $where = '1=1';
         $params = [];
-        if ($tahun > 0) { $where .= ' AND s.tahun_anggaran = ?'; $params[] = $tahun; }
+        if (!empty($tahun)) { $where .= ' AND s.tahun_anggaran LIKE ?'; $params[] = '%' . $tahun . '%'; }
         if ($status !== '') { $where .= ' AND s.status = ?'; $params[] = $status; }
 
         $list = DB::all("
@@ -517,7 +517,7 @@ class PenugasanController {
 
         // Format standar No. SPT Rohil
         $seq = (int)DB::val("SELECT COUNT(*) FROM kka_spt WHERE tahun_anggaran = ?", [$nd['tahun_anggaran']]) + 1;
-        $defaultNoSpt = sprintf("700.1.2.1/SPT/ITKAB-DESA/%d/%03d", $nd['tahun_anggaran'], $seq);
+        $defaultNoSpt = sprintf("700.1.2.1/SPT/ITKAB-DESA/%s/%03d", date('Y'), $seq);
 
         $defaultDasarHukum = '';
 
@@ -735,7 +735,7 @@ class PenugasanController {
         $tahun = (int) input('tahun', 0);
         $where = '1=1';
         $params = [];
-        if ($tahun > 0) { $where .= ' AND p.tahun_anggaran = ?'; $params[] = $tahun; }
+        if (!empty($tahun)) { $where .= ' AND p.tahun_anggaran LIKE ?'; $params[] = '%' . $tahun . '%'; }
 
         $list = DB::all("
             SELECT p.*, d.nama AS desa_nama, k.nama AS kecamatan_nama,

@@ -390,6 +390,7 @@ class SesiController {
             'no_lha'         => trim((string) input('no_lha')) ?: null,
             'kesimpulan'     => trim((string) input('kesimpulan')) ?: null,
             'sumber_data'    => trim((string) input('sumber_data')) ?: null,
+            'kendala_lapangan'=> trim((string) input('kendala_lapangan')) ?: null,
         ];
         DB::update('kka_sesi', $data, ['id' => $id]);
         // Hanya perbarui daftar berbagi bila form memang mengirim penanda 'manage_shares'

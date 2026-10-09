@@ -252,7 +252,8 @@ class DashboardController {
         $allActiveSpt = DB::all("
             SELECT s.*, d.nama AS desa_nama, k.nama AS kecamatan_nama,
                    (SELECT COUNT(*) FROM kka_sesi sesi WHERE sesi.desa_id = s.desa_id) AS jml_sesi_kka,
-                   (SELECT COUNT(*) FROM kka_temuan t WHERE t.desa_id = s.desa_id) AS jml_temuan
+                   (SELECT COUNT(*) FROM kka_temuan t WHERE t.desa_id = s.desa_id) AS jml_temuan,
+                   (SELECT kendala_lapangan FROM kka_sesi sesi WHERE sesi.desa_id = s.desa_id AND kendala_lapangan IS NOT NULL AND kendala_lapangan != '' ORDER BY sesi.id DESC LIMIT 1) AS kendala_lapangan
             FROM kka_spt s
             JOIN kka_desa d ON d.id = s.desa_id
             JOIN kka_kecamatan k ON k.id = s.kecamatan_id

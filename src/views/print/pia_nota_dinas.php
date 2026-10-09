@@ -218,7 +218,7 @@ $dariKantor = str_contains($jabatanIrban, 'Inspektorat') ? $jabatanIrban : ($jab
     <tr>
       <td><b>Perihal</b></td>
       <td>:</td>
-      <td><b>Permohonan Penerbitan Surat Perintah Tugas (SPT) Pengawasan Keuangan Kepenghuluan <?= e($nd['desa_nama']) ?> TA <?= (int)$nd['tahun_anggaran'] ?></b></td>
+      <td><b>Permohonan Penerbitan Surat Perintah Tugas (SPT) Pengawasan Keuangan Kepenghuluan <?= e($nd['desa_nama']) ?> TA <?= e($nd['tahun_anggaran']) ?></b></td>
     </tr>
   </table>
 
@@ -230,7 +230,7 @@ $dariKantor = str_contains($jabatanIrban, 'Inspektorat') ? $jabatanIrban : ($jab
       <tr>
         <td style="width:65px;vertical-align:top"><b>Dasar</b></td>
         <td style="width:12px;vertical-align:top">:</td>
-        <td style="vertical-align:top">Program Kerja Pengawasan Tahunan (PKPT) Tahun <?= (int)$nd['tahun_anggaran'] ?> Inspektorat Kabupaten Rokan Hilir;</td>
+        <td style="vertical-align:top">Program Kerja Pengawasan Tahunan (PKPT) Tahun <?= e($nd['tahun_anggaran']) ?> Inspektorat Kabupaten Rokan Hilir;</td>
       </tr>
     </table>
 

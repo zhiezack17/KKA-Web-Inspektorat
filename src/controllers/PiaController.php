@@ -44,9 +44,9 @@ class PiaController {
             $params[] = $status;
         }
 
-        if ($tahun > 0) {
-            $where .= ' AND nd.tahun_anggaran = ?';
-            $params[] = $tahun;
+        if (!empty($tahun)) {
+            $where .= ' AND nd.tahun_anggaran LIKE ?';
+            $params[] = '%' . $tahun . '%';
         }
 
         $list = DB::all("
@@ -115,7 +115,7 @@ class PiaController {
         csrf_check();
 
         $desaId      = (int) input('desa_id');
-        $tahun       = (int) input('tahun_anggaran', date('Y'));
+        $tahun       = trim((string) input('tahun_anggaran', date('Y')));
         $irbanId     = (int) input('irban_id');
         $dalnisId    = (int) input('dalnis_id');
         $ketuaTimId  = (int) input('ketua_tim_id');
@@ -168,7 +168,7 @@ class PiaController {
         if ($noNd === '') {
             $romawiBulan = ['', 'I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][(int)date('n')];
             $seq = (int)DB::val("SELECT COUNT(*) FROM kka_pia_nd WHERE tahun_anggaran = ?", [$tahun]) + 1;
-            $noNd = sprintf("700/ND-IRBAN/%s/%d/%03d", $romawiBulan, $tahun, $seq);
+            $noNd = sprintf("700/ND-IRBAN/%s/%s/%03d", $romawiBulan, date('Y'), $seq);
         }
 
         $status = ($submitAction === 'ajukan') ? 'DIAJUKAN_INSPEKTUR' : 'DRAFT';
@@ -330,7 +330,7 @@ class PiaController {
         }
 
         $desaId      = (int) input('desa_id');
-        $tahun       = (int) input('tahun_anggaran', date('Y'));
+        $tahun       = trim((string) input('tahun_anggaran', date('Y')));
         $irbanId     = (int) input('irban_id');
         $dalnisId    = (int) input('dalnis_id');
         $ketuaTimId  = (int) input('ketua_tim_id');
@@ -460,7 +460,7 @@ class PiaController {
 
         $where = '1=1';
         $params = [];
-        if ($tahun > 0) { $where .= ' AND s.tahun_anggaran = ?'; $params[] = $tahun; }
+        if (!empty($tahun)) { $where .= ' AND s.tahun_anggaran LIKE ?'; $params[] = '%' . $tahun . '%'; }
         if ($status !== '') { $where .= ' AND s.status = ?'; $params[] = $status; }
 
         $list = DB::all("
@@ -517,7 +517,7 @@ class PiaController {
 
         // Format standar No. SPT Rohil
         $seq = (int)DB::val("SELECT COUNT(*) FROM kka_pia_spt WHERE tahun_anggaran = ?", [$nd['tahun_anggaran']]) + 1;
-        $defaultNoSpt = sprintf("700.1.2.1/SPT/ITKAB-DESA/%d/%03d", $nd['tahun_anggaran'], $seq);
+        $defaultNoSpt = sprintf("700.1.2.1/SPT/ITKAB-DESA/%s/%03d", date('Y'), $seq);
 
         $defaultDasarHukum = '';
 
@@ -1038,6 +1038,7 @@ class PiaController {
             'simpulan_rekomendasi' => input('simpulan_rekomendasi'),
             'dpp_sasaran'          => input('dpp_sasaran'),
             'dpp_metodologi'       => input('dpp_metodologi'),
+            'kendala_lapangan'     => trim((string) input('kendala_lapangan')) ?: null,
             'keputusan_inspektur'  => input('keputusan_inspektur') ?? 'BELUM_DIPUTUSKAN',
             'status'               => 'DIAJUKAN'
         ];

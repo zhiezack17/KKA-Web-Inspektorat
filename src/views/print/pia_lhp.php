@@ -82,6 +82,9 @@
       <tr><th style="text-align:left">Simpulan &amp; Rekomendasi PIA</th><td><?= nl2br(e($lhp['simpulan_rekomendasi'] ?? '-')) ?></td></tr>
       <tr><th style="text-align:left">Sasaran Pengawasan (Objective)</th><td><?= nl2br(e($lhp['dpp_sasaran'] ?? '-')) ?></td></tr>
       <tr><th style="text-align:left">Metodologi &amp; Langkah Kerja</th><td><?= nl2br(e($lhp['dpp_metodologi'] ?? '-')) ?></td></tr>
+      <?php if (!empty($lhp['kendala_lapangan'])): ?>
+      <tr><th style="text-align:left;color:#b45309">Hambatan / Kendala Lapangan</th><td style="color:#78350f;background:#fffbeb"><?= nl2br(e($lhp['kendala_lapangan'])) ?></td></tr>
+      <?php endif; ?>
       <tr><th style="text-align:left">Keputusan Final Inspektur</th><td class="font-bold">
         <?php
           if(($lhp['keputusan_inspektur'] ?? '') === 'LAYAK_AUDIT') echo "LAYAK AUDIT / TERBITKAN ND ADTT (GO)";

@@ -103,7 +103,7 @@
                   <td>
                     <div style="font-weight:700;font-size:13.5px"><?= e($row['desa_nama']) ?></div>
                     <div style="font-size:12px;color:#64748b">Kec. <?= e($row['kecamatan_nama']) ?></div>
-                    <span class="badge" style="background:#e0f2fe;color:#0369a1;font-size:11px;margin-top:4px">TA <?= (int)$row['tahun_anggaran'] ?></span>
+                    <span class="badge" style="background:#e0f2fe;color:#0369a1;font-size:11px;margin-top:4px">TA <?= e($row['tahun_anggaran']) ?></span>
                   </td>
                   <td>
                     <div style="font-size:12px"><b>Dalnis:</b> <?= e($row['dalnis_nama']) ?></div>

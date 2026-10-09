@@ -93,7 +93,7 @@
     <div class="logo"><img src="<?= asset('img/logo-inspektorat.png') ?>" alt="Inspektorat"></div>
   </div>
   <h1>KERTAS KERJA AUDIT (KKA)</h1>
-  <h2>PENGELUARAN KEUANGAN KEPENGHULUAN — Tahun Anggaran <?= (int)$sesi['tahun_anggaran'] ?></h2>
+  <h2>PENGELUARAN KEUANGAN KEPENGHULUAN — Tahun Anggaran <?= e($sesi['tahun_anggaran']) ?></h2>
   <?php
     $tgl_buat   = !empty($sesi['tanggal_dibuat'])  ? date('d/m/y', strtotime($sesi['tanggal_dibuat']))  : '..../..../....';
     $tgl_review = !empty($sesi['tanggal_review']) ? date('d/m/y', strtotime($sesi['tanggal_review'])) : '..../..../....';
@@ -112,7 +112,7 @@
       <td class="lbl-r">Ref. PKA</td><td class="sep">:</td><td class="val-right"><?= e($sesi['ref_kka'] ?: '-') ?></td>
     </tr>
     <tr>
-      <td class="lbl">Masa Audit</td><td class="sep">:</td><td class="val-left">Semester <?= (int)$sesi['semester'] ?> Tahun <?= (int)$sesi['tahun_anggaran'] ?></td>
+      <td class="lbl">Masa Audit</td><td class="sep">:</td><td class="val-left">Semester <?= (int)$sesi['semester'] ?> Tahun <?= e($sesi['tahun_anggaran']) ?></td>
       <td class="lbl-r">Disusun oleh <span class="sub-r">(Auditor)</span></td><td class="sep">:</td><td class="val-right"><?= e($nama_buat) ?></td>
     </tr>
     <tr>
@@ -140,7 +140,7 @@
         <th style="width:78px">Realisasi (Rp)</th>
         <th style="width:78px">Biaya Dikwitansi (Rp)</th>
         <th style="width:78px">Selisih (Rp)</th>
-        <th style="width:80px">Penerima</th>
+        <th style="width:95px">TPK / Penerima</th>
         <th style="width:90px">Keterangan</th>
       </tr>
     </thead>
@@ -155,7 +155,7 @@
           <td class="num"><?= number_format($r['realisasi'],0,',','.') ?></td>
           <td class="num"><?= number_format($r['biaya_dikwitansi'],0,',','.') ?></td>
           <td class="num"><?= number_format($sel,0,',','.') ?></td>
-          <td><?= e($r['penerima'] ?: '-') ?></td>
+          <td><?= (!empty($r['jenis_penerima']) && $r['jenis_penerima'] === 'TPK' ? '<b>[TPK]</b> ' : '') . e($r['penerima'] ?: '-') ?></td>
           <td><?= e($r['keterangan'] ?: '-') ?></td>
         </tr>
       <?php endforeach; endif; ?>
@@ -181,6 +181,12 @@
     <div class="ttl">SUMBER DATA:</div>
     <div class="isi"><?= nl2br(e($sesi['sumber_data'] ?: '-')) ?></div>
   </div>
+  <?php if (!empty($sesi['kendala_lapangan'])): ?>
+  <div class="sec">
+    <div class="ttl" style="color:#b45309">HAMBATAN / KENDALA DI LAPANGAN:</div>
+    <div class="isi" style="background:#fffbeb;border-left:3px solid #f59e0b;padding:6px 10px"><?= nl2br(e($sesi['kendala_lapangan'])) ?></div>
+  </div>
+  <?php endif; ?>
   <div class="page-footer">
     <div>Portal Arsip Digital · Inspektorat Kab. Rokan Hilir</div>
     <div>Dicetak: <?= date('d/m/Y H:i') ?></div>

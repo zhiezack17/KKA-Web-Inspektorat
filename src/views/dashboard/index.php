@@ -486,6 +486,11 @@ $user = $auth->user();
                       <div style="font-weight:800;color:#0f172a"><?= e($sm['desa_nama']) ?></div>
                       <div style="font-size:11px;color:#64748b">Kec. <?= e($sm['kecamatan_nama']) ?></div>
                       <div style="font-size:10.5px;color:#0284c7;font-weight:600;margin-top:2px"><?= e($sm['no_spt']) ?></div>
+                      <?php if (!empty($sm['kendala_lapangan'])): ?>
+                        <div style="margin-top:5px;font-size:11px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:3px 6px;line-height:1.3" title="<?= e($sm['kendala_lapangan']) ?>">
+                          <i class="fa-solid fa-triangle-exclamation"></i> <b>Kendala:</b> <?= e(mb_strimwidth($sm['kendala_lapangan'], 0, 45, '...')) ?>
+                        </div>
+                      <?php endif; ?>
                     </td>
                     <td style="padding:10px 12px;vertical-align:middle">
                       <div style="font-size:12px;font-weight:700;color:#0f172a">

@@ -39,11 +39,16 @@
               </div>
               <div>
                 <label class="form-label" style="font-weight:600;font-size:12px;color:#475569">Tahun Anggaran <span style="color:red">*</span></label>
-                <select name="tahun_anggaran" class="input" style="font-size:13.5px;width:100%">
-                  <?php for ($y = (int)date('Y'); $y >= (int)date('Y') - 3; $y--): ?>
-                    <option value="<?= $y ?>"><?= $y ?></option>
-                  <?php endfor; ?>
-                </select>
+                <input type="text" name="tahun_anggaran" list="ta_list_pia" class="input" value="<?= date('Y') ?>" placeholder="Pilih / ketik TA, cth: 2024 atau 2023 dan 2024" required style="font-size:13.5px;width:100%">
+                <datalist id="ta_list_pia">
+                  <option value="<?= date('Y') ?>">
+                  <option value="<?= date('Y') - 1 ?>">
+                  <option value="<?= date('Y') - 2 ?>">
+                  <option value="<?= (date('Y') - 1) . ' dan ' . date('Y') ?>">
+                  <option value="<?= (date('Y') - 2) . ' dan ' . (date('Y') - 1) ?>">
+                  <option value="<?= (date('Y') - 2) . ' s.d. ' . date('Y') ?>">
+                </datalist>
+                <div style="font-size:11px;color:#64748b;margin-top:2px">Bisa 1 atau 2 tahun anggaran (cth: <?= (date('Y') - 1) . ' dan ' . date('Y') ?>)</div>
               </div>
             </div>
 
@@ -128,9 +133,12 @@
                 <span>4. Anggota Tim Pemeriksa (Pilih 1 s.d 4 Anggota):</span>
                 <span style="font-weight:normal;color:#64748b;font-size:11.5px">Centang auditor pelaksana lapangan</span>
               </label>
-              <div style="max-height:220px;overflow-y:auto;border:1px solid #cbd5e1;border-radius:8px;padding:8px;background:#f8fafc;display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <div style="margin-bottom:6px">
+                <input type="text" id="search-auditor" placeholder="🔍 Cari auditor cepat (ketik nama / jabatan)..." class="input" style="font-size:12px;padding:5px 10px;width:100%" oninput="filterAuditors(this.value)">
+              </div>
+              <div id="list-auditor-container" style="max-height:220px;overflow-y:auto;border:1px solid #cbd5e1;border-radius:8px;padding:8px;background:#f8fafc;display:grid;grid-template-columns:1fr 1fr;gap:6px">
                 <?php foreach ($anggota as $ag): ?>
-                  <label style="display:flex;align-items:center;gap:8px;background:#fff;padding:6px 10px;border-radius:6px;border:1px solid #e2e8f0;cursor:pointer;font-size:12px">
+                  <label class="auditor-item" data-nama="<?= strtolower(e($ag['nama'])) ?>" data-jabatan="<?= strtolower(e($ag['jabatan'])) ?>" style="display:flex;align-items:center;gap:8px;background:#fff;padding:6px 10px;border-radius:6px;border:1px solid #e2e8f0;cursor:pointer;font-size:12px">
                     <input type="checkbox" name="anggota_ids[]" value="<?= $ag['id'] ?>" class="anggota-check">
                     <div>
                       <div style="font-weight:600;color:#1e293b"><?= e($ag['nama']) ?></div>
@@ -191,4 +199,19 @@
     </form>
   </div>
 </main>
+<script>
+function filterAuditors(q) {
+  q = (q || '').toLowerCase().trim();
+  var items = document.querySelectorAll('#list-auditor-container .auditor-item');
+  items.forEach(function(el) {
+    var nama = el.getAttribute('data-nama') || '';
+    var jab = el.getAttribute('data-jabatan') || '';
+    if (!q || nama.indexOf(q) !== -1 || jab.indexOf(q) !== -1) {
+      el.style.display = 'flex';
+    } else {
+      el.style.display = 'none';
+    }
+  });
+}
+</script>
 <?php partial('foot'); ?>

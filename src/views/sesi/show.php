@@ -456,7 +456,7 @@
               <th class="num">Biaya Dikwitansi</th>
               <th class="num">Selisih</th>
               <th style="text-align:center">Uji Pajak</th>
-              <th>Penerima</th>
+              <th>TPK / Penerima</th>
               <th>Keterangan</th>
               <th style="width:110px;text-align:center">Aksi</th>
             </tr>
@@ -500,6 +500,7 @@
                   data-kwi="<?= (float)$r['biaya_dikwitansi'] ?>"
                   data-real="<?= (float)$r['realisasi'] ?>"
                   data-penerima="<?= e((string)$r['penerima']) ?>"
+                  data-jenis-penerima="<?= e((string)($r['jenis_penerima'] ?? 'PENERIMA')) ?>"
                   data-keterangan="<?= e((string)$r['keterangan']) ?>"
                   data-potong-ppn="<?= (int)($r['potong_ppn'] ?? 0) ?>"
                   data-nominal-ppn="<?= (float)($r['nominal_ppn'] ?? 0) ?>"
@@ -512,8 +513,8 @@
                   <strong><?= e($r['uraian']) ?></strong>
                   <?php if (!empty($r['potong_pph']) || !empty($r['potong_ppn'])): ?>
                     <div style="font-size:11px;color:var(--slate-500)">
-                      <?= !empty($r['potong_ppn']) ? 'PPN: ' . rupiah($r['nominal_ppn']) : '' ?>
-                      <?= !empty($r['potong_pph']) ? ' &bull; ' . e($r['potong_pph']) . ': ' . rupiah($r['nominal_pph']) : '' ?>
+                       <?= !empty($r['potong_ppn']) ? 'PPN: ' . rupiah($r['nominal_ppn']) : '' ?>
+                       <?= !empty($r['potong_pph']) ? ' &bull; ' . e($r['potong_pph']) . ': ' . rupiah($r['nominal_pph']) : '' ?>
                     </div>
                   <?php endif; ?>
                 </td>
@@ -522,7 +523,15 @@
                 <td class="num"><?= rupiah($r['biaya_dikwitansi']) ?></td>
                 <td class="num" style="color:<?= $sel<0?'var(--red-600)':'var(--emerald-700)' ?>;font-weight:700"><?= rupiah($sel) ?></td>
                 <td style="text-align:center"><?= $pajakHtml ?></td>
-                <td><?= e($r['penerima'] ?: '-') ?></td>
+                <td>
+                  <?php 
+                    $jp = strtoupper($r['jenis_penerima'] ?? 'PENERIMA');
+                    $jpBg = ($jp === 'TPK') ? '#e0e7ff' : '#f1f5f9';
+                    $jpColor = ($jp === 'TPK') ? '#3730a3' : '#475569';
+                  ?>
+                  <span class="badge" style="background:<?= $jpBg ?>;color:<?= $jpColor ?>;font-size:10px;padding:2px 5px;border-radius:4px;font-weight:700;margin-right:4px"><?= $jp === 'TPK' ? 'TPK' : 'Penerima' ?></span>
+                  <?= e($r['penerima'] ?: '-') ?>
+                </td>
                 <td><?= e($r['keterangan'] ?: '-') ?></td>
                 <td style="white-space:nowrap;text-align:center">
                   <a href="<?= url('temuan/create?sesi_id=' . $sesi['id'] . '&rincian_id=' . $r['id']) ?>" class="btn btn-ghost btn-sm" style="color:#d97706;padding:5px 7px" title="Jadikan Konsep Temuan (KTP)"><i class="fa-solid fa-file-circle-exclamation"></i></a>
@@ -567,12 +576,19 @@
           <?= csrf_field() ?>
           <input type="hidden" name="sesi_id" value="<?= $sesi['id'] ?>">
           
-          <div style="display:grid;grid-template-columns:2.5fr 1fr 1fr 1fr 1.2fr auto;gap:8px;align-items:end;margin-bottom:10px">
+          <div style="display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr 110px 1.2fr auto;gap:8px;align-items:end;margin-bottom:10px">
             <div class="field" style="margin:0"><label>Uraian Belanja <span class="req">*</span></label><input type="text" name="uraian" id="add-uraian" required class="input" placeholder="cth: Pembayaran honor / belanja semen" data-testid="r-uraian"></div>
             <div class="field" style="margin:0"><label>Pagu (Rp)</label><input type="text" name="pagu_anggaran" id="add-pagu" class="input" data-money placeholder="0" data-testid="r-pagu"></div>
             <div class="field" style="margin:0"><label>Realisasi (Rp)</label><input type="text" name="realisasi" id="add-realisasi" class="input" data-money placeholder="0" data-testid="r-realisasi"></div>
             <div class="field" style="margin:0"><label>Kuitansi (Rp)</label><input type="text" name="biaya_dikwitansi" id="add-kwi" class="input" data-money placeholder="0"></div>
-            <div class="field" style="margin:0"><label>Penerima</label><input type="text" name="penerima" id="add-penerima" class="input" placeholder="Nama penerima"></div>
+            <div class="field" style="margin:0">
+              <label>Pilihan</label>
+              <select name="jenis_penerima" id="add-jenis-penerima" class="input" style="font-size:12px">
+                <option value="PENERIMA">Penerima</option>
+                <option value="TPK">TPK</option>
+              </select>
+            </div>
+            <div class="field" style="margin:0"><label>TPK / Penerima</label><input type="text" name="penerima" id="add-penerima" class="input" placeholder="Nama TPK / penerima"></div>
             <button class="btn btn-primary" type="submit" data-testid="btn-tambah-rincian"><i class="fa-solid fa-plus"></i> Tambah</button>
           </div>
 
@@ -670,7 +686,18 @@
             <textarea name="sumber_data" class="textarea" placeholder="cth: SPP, kwitansi, daftar hadir..."><?= e((string)$sesi['sumber_data']) ?></textarea>
           </div>
         </div>
-        <div style="text-align:right"><button class="btn btn-primary" type="submit"><i class="fa-solid fa-save"></i> Simpan Kesimpulan</button></div>
+
+        <div class="field" style="margin-top:12px;background:#fffbeb;padding:14px;border:1px solid #fde68a;border-radius:8px">
+          <label style="color:#b45309;font-weight:700;display:flex;align-items:center;gap:6px">
+            <i class="fa-solid fa-triangle-exclamation"></i> Hambatan / Kendala di Lapangan
+          </label>
+          <textarea name="kendala_lapangan" class="textarea" style="background:#fff;border-color:#fcd34d" rows="3" placeholder="Tuliskan kendala riil di lapangan (akses lokasi medan, ketidakhadiran perangkat desa, SPJ belum diserahkan bendahara, cuaca ekstrem, dll)..."><?= e((string)($sesi['kendala_lapangan'] ?? '')) ?></textarea>
+          <div style="font-size:11.5px;color:#78350f;margin-top:4px">
+            <i class="fa-solid fa-circle-info"></i> Catatan hambatan ini dapat dipantau langsung secara real-time oleh Dalnis, Irban, dan Inspektur di Executive Dashboard.
+          </div>
+        </div>
+
+        <div style="text-align:right;margin-top:14px"><button class="btn btn-primary" type="submit"><i class="fa-solid fa-save"></i> Simpan Kesimpulan & Kendala</button></div>
       </form>
     </div>
 
@@ -752,10 +779,17 @@
           </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:12px">
+        <div style="display:grid;grid-template-columns:120px 1.2fr 1fr;gap:12px">
           <div class="field">
-            <label>Nama Rekanan / Toko / Penerima</label>
-            <input type="text" name="penerima" id="er-penerima" class="input" placeholder="Cth: Toko Berkah Mandiri / Bendahara Desa">
+            <label>Pilihan</label>
+            <select name="jenis_penerima" id="er-jenis-penerima" class="input" style="font-size:12.5px">
+              <option value="PENERIMA">Penerima</option>
+              <option value="TPK">TPK</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>TPK / Toko / Penerima</label>
+            <input type="text" name="penerima" id="er-penerima" class="input" placeholder="Cth: TPK Desa / Toko Berkah / Bendahara">
           </div>
           <div class="field">
             <label>Catatan Bukti SPJ / Keterangan</label>
@@ -1384,6 +1418,8 @@
       document.getElementById('er-kwi').value       = fmt(tr.dataset.kwi);
       document.getElementById('er-real').value      = fmt(tr.dataset.real);
       document.getElementById('er-penerima').value  = tr.dataset.penerima || '';
+      var elJp = document.getElementById('er-jenis-penerima');
+      if (elJp) elJp.value = tr.dataset.jenisPenerima || 'PENERIMA';
       document.getElementById('er-keterangan').value= tr.dataset.keterangan || '';
       
       var elStatusPajak = document.getElementById('er-status-pajak');
