@@ -358,6 +358,17 @@ class DashboardController {
                 WHERE spt.status IN ('DRAFT', 'MENUNGGU_TTD')
                 ORDER BY spt.id DESC LIMIT 5
             ");
+            $inspekturData['pending_nhp'] = DB::all("
+                SELECT s.id, s.desa_id, s.tahun_anggaran, s.no_spt, s.tgl_pengajuan_nhp, s.diajukan_oleh_nhp,
+                       d.nama AS desa_nama, k.nama AS kecamatan_nama,
+                       (SELECT COUNT(*) FROM kka_temuan t WHERE t.desa_id = s.desa_id) AS jml_temuan,
+                       (SELECT COALESCE(SUM(nominal),0) FROM kka_temuan t WHERE t.desa_id = s.desa_id) AS total_nominal
+                FROM kka_spt s
+                JOIN kka_desa d ON d.id = s.desa_id
+                JOIN kka_kecamatan k ON k.id = s.kecamatan_id
+                WHERE s.status_nhp = 'DIAJUKAN_INSPEKTUR'
+                ORDER BY s.tgl_pengajuan_nhp DESC, s.id DESC LIMIT 5
+            ");
             $inspekturData['pending_lhp'] = DB::all("
                 SELECT lhp.id, lhp.desa_id, lhp.tahun_anggaran, d.nama AS desa_nama, k.nama AS kecamatan_nama, lhp.status_lhp, lhp.dalnis_nama, lhp.irban_nama
                 FROM kka_lhp_narasi lhp

@@ -66,6 +66,16 @@ foreach ($daftarTemuan as $t) {
   <span>Nomor: 700/NHP-ITKAB/<?= strtoupper(str_replace(' ', '-', e($desa['nama']))) ?>/<?= $tahun ?></span>
 </div>
 
+<?php 
+$stNhp = $spt['status_nhp'] ?? 'DRAFT';
+if ($stNhp !== 'DISETUJUI_EKSPOSE'): 
+?>
+  <div style="border: 1.5px dashed #dc2626; background: #fef2f2; padding: 8px 12px; margin-bottom: 14px; text-align: center; color: #b91c1c; font-size: 8.5pt; font-family: Arial, sans-serif;">
+    <b>⚠️ LEMBAR KONSEP / DRAFT NHP — BELUM DISAHKAN INSPEKTUR DAERAH</b><br>
+    Dokumen ini merupakan naskah telaah internal. Wajib mendapatkan telaah &amp; pengesahan pra-ekspose Inspektur Daerah sebelum ekspose resmi.
+  </div>
+<?php endif; ?>
+
 <p class="paragraf">
   Berdasarkan Surat Perintah Tugas Inspektur Kabupaten Rokan Hilir Nomor <b><?= e($spt['no_spt'] ?? '700.1.2.1/SPT/ITKAB-DESA/' . $tahun) ?></b> tanggal <b><?= !empty($spt['tgl_spt']) ? tgl_id($spt['tgl_spt']) : tgl_id(date('Y-m-d')) ?></b>, Tim Pemeriksa APIP Inspektorat Kabupaten Rokan Hilir telah melaksanakan Pemeriksaan Ketaatan atas Pengelolaan Keuangan Kepenghuluan <b><?= e($desa['nama']) ?></b> Kecamatan <b><?= e($desa['kecamatan_nama']) ?></b> Tahun Anggaran <b><?= $tahun ?></b>.
 </p>
@@ -129,6 +139,37 @@ foreach ($daftarTemuan as $t) {
   1. Notisi Hasil Pemeriksaan (NHP) ini merupakan lembar konfirmasi temuan lapangan sebelum diterbitkannya Laporan Hasil Pengawasan (LHP) Definitif.<br>
   2. Pihak Auditi (Pj. Penghulu / Kaur Keuangan) menyatakan menerima temuan ini dan berkomitmen menindaklanjuti rekomendasi selambat-lambatnya <b>60 (enam puluh) hari kalender</b> sejak naskah LHP diterima.
 </p>
+
+<?php if ($stNhp === 'DISETUJUI_EKSPOSE'): ?>
+  <!-- KOTAK PENGESAHAN TELAAH & TTE DIGITAL INSPEKTUR DAERAH -->
+  <div style="border: 2px solid #047857; background: #f0fdf4; padding: 10px 14px; margin: 16px 0 10px; border-radius: 4px; page-break-inside: avoid;">
+    <table style="width: 100%; border-collapse: collapse; border: 0;">
+      <tr>
+        <td style="width: 80px; vertical-align: middle; text-align: center; border: 0; padding: 0;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=76x76&data=<?= urlencode('VERIFIKASI-NHP-KKA:' . ($spt['tte_barcode_nhp'] ?? '') . ':' . $desa['nama'] . ':' . $tahun) ?>" alt="QR TTE" style="width:76px;height:76px;border:1px solid #047857;padding:2px;background:#fff;display:block">
+        </td>
+        <td style="padding-left: 14px; vertical-align: top; font-size: 8.5pt; color: #064e3b; border: 0;">
+          <div style="font-weight: 800; font-size: 9.5pt; text-transform: uppercase; color: #047857; letter-spacing: 0.3px;">
+            PENGESAHAN TELAAH PRA-EKSPOSE INSPEKTUR DAERAH
+          </div>
+          <div style="margin-top: 3px; line-height: 1.35;">
+            Naskah Notisi Hasil Pemeriksaan (NHP) ini telah ditelaah dan <b>DISAHKAN</b> oleh Inspektur Daerah untuk dipaparkan pada Forum Ekspose Hasil Pemeriksaan bersama Pihak Auditi Kepenghuluan <?= e($desa['nama']) ?>.
+          </div>
+          <div style="margin-top: 4px; font-size: 8.5pt;">
+            <b>Otorisasi Digital:</b> <?= e($spt['disetujui_oleh_nhp'] ?? 'Inspektur Daerah Kab. Rokan Hilir') ?> &bull; 
+            <b>Tanggal:</b> <?= !empty($spt['tgl_disetujui_nhp']) ? tgl_id($spt['tgl_disetujui_nhp']) : '-' ?> &bull; 
+            <b>Kode TTE:</b> <code style="font-family: monospace; font-weight: bold; background: #dcfce7; padding: 1px 4px;"><?= e($spt['tte_barcode_nhp'] ?? '-') ?></code>
+          </div>
+          <?php if (!empty($spt['catatan_inspektur_nhp'])): ?>
+            <div style="margin-top: 3px; font-style: italic; color: #166534;">
+              <b>Catatan Inspektur:</b> "<?= e($spt['catatan_inspektur_nhp']) ?>"
+            </div>
+          <?php endif; ?>
+        </td>
+      </tr>
+    </table>
+  </div>
+<?php endif; ?>
 
 <!-- TANDA TANGAN BERSAMA -->
 <div class="ttd-box">

@@ -9,6 +9,37 @@ partial('sidebar');
   <div class="content">
     <?php partial('flash'); ?>
 
+    <?php if (!empty($pendingNhp)): ?>
+      <!-- Antrean Telaah NHP Pra-Ekspose Khusus Inspektur / Admin -->
+      <div class="card" style="padding:14px 18px;margin-bottom:18px;background:#f0f9ff;border:1px solid #bae6fd;border-left:4px solid #0284c7">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+          <div>
+            <h4 style="margin:0;font-size:14px;color:#0369a1;display:flex;align-items:center;gap:8px">
+              <i class="fa-solid fa-file-shield" style="font-size:16px"></i>
+              Antrean Telaah NHP Pra-Ekspose (<?= count($pendingNhp) ?> Usulan Menunggu Disetujui)
+            </h4>
+            <p style="margin:4px 0 0;font-size:12px;color:#075985">
+              Tim Pemeriksa telah merampungkan pengujian dan mengajukan konsep temuan (NHP) untuk persetujuan ekspose ke pihak auditi.
+            </p>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:10px;margin-top:12px">
+          <?php foreach ($pendingNhp as $p): ?>
+            <div style="background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <strong style="color:#0f172a;font-size:13px"><?= e($p['desa_nama']) ?></strong>
+                <div style="font-size:11.5px;color:#64748b">Kec. <?= e($p['kecamatan_nama']) ?> &bull; TA <?= $p['tahun_anggaran'] ?></div>
+                <div style="font-size:11px;color:#0284c7;font-weight:600;margin-top:2px"><?= (int)$p['jml_temuan'] ?> Temuan &bull; <?= rupiah($p['total_nominal']) ?></div>
+              </div>
+              <a href="<?= url('temuan?desa_id=' . $p['desa_id'] . '&tahun=' . $p['tahun_anggaran']) ?>" class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700">
+                Telaah &raquo;
+              </a>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    <?php endif; ?>
+
     <div class="page-head">
       <div>
         <h2 style="display:flex;align-items:center;gap:10px">
@@ -68,6 +99,114 @@ partial('sidebar');
         <?php endif; ?>
       </form>
     </div>
+
+    <?php if ($desaId > 0 && $spt): ?>
+      <?php 
+        $stNhp = $spt['status_nhp'] ?? 'DRAFT';
+      ?>
+      <!-- Banner Alur NHP Pra-Ekspose -->
+      <div class="card" style="padding:16px 20px;margin-bottom:18px;border-radius:10px;<?= $stNhp === 'DISETUJUI_EKSPOSE' ? 'background:#f0fdf4;border:1px solid #bbf7d0;border-left:5px solid #16a34a' : ($stNhp === 'DIAJUKAN_INSPEKTUR' ? 'background:#eff6ff;border:1px solid #bfdbfe;border-left:5px solid #2563eb' : ($stNhp === 'PERBAIKAN' ? 'background:#fffbeb;border:1px solid #fde68a;border-left:5px solid #d97706' : 'background:#f8fafc;border:1px solid #e2e8f0;border-left:5px solid #64748b')) ?>">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:13px;font-weight:800;text-transform:uppercase;color:var(--slate-800)">
+                STATUS ALUR NOTISI HASIL PEMERIKSAAN (NHP PRA-EKSPOSE)
+              </span>
+              <?php if ($stNhp === 'DISETUJUI_EKSPOSE'): ?>
+                <span class="badge" style="background:#dcfce7;color:#15803d;font-weight:800;font-size:11px"><i class="fa-solid fa-circle-check"></i> DISAHKAN UNTUK EKSPOSE (TTE SAH)</span>
+              <?php elseif ($stNhp === 'DIAJUKAN_INSPEKTUR'): ?>
+                <span class="badge" style="background:#dbeafe;color:#1e40af;font-weight:800;font-size:11px"><i class="fa-solid fa-hourglass-half"></i> MENUNGGU TELAAH INSPEKTUR</span>
+              <?php elseif ($stNhp === 'PERBAIKAN'): ?>
+                <span class="badge" style="background:#fef3c7;color:#92400e;font-weight:800;font-size:11px"><i class="fa-solid fa-triangle-exclamation"></i> PERLU PERBAIKAN DARI INSPEKTUR</span>
+              <?php else: ?>
+                <span class="badge" style="background:#f1f5f9;color:#475569;font-weight:800;font-size:11px"><i class="fa-solid fa-file-pen"></i> DRAFT (BELUM DIAJUKAN)</span>
+              <?php endif; ?>
+            </div>
+            <p style="margin:6px 0 0;font-size:12.5px;color:var(--slate-600)">
+              Pemeriksaan Kepenghuluan <b><?= e($spt['desa_nama']) ?></b> TA <b><?= e($spt['tahun_anggaran']) ?></b> &bull; SPT No: <b><?= e($spt['no_spt'] ?: 'DRAFT') ?></b>
+            </p>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center">
+            <?php if ($stNhp === 'DISETUJUI_EKSPOSE'): ?>
+              <a href="<?= url('print/nhp?desa_id=' . $desaId . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-sm" style="background:#16a34a;color:#fff;font-weight:700">
+                <i class="fa-solid fa-print"></i> Cetak NHP Sah (Barcode TTE)
+              </a>
+            <?php else: ?>
+              <a href="<?= url('print/nhp?desa_id=' . $desaId . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-sm btn-outline" style="border-color:#0284c7;color:#0284c7">
+                <i class="fa-solid fa-eye"></i> Pratinjau NHP
+              </a>
+            <?php endif; ?>
+          </div>
+        </div>
+
+        <?php if ($stNhp === 'DISETUJUI_EKSPOSE'): ?>
+          <div style="margin-top:12px;padding:10px 14px;background:#ffffff;border:1px solid #bbf7d0;border-radius:6px;font-size:12px;color:#166534">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <div><b>Disetujui Oleh:</b> <?= e($spt['disetujui_oleh_nhp'] ?? 'Inspektur Daerah') ?> (<?= !empty($spt['tgl_disetujui_nhp']) ? tgl_id($spt['tgl_disetujui_nhp']) : '-' ?>)</div>
+              <div><b>Kode Barcode TTE:</b> <code style="font-family:monospace;font-weight:700"><?= e($spt['tte_barcode_nhp'] ?? '-') ?></code></div>
+            </div>
+            <?php if (!empty($spt['catatan_inspektur_nhp'])): ?>
+              <div style="margin-top:6px;font-style:italic"><b>Catatan/Arahan Inspektur:</b> "<?= e($spt['catatan_inspektur_nhp']) ?>"</div>
+            <?php endif; ?>
+          </div>
+        <?php elseif ($stNhp === 'PERBAIKAN'): ?>
+          <div style="margin-top:12px;padding:10px 14px;background:#ffffff;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e">
+            <div style="font-weight:700;margin-bottom:4px"><i class="fa-solid fa-circle-exclamation"></i> Catatan / Koreksi dari Inspektur:</div>
+            <div>"<?= e($spt['catatan_inspektur_nhp'] ?: 'Mohon perbaiki rumusan temuan sebelum ekspose.') ?>"</div>
+          </div>
+          <form method="post" action="<?= url('temuan/ajukan-nhp') ?>" style="margin-top:10px">
+            <?= csrf_field() ?>
+            <input type="hidden" name="spt_id" value="<?= $spt['id'] ?>">
+            <button type="submit" class="btn btn-sm" style="background:#d97706;color:#fff;font-weight:700">
+              <i class="fa-solid fa-paper-plane"></i> Ajukan Ulang ke Inspektur Setelah Revisi
+            </button>
+          </form>
+        <?php elseif ($stNhp === 'DIAJUKAN_INSPEKTUR'): ?>
+          <div style="margin-top:12px;padding:10px 14px;background:#ffffff;border:1px solid #bfdbfe;border-radius:6px;font-size:12px;color:#1e40af">
+            <div><b>Diajukan Oleh:</b> <?= e($spt['diajukan_oleh_nhp'] ?? 'Ketua Tim') ?> pada tanggal <?= !empty($spt['tgl_pengajuan_nhp']) ? tgl_id($spt['tgl_pengajuan_nhp']) : '-' ?>.</div>
+          </div>
+
+          <?php if ($this->auth->isInspektur() || $this->auth->isAdmin()): ?>
+            <!-- FORM TELAAH & PENGESAHAN KHUSUS INSPEKTUR -->
+            <form method="post" action="<?= url('temuan/approve-nhp') ?>" style="margin-top:12px;background:#ffffff;border:1px solid #cbd5e1;padding:12px 14px;border-radius:8px">
+              <?= csrf_field() ?>
+              <input type="hidden" name="spt_id" value="<?= $spt['id'] ?>">
+              <label style="font-size:12px;font-weight:700;color:#0f172a;display:block;margin-bottom:4px">
+                <i class="fa-solid fa-pen-fancy"></i> Lembar Telaah &amp; Catatan Inspektur:
+              </label>
+              <textarea name="catatan_inspektur" class="input" rows="2" style="font-size:12px" placeholder="Tuliskan arahan, pengurangan temuan, atau koreksi sebelum ekspose (opsional jika langsung disetujui)..."></textarea>
+              <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+                <button type="submit" name="action" value="setujui" class="btn" style="background:#16a34a;color:#fff;font-weight:700">
+                  <i class="fa-solid fa-stamp"></i> Setujui &amp; Sahkan NHP (TTE Barcode Otomatis)
+                </button>
+                <button type="submit" name="action" value="kembalikan" class="btn" style="background:#d97706;color:#fff;font-weight:700" onclick="return confirm('Kembalikan naskah NHP ini ke Tim Pemeriksa untuk perbaikan?')">
+                  <i class="fa-solid fa-rotate-left"></i> Kembalikan untuk Perbaikan
+                </button>
+              </div>
+            </form>
+          <?php else: ?>
+            <div style="margin-top:8px;font-size:12px;color:#475569;font-style:italic">
+              <i class="fa-solid fa-hourglass-start"></i> Dokumen NHP sedang dalam proses telaah pimpinan. Harap tunggu persetujuan Inspektur sebelum menggelar Forum Ekspose dengan Pj. Penghulu/Desa.
+            </div>
+          <?php endif; ?>
+        <?php else: ?>
+          <!-- DRAFT BELUM DIAJUKAN -->
+          <div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div style="font-size:12px;color:#475569">
+              Kertas kerja dan daftar temuan di bawah siap diajukan kepada Inspektur Daerah untuk mendapatkan telaah dan persetujuan pra-ekspose.
+            </div>
+            <form method="post" action="<?= url('temuan/ajukan-nhp') ?>">
+              <?= csrf_field() ?>
+              <input type="hidden" name="spt_id" value="<?= $spt['id'] ?>">
+              <button type="submit" class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700">
+                <i class="fa-solid fa-paper-plane"></i> Ajukan NHP ke Inspektur untuk Telaah Pra-Ekspose
+              </button>
+            </form>
+          </div>
+        <?php endif; ?>
+      </div>
+    <?php endif; ?>
 
     <!-- Summary Box -->
     <?php

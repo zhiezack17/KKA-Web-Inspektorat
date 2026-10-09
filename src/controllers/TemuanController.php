@@ -59,7 +59,26 @@ class TemuanController {
             $totalNominal += (float)$t['nominal'];
         }
 
-        view('temuan/index', compact('daftarTemuan', 'daftarDesa', 'desaId', 'tahun', 'status', 'totalNominal'));
+        $spt = null;
+        if ($desaId > 0) {
+            $spt = DB::one("SELECT s.*, d.nama AS desa_nama FROM kka_spt s JOIN kka_desa d ON d.id = s.desa_id WHERE s.desa_id = ? AND s.tahun_anggaran LIKE ? ORDER BY s.id DESC LIMIT 1", [$desaId, "%$tahun%"]);
+        }
+
+        $pendingNhp = [];
+        if ($this->auth->isInspektur() || $this->auth->isAdmin()) {
+            $pendingNhp = DB::all("
+                SELECT s.*, d.nama AS desa_nama, k.nama AS kecamatan_nama,
+                       (SELECT COUNT(*) FROM kka_temuan t WHERE t.desa_id = s.desa_id) AS jml_temuan,
+                       (SELECT COALESCE(SUM(nominal),0) FROM kka_temuan t WHERE t.desa_id = s.desa_id) AS total_nominal
+                FROM kka_spt s
+                JOIN kka_desa d ON d.id = s.desa_id
+                JOIN kka_kecamatan k ON k.id = s.kecamatan_id
+                WHERE s.status_nhp = 'DIAJUKAN_INSPEKTUR'
+                ORDER BY s.tgl_pengajuan_nhp DESC, s.id DESC
+            ");
+        }
+
+        view('temuan/index', compact('daftarTemuan', 'daftarDesa', 'desaId', 'tahun', 'status', 'totalNominal', 'spt', 'pendingNhp'));
     }
 
     public function create(): void {
@@ -370,7 +389,7 @@ class TemuanController {
             redirect('temuan');
         }
 
-        $spt = DB::one("SELECT * FROM kka_spt WHERE desa_id = ? AND tahun_anggaran = ? ORDER BY id DESC LIMIT 1", [$desaId, $tahun]);
+        $spt = DB::one("SELECT * FROM kka_spt WHERE desa_id = ? AND tahun_anggaran LIKE ? ORDER BY id DESC LIMIT 1", [$desaId, "%$tahun%"]);
 
         $daftarTemuan = DB::all("
             SELECT * FROM kka_temuan 
@@ -378,6 +397,72 @@ class TemuanController {
             ORDER BY id ASC
         ", [$desaId, $tahun]);
 
-        view('print/nhp', compact('desa', 'tahun', 'spt', 'daftarTemuan'));
+        $totalTemuan = 0;
+        foreach ($daftarTemuan as $t) {
+            $totalTemuan += (float)$t['nominal'];
+        }
+
+        view('print/nhp', compact('desa', 'tahun', 'spt', 'daftarTemuan', 'totalTemuan'));
+    }
+
+    public function ajukanNhp(): void {
+        only_post(); csrf_check();
+        $sptId = (int) input('spt_id');
+        $spt = DB::one('SELECT s.*, d.nama AS desa_nama FROM kka_spt s JOIN kka_desa d ON d.id = s.desa_id WHERE s.id = ?', [$sptId]);
+        if (!$spt) {
+            flash('error', 'Data penugasan SPT tidak ditemukan.');
+            redirect('temuan');
+        }
+
+        $user = $this->auth->user();
+        DB::update('kka_spt', [
+            'status_nhp'        => 'DIAJUKAN_INSPEKTUR',
+            'tgl_pengajuan_nhp' => date('Y-m-d'),
+            'diajukan_oleh_nhp' => $user['nama'] . ' (' . ($user['jabatan'] ?? 'Ketua Tim') . ')',
+        ], ['id' => $sptId]);
+
+        flash('success', 'Naskah NHP atas Kepenghuluan ' . $spt['desa_nama'] . ' berhasil diajukan ke Inspektur untuk telaah & persetujuan ekspose.');
+        redirect('temuan?desa_id=' . $spt['desa_id'] . '&tahun=' . $spt['tahun_anggaran']);
+    }
+
+    public function approveNhp(): void {
+        only_post(); csrf_check();
+        if (!$this->auth->isInspektur() && !$this->auth->isAdmin()) {
+            flash('error', 'Hanya Inspektur Daerah yang berwenang memberikan pengesahan / telaah NHP pra-ekspose.');
+            redirect('temuan');
+        }
+
+        $sptId   = (int) input('spt_id');
+        $action  = trim((string) input('action')); // 'setujui' atau 'kembalikan'
+        $catatan = trim((string) input('catatan_inspektur', ''));
+
+        $spt = DB::one('SELECT s.*, d.nama AS desa_nama FROM kka_spt s JOIN kka_desa d ON d.id = s.desa_id WHERE s.id = ?', [$sptId]);
+        if (!$spt) {
+            flash('error', 'Data SPT tidak ditemukan.');
+            redirect('temuan');
+        }
+
+        $user = $this->auth->user();
+        if ($action === 'setujui') {
+            $tteBarcode = 'TTE-INSP-' . date('Ymd') . '-' . strtoupper(substr(md5((string)$sptId . time()), 0, 8));
+            DB::update('kka_spt', [
+                'status_nhp'            => 'DISETUJUI_EKSPOSE',
+                'tgl_disetujui_nhp'     => date('Y-m-d'),
+                'disetujui_oleh_nhp'    => $user['nama'],
+                'catatan_inspektur_nhp' => $catatan ?: 'Disetujui untuk ekspose dengan auditi.',
+                'tte_barcode_nhp'       => $tteBarcode,
+            ], ['id' => $sptId]);
+
+            flash('success', 'NHP atas Kepenghuluan ' . $spt['desa_nama'] . ' telah DISAHKAN untuk ekspose ke auditi.');
+        } else {
+            DB::update('kka_spt', [
+                'status_nhp'            => 'PERBAIKAN',
+                'catatan_inspektur_nhp' => $catatan ?: 'Perlu perbaikan/penyempurnaan temuan sebelum ekspose.',
+            ], ['id' => $sptId]);
+
+            flash('warning', 'NHP atas Kepenghuluan ' . $spt['desa_nama'] . ' dikembalikan ke Tim Pemeriksa dengan catatan perbaikan.');
+        }
+
+        redirect('temuan?desa_id=' . $spt['desa_id'] . '&tahun=' . $spt['tahun_anggaran']);
     }
 }

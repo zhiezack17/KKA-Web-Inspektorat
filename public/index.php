@@ -276,6 +276,8 @@ $routes = [
     '/temuan/edit'                    => ['TemuanController', 'edit'],
     '/temuan/update'                  => ['TemuanController', 'update'],
     '/temuan/delete'                  => ['TemuanController', 'delete'],
+    '/temuan/ajukan-nhp'              => ['TemuanController', 'ajukanNhp'],
+    '/temuan/approve-nhp'             => ['TemuanController', 'approveNhp'],
     '/print/matriks-temuan'           => ['TemuanController', 'matriks'],
     '/print/nhp'                      => ['TemuanController', 'nhp'],
 
