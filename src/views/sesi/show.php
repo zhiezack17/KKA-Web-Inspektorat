@@ -512,25 +512,21 @@
                 <td><?= $no++ ?></td>
                 <td>
                   <strong><?= e($r['uraian']) ?></strong>
-                  <?php if (!empty($r['potong_pph']) || !empty($r['potong_ppn'])): ?>
-                    <div style="font-size:11px;color:var(--slate-500)">
-                       <?= !empty($r['potong_ppn']) ? 'PPN: ' . rupiah($r['nominal_ppn']) : '' ?>
-                       <?= !empty($r['potong_pph']) ? ' &bull; ' . e($r['potong_pph']) . ': ' . rupiah($r['nominal_pph']) : '' ?>
-                    </div>
-                  <?php endif; ?>
                 </td>
                 <td class="num"><?= rupiah($r['pagu_anggaran']) ?></td>
                 <td class="num"><?= rupiah($r['realisasi']) ?></td>
                 <td class="num"><?= rupiah($r['biaya_dikwitansi']) ?></td>
                 <td class="num" style="color:<?= $sel<0?'var(--red-600)':'var(--emerald-700)' ?>;font-weight:700"><?= rupiah($sel) ?></td>
-                <td style="text-align:center"><?= $pajakHtml ?></td>
+                <td style="text-align:center">
+                  <?= $pajakHtml ?>
+                  <?php if ($totNomPajak > 0 && $stPajak === 'SUDAH_SETOR'): ?>
+                    <div style="font-size:11px;color:#15803d;margin-top:2px;font-weight:600"><?= rupiah($totNomPajak) ?></div>
+                  <?php endif; ?>
+                </td>
                 <td>
-                  <?php 
-                    $jp = strtoupper($r['jenis_penerima'] ?? 'PENERIMA');
-                    $jpBg = ($jp === 'TPK') ? '#e0e7ff' : '#f1f5f9';
-                    $jpColor = ($jp === 'TPK') ? '#3730a3' : '#475569';
-                  ?>
-                  <span class="badge" style="background:<?= $jpBg ?>;color:<?= $jpColor ?>;font-size:10px;padding:2px 5px;border-radius:4px;font-weight:700;margin-right:4px"><?= $jp === 'TPK' ? 'TPK' : 'Penerima' ?></span>
+                  <?php if (!empty($r['jenis_penerima']) && strtoupper($r['jenis_penerima']) === 'TPK'): ?>
+                    <span class="badge" style="background:#e0e7ff;color:#3730a3;font-size:10px;padding:2px 5px;border-radius:4px;font-weight:700;margin-right:4px">TPK</span>
+                  <?php endif; ?>
                   <?= e($r['penerima'] ?: '-') ?>
                 </td>
                 <td><?= e($r['keterangan'] ?: '-') ?></td>
