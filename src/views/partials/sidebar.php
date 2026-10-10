@@ -51,7 +51,7 @@ $isPengaturanActive = str_contains($current, '/panduan-workflow')
           <span class="elhp-text">E-LHP</span>
           <span class="elhp-badge-pro">DIGITAL</span>
         </h1>
-        <p class="elhp-sub">Inspektorat Rokan Hilir</p>
+        <p class="elhp-sub" title="Inspektorat Kabupaten Rokan Hilir">Inspektorat Kabupaten Rokan Hilir</p>
       </div>
     </div>
 

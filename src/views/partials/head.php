@@ -59,12 +59,38 @@
     box-shadow: 0 0 8px rgba(250,204,21,0.25);
     text-transform: uppercase;
   }
+  .sidebar {
+    width: 276px;
+  }
+  @media (min-width: 993px) {
+    body.sidebar-collapsed .sidebar,
+    html.sidebar-collapsed .sidebar {
+      margin-left: -276px;
+    }
+  }
+  .sidebar .brand {
+    gap: 10px !important;
+    padding: 16px 14px 14px !important;
+  }
+  .sidebar .brand-logo {
+    width: 38px !important;
+    height: 42px !important;
+    flex-shrink: 0 !important;
+  }
+  .sidebar .brand-text {
+    flex: 1 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
   .elhp-sub {
-    margin: 2px 0 0;
-    font-size: 10.5px;
-    color: #a7f3d0;
-    letter-spacing: 0.3px;
-    font-weight: 600;
+    margin: 3px 0 0 !important;
+    font-size: 9.75px !important;
+    color: #a7f3d0 !important;
+    letter-spacing: 0.15px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    text-transform: none !important;
+    line-height: 1.2 !important;
   }
 </style>
 <script>
