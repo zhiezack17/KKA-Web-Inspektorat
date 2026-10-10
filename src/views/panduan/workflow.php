@@ -1,5 +1,5 @@
 <?php
-$title = 'Master Blueprint & Workflow KKA Digital 2026 - Inspektorat Rokan Hilir';
+$title = 'Master Blueprint & Workflow E-LHP 2026 - Inspektorat Rokan Hilir';
 $auth  = $GLOBALS['auth'];
 ?>
 <!DOCTYPE html>
@@ -410,7 +410,7 @@ $auth  = $GLOBALS['auth'];
     <div class="left">
       <div class="brand-title">
         <i class="fa-solid fa-file-shield" style="color:var(--emerald);font-size:18px"></i>
-        <span>Master Blueprint &amp; Dokumen SOP KKA Digital (Edisi Terpadu 2026)</span>
+        <span>Master Blueprint &amp; Dokumen SOP E-LHP (Edisi Terpadu 2026)</span>
       </div>
     </div>
     <div class="actions">
@@ -445,7 +445,7 @@ $auth  = $GLOBALS['auth'];
     <!-- Judul Dokumen Master -->
     <div class="doc-title-block">
       <h1>Master Blueprint &amp; Standar Operasional Prosedur (SOP)</h1>
-      <div class="doc-subtitle">Siklus Pengawasan Pengelolaan Keuangan Kepenghuluan (KKA Digital ADTT)</div>
+      <div class="doc-subtitle">Siklus Pengawasan Pengelolaan Keuangan Kepenghuluan (E-LHP ADTT)</div>
       <div class="doc-meta">Nomor Registrasi: BP-SOP/KKA-QA/INSP-ROHIL/2026 · Berlaku Efektif: Tahun Anggaran 2026</div>
     </div>
 
@@ -496,7 +496,7 @@ $auth  = $GLOBALS['auth'];
         <i class="fa-solid fa-scale-balanced"></i>
         <span>2. Landasan Hukum &amp; Standar Pemeriksaan</span>
       </div>
-      <p>Penyusunan KKA Digital dan tata kelola pengawasan ini berlandaskan pada regulasi resmi:</p>
+      <p>Penyusunan E-LHP dan tata kelola pengawasan ini berlandaskan pada regulasi resmi:</p>
       <ul style="margin-left: 20px; line-height: 1.7">
         <li><b>Undang-Undang Nomor 6 Tahun 2014</b> tentang Desa sebagaimana telah diubah terakhir dengan UU No. 3 Tahun 2024.</li>
         <li><b>Peraturan Pemerintah Nomor 12 Tahun 2017</b> tentang Pembinaan dan Pengawasan Penyelenggaraan Pemerintahan Daerah.</li>

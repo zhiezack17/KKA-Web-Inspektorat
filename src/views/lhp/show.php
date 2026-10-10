@@ -113,7 +113,7 @@ $stLhp = $narasi['status_lhp'] ?? 'DRAFT';
           <i class="fa-solid fa-cloud-check" style="font-size:18px;color:#15803d"></i>
           <div>
             <b>Naskah LHP Final telah tersinkronisasi di Google Drive:</b>
-            <span style="color:#15803d">Folder <code>KKA DIGITAL INSPEKTORAT / <?= e($gdriveLhp['irban_nama']) ?> / TAHUN ANGGARAN <?= $tahun ?> / Kepenghuluan <?= e($desa['nama']) ?> / 04_LHP_FINAL</code> (Disimpan <?= date('d/m/Y H:i', strtotime($gdriveLhp['synced_at'])) ?> WIB)</span>
+            <span style="color:#15803d">Folder <code>E-LHP INSPEKTORAT / <?= e($gdriveLhp['irban_nama']) ?> / TAHUN ANGGARAN <?= $tahun ?> / Kepenghuluan <?= e($desa['nama']) ?> / 04_LHP_FINAL</code> (Disimpan <?= date('d/m/Y H:i', strtotime($gdriveLhp['synced_at'])) ?> WIB)</span>
           </div>
         </div>
         <a href="<?= e($gdriveLhp['web_view_link']) ?>" target="_blank" style="font-size:12px;font-weight:700;color:#0369a1;text-decoration:none;display:flex;align-items:center;gap:4px">

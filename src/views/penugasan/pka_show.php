@@ -1,4 +1,4 @@
-<?php $title = 'Matriks PKA - KKA Digital'; ?>
+<?php $title = 'Matriks PKA - E-LHP'; ?>
 <?php partial('head', compact('title')); ?>
 <?php partial('sidebar'); ?>
 

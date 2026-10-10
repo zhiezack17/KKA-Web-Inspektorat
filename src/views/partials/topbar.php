@@ -1,5 +1,5 @@
 <?php
-$tbTitle = $title ?? 'KKA Digital';
+$tbTitle = $title ?? 'E-LHP';
 $tbIcon  = $icon ?? 'fa-solid fa-layer-group';
 $curUser = $GLOBALS['auth']->user() ?? [];
 $curUname = $curUser['username'] ?? '';

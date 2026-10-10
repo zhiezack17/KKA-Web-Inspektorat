@@ -1,8 +1,8 @@
-# KKA - Kertas Kerja Audit
+# E-LHP DIGITAL - Sistem Pengawasan & Laporan Hasil Pemeriksaan
 ## Inspektorat Kabupaten Rokan Hilir
 
-Aplikasi pencatatan & cetak Kertas Kerja Audit (KKA) untuk pengeluaran keuangan kepenghuluan.
-Dibangun dengan PHP 8.1+ native dan MySQL/MariaDB agar **kompatibel penuh dengan shared hosting cPanel**.
+Aplikasi digital pengawasan, penyusunan Kertas Kerja Audit (KKA), dan Laporan Hasil Pemeriksaan (E-LHP) untuk entitas kepenghuluan di lingkungan Pemerintah Kabupaten Rokan Hilir.
+Dibangun dengan arsitektur PHP 8.1+ modern dan MySQL/MariaDB.
 
 ---
 

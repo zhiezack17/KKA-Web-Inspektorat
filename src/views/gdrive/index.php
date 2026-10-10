@@ -97,7 +97,7 @@ partial('sidebar');
             <span style="color:#64748b">Folder Induk di Google Drive:</span>
             <a href="<?= e($parentFolderLink ?? 'https://drive.google.com/drive/folders/1QmpDbKANfhitTF69T4epmaD7rWsjMTem') ?>" target="_blank" style="font-weight:700;color:#0284c7;margin-left:6px;text-decoration:none;display:inline-flex;align-items:center;gap:5px">
               <i class="fa-solid fa-folder-open" style="color:#f59e0b"></i>
-              <span><?= e($parentFolderName ?? 'KKA DIGITAL INSPEKTORAT') ?></span>
+              <span><?= e($parentFolderName ?? 'E-LHP INSPEKTORAT') ?></span>
               <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px"></i>
             </a>
           </div>
@@ -170,7 +170,7 @@ partial('sidebar');
             Naskah Laporan Hasil Pengawasan (LHP) Desa — TA <?= $tahun ?>
           </h3>
           <p style="margin:2px 0 0;font-size:12px;color:#64748b">
-            Folder Tujuan: <code>KKA DIGITAL INSPEKTORAT / IRBAN [I-V] / TAHUN ANGGARAN <?= $tahun ?> / Kepenghuluan ... / 04_LHP_FINAL</code>
+            Folder Tujuan: <code>E-LHP INSPEKTORAT / IRBAN [I-V] / TAHUN ANGGARAN <?= $tahun ?> / Kepenghuluan ... / 04_LHP_FINAL</code>
           </p>
         </div>
       </div>
@@ -257,7 +257,7 @@ partial('sidebar');
             Berita Acara Pemeriksaan Kas (Opname Kas)
           </h3>
           <p style="margin:2px 0 0;font-size:12px;color:#64748b">
-            Folder Tujuan: <code>KKA DIGITAL INSPEKTORAT / IRBAN [I-V] / TAHUN ANGGARAN ... / Kepenghuluan ... / 03_OPNAME_KAS</code>
+            Folder Tujuan: <code>E-LHP INSPEKTORAT / IRBAN [I-V] / TAHUN ANGGARAN ... / Kepenghuluan ... / 03_OPNAME_KAS</code>
           </p>
         </div>
       </div>

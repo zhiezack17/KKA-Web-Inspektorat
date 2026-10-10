@@ -1,4 +1,4 @@
-<?php $title = 'Buat Nota Dinas Penugasan - KKA Digital'; ?>
+<?php $title = 'Buat Nota Dinas Penugasan - E-LHP'; ?>
 <?php partial('head', compact('title')); ?>
 <?php partial('sidebar'); ?>
 

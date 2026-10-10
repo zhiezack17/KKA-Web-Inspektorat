@@ -1,4 +1,4 @@
-<?php $title = 'Penerbitan SPT - KKA Digital'; ?>
+<?php $title = 'Penerbitan SPT - E-LHP'; ?>
 <?php partial('head', compact('title')); ?>
 <?php partial('sidebar'); ?>
 

@@ -1,4 +1,4 @@
-<?php $title = 'Login - KKA Inspektorat Rokan Hilir'; $body_class = 'login'; ?>
+<?php $title = 'Login - E-LHP Inspektorat Rokan Hilir'; $body_class = 'login'; ?>
 <?php partial('head', compact('title','body_class')); ?>
 
 <div class="login-card" data-testid="login-card">
@@ -17,8 +17,8 @@
     </div>
 
     <div class="hero">
-      <h2>Kertas Kerja <span class="gold">Audit Digital</span><br>Inspektorat Rohil</h2>
-      <p>Siklus pengawasan keuangan desa terpadu &amp; akuntabel berbasis digital dari Pra-Audit hingga Tindak Lanjut.</p>
+      <h2>Sistem Pengawasan <span class="gold"><i class="fa-solid fa-sparkles" style="font-size:18px;color:#facc15"></i> E-LHP</span><br>Inspektorat Rohil</h2>
+      <p>Siklus pengawasan keuangan desa terpadu &amp; akuntabel berbasis digital dari Pra-Audit, KKA, hingga Penerbitan LHP &amp; Tindak Lanjut.</p>
       
       <!-- 5 PILAR SIKLUS PENGAWASAN CARD -->
       <div class="pilar-card" onclick="openPilarModal()" title="Klik untuk memperbesar diagram alur pengawasan">

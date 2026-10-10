@@ -193,7 +193,7 @@
   </div>
   <?php endif; ?>
   <div class="page-footer">
-    <div>Portal Arsip Digital · Inspektorat Kab. Rokan Hilir</div>
+    <div>Portal E-LHP · Inspektorat Kab. Rokan Hilir</div>
     <div>Dicetak: <?= date('d/m/Y H:i') ?></div>
     <div>KKA #<?= (int)$sesi['id'] ?></div>
   </div>

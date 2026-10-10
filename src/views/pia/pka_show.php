@@ -1,4 +1,4 @@
-<?php $title = 'KKA PIA - KKA Digital'; ?>
+<?php $title = 'KKA PIA - E-LHP'; ?>
 <?php partial('head', compact('title')); ?>
 <?php partial('sidebar'); ?>
 

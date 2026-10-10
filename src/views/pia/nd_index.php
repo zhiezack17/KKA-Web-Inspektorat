@@ -1,4 +1,4 @@
-<?php $title = 'Nota Dinas PIA - KKA Digital'; ?>
+<?php $title = 'Nota Dinas PIA - E-LHP'; ?>
 <?php partial('head', compact('title')); ?>
 <?php partial('sidebar'); ?>
 

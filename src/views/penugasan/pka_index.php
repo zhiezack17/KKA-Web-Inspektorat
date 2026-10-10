@@ -1,4 +1,4 @@
-<?php $title = 'Program Kerja Audit (PKA) - KKA Digital'; ?>
+<?php $title = 'Program Kerja Audit (PKA) - E-LHP'; ?>
 <?php partial('head', compact('title')); ?>
 <?php partial('sidebar'); ?>
 

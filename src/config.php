@@ -36,7 +36,7 @@ foreach ($required as $key) {
 
 return [
     'root_dir' => $rootDir,
-    'app_name' => $env['APP_NAME'] ?? 'Kertas Kerja Audit',
+    'app_name' => $env['APP_NAME'] ?? 'E-LHP Inspektorat Rokan Hilir',
     'app_url' => $env['APP_URL'] ?? '',
     'app_env' => $env['APP_ENV'] ?? 'production',
     'app_debug' => filter_var($env['APP_DEBUG'] ?? 'false', FILTER_VALIDATE_BOOLEAN),

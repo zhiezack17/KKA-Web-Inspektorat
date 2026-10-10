@@ -1,5 +1,5 @@
 <?php 
-$title = 'Dashboard Operasional Pengawasan - KKA Digital Inspektorat'; 
+$title = 'Dashboard Operasional Pengawasan - E-LHP Inspektorat'; 
 $user = $auth->user();
 ?>
 <?php partial('head', compact('title')); ?>
@@ -77,7 +77,7 @@ $user = $auth->user();
               </span>
             </div>
             <p style="color:#64748b;font-size:12px;margin-top:3px;margin-bottom:0">
-              Pusat Komando Operasional Pengawasan KKA Digital &mdash; Inspektorat Kabupaten Rokan Hilir.
+              Pusat Komando Operasional Pengawasan E-LHP &mdash; Inspektorat Kabupaten Rokan Hilir.
             </p>
           </div>
         </div>

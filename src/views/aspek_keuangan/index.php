@@ -1,5 +1,5 @@
 <?php 
-$title = 'Pengujian Aspek Keuangan Desa - KKA Digital'; 
+$title = 'Pengujian Aspek Keuangan Desa - E-LHP'; 
 partial('head', compact('title'));
 partial('sidebar');
 ?>

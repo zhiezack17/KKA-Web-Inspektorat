@@ -45,8 +45,14 @@ $isPengaturanActive = str_contains($current, '/panduan-workflow')
       <img src="<?= asset('img/logo-rohil.png') ?>" alt="Rohil">
     </div>
     <div class="brand-text">
-      <h1>KKA DIGITAL <span style="font-size:9px;background:rgba(245,158,11,0.2);color:#fef08a;padding:1px 5px;border-radius:4px;border:1px solid rgba(245,158,11,0.3);font-weight:700">v2.5</span></h1>
-      <p>Inspektorat Rokan Hilir</p>
+      <div class="elhp-brand-wrap">
+        <h1 class="elhp-title">
+          <span class="elhp-sparkle"><i class="fa-solid fa-sparkles"></i></span>
+          <span class="elhp-text">E-LHP</span>
+          <span class="elhp-badge-pro">DIGITAL</span>
+        </h1>
+        <p class="elhp-sub">Inspektorat Rokan Hilir</p>
+      </div>
     </div>
 
     <button type="button" class="sidebar-collapse-btn hide-mobile" id="sidebarCollapseBtn" title="Sembunyikan Menu (Ctrl+B)" aria-label="Sembunyikan Menu">

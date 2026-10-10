@@ -1,4 +1,4 @@
-<?php $title = 'Surat Tugas PIA (SPT) - KKA Digital'; ?>
+<?php $title = 'Surat Tugas PIA (SPT) - E-LHP'; ?>
 <?php partial('head', compact('title')); ?>
 <?php partial('sidebar'); ?>
 
