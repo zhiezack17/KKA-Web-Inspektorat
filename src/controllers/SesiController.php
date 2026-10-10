@@ -126,6 +126,8 @@ class SesiController {
      * Buat Sesi KKA baru langsung dari dokumen LRA (PDF Siskeudes / Excel)
      */
     public function createFromLra(): void {
+        @set_time_limit(300);
+        @ini_set('memory_limit', '512M');
         only_post(); csrf_check();
 
         if (empty($_FILES['file_lra']['name']) || empty($_FILES['file_lra']['tmp_name'])) {

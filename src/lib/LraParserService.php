@@ -72,7 +72,49 @@ except Exception:
             }
         }
 
+        // 3. Fallback Tesseract OCR jika file merupakan hasil scan gambar (scanned PDF)
+        if (function_exists('shell_exec')) {
+            $ocrText = self::ocrPdfWithTesseract($pdfPath);
+            if (strlen(trim($ocrText)) > 30) {
+                return $ocrText;
+            }
+        }
+
         return (string)$output;
+    }
+
+    /**
+     * Fallback OCR menggunakan pdftoppm dan Tesseract untuk dokumen scan gambar
+     */
+    public static function ocrPdfWithTesseract(string $pdfPath): string {
+        $whichTess = trim((string) @shell_exec('which tesseract 2>/dev/null'));
+        if (!$whichTess) return '';
+
+        $tmpDir = sys_get_temp_dir() . '/kka_ocr_' . uniqid();
+        @mkdir($tmpDir, 0777, true);
+
+        // Render PDF pages as PNG (maksimal 12 halaman pertama, 120 DPI untuk kecepatan & ketajaman optimal)
+        $ppmCmd = 'pdftoppm -png -r 120 -l 12 ' . escapeshellarg($pdfPath) . ' ' . escapeshellarg($tmpDir . '/pg') . ' 2>/dev/null';
+        @shell_exec($ppmCmd);
+
+        $pngs = glob($tmpDir . '/pg-*.png');
+        if (empty($pngs)) {
+            @shell_exec('rm -rf ' . escapeshellarg($tmpDir));
+            return '';
+        }
+
+        natsort($pngs);
+        $fullText = '';
+        foreach ($pngs as $png) {
+            $tessCmd = 'tesseract ' . escapeshellarg($png) . ' stdout -l ind+eng --psm 6 2>/dev/null';
+            $t = (string) @shell_exec($tessCmd);
+            if ($t) {
+                $fullText .= $t . "\n";
+            }
+        }
+
+        @shell_exec('rm -rf ' . escapeshellarg($tmpDir));
+        return $fullText;
     }
 
     /**
@@ -157,19 +199,19 @@ except Exception:
             if ($isHeader) continue;
 
             // Deteksi Bidang dari judul Bidang Siskeudes
-            if (strpos($lLower, 'bidang penyelenggaraan pemerintahan') !== false) {
+            if (strpos($lLower, 'penyelenggaraan pemerintahan') !== false) {
                 $isInBelanja = true;
                 $currentBidang = 1;
-            } elseif (strpos($lLower, 'bidang pelaksanaan pembangunan') !== false) {
+            } elseif (strpos($lLower, 'pelaksanaan pembangunan') !== false) {
                 $isInBelanja = true;
                 $currentBidang = 2;
-            } elseif (strpos($lLower, 'bidang pembinaan kemasyarakatan') !== false) {
+            } elseif (strpos($lLower, 'pembinaan kemasyarakatan') !== false || strpos($lLower, 'pembinaan kemasyaratan') !== false) {
                 $isInBelanja = true;
                 $currentBidang = 3;
-            } elseif (strpos($lLower, 'bidang pemberdayaan masyarakat') !== false) {
+            } elseif (strpos($lLower, 'pemberdayaan masyarakat') !== false) {
                 $isInBelanja = true;
                 $currentBidang = 4;
-            } elseif (strpos($lLower, 'bidang penanggulangan bencana') !== false) {
+            } elseif (strpos($lLower, 'penanggulangan bencana') !== false || strpos($lLower, 'keadaan darurat') !== false || strpos($lLower, 'mendesak desa') !== false) {
                 $isInBelanja = true;
                 $currentBidang = 5;
             }
@@ -202,18 +244,19 @@ except Exception:
                 }
 
                 // Deteksi Bidang dari Kode Rekening Siskeudes (Kolom 1)
-                if ($code === '1' || strpos($code, '1.') === 0) {
+                $codeNormalized = ltrim($code, '0');
+                if ($code === '1' || $code === '01' || strpos($code, '1.') === 0 || strpos($code, '01.') === 0 || strpos($codeNormalized, '1.') === 0) {
                     $isInBelanja = true;
                     $currentBidang = 1;
-                } elseif ($code === '2' || strpos($code, '2.') === 0) {
+                } elseif ($code === '2' || $code === '02' || strpos($code, '2.') === 0 || strpos($code, '02.') === 0 || strpos($codeNormalized, '2.') === 0) {
                     $isInBelanja = true;
                     $currentBidang = 2;
-                } elseif ($code === '3' || strpos($code, '3.') === 0) {
+                } elseif ($code === '3' || $code === '03' || strpos($code, '3.') === 0 || strpos($code, '03.') === 0 || strpos($codeNormalized, '3.') === 0) {
                     $isInBelanja = true;
                     $currentBidang = 3;
-                } elseif ($isInBelanja && ($code === '4' || strpos($code, '4.') === 0)) {
+                } elseif ($isInBelanja && ($code === '4' || $code === '04' || strpos($code, '4.') === 0 || strpos($code, '04.') === 0 || strpos($codeNormalized, '4.') === 0)) {
                     $currentBidang = 4;
-                } elseif ($isInBelanja && ($code === '5' || strpos($code, '5.') === 0)) {
+                } elseif ($isInBelanja && ($code === '5' || $code === '05' || strpos($code, '5.') === 0 || strpos($code, '05.') === 0 || strpos($codeNormalized, '5.') === 0)) {
                     $currentBidang = 5;
                 }
 

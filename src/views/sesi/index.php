@@ -204,8 +204,8 @@
         </div>
       </div>
       <div class="kka-modal__foot">
-        <button type="button" class="btn btn-ghost" data-close-modal>Batal</button>
-        <button type="submit" class="btn btn-primary" style="background:#059669;border-color:#059669">
+        <button type="button" class="btn btn-ghost" data-close-modal id="btnCancelModalLra">Batal</button>
+        <button type="submit" class="btn btn-primary" id="btnSubmitModalLra" style="background:#059669;border-color:#059669">
           <i class="fa-solid fa-cloud-arrow-up"></i> Mulai Ekstrak &amp; Buat KKA
         </button>
       </div>
@@ -217,6 +217,9 @@
 (function(){
   var btnOpen = document.getElementById('btnBukaModalCreateLra');
   var modal = document.getElementById('modalCreateLra');
+  var form = modal ? modal.querySelector('form') : null;
+  var btnSubmit = document.getElementById('btnSubmitModalLra');
+  var btnCancel = document.getElementById('btnCancelModalLra');
   if (!btnOpen || !modal) return;
 
   btnOpen.addEventListener('click', function(){
@@ -230,6 +233,14 @@
       document.body.style.overflow = '';
     });
   });
+
+  if (form && btnSubmit) {
+    form.addEventListener('submit', function(){
+      btnSubmit.disabled = true;
+      if (btnCancel) btnCancel.style.display = 'none';
+      btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengekstrak Dokumen LRA... Harap tunggu...';
+    });
+  }
 
   document.addEventListener('keydown', function(e){
     if (e.key === 'Escape' && !modal.hidden) {

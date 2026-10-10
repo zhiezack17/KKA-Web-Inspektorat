@@ -175,7 +175,8 @@ $routes = [
     '/kecamatan/store'        => ['DesaController', 'storeKec'],
 
     '/sesi'                   => ['SesiController', 'index'],
-    '/sesi/create'            => ['SesiController', 'create'],
+    '/sesi/create'            => ['SesiController', 'create'],
+    '/sesi/create-from-lra'   => ['SesiController', 'createFromLra'],
     '/sesi/store'             => ['SesiController', 'store'],
     '/sesi/show'              => ['SesiController', 'show'],
     '/sesi/edit'              => ['SesiController', 'edit'],
