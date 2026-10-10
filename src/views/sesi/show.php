@@ -7,7 +7,7 @@
     <div class="crumb">
       <i class="fa-solid fa-clipboard-list"></i>
       <a href="<?= url('sesi') ?>" style="color:var(--slate-500)">Sesi Audit</a> /
-      <b><?= e(mb_strimwidth($sesi['objek_audit'],0,42,'…')) ?></b>
+      <b><?= e(mb_strimwidth($sesi['kegiatan'] ?: $sesi['objek_audit'],0,42,'…')) ?></b>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <a href="<?= url('sesi') ?>" class="btn btn-ghost btn-sm" data-testid="btn-back-sesi"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
@@ -68,10 +68,10 @@
     <div class="page-head">
       <div>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-          <h2 style="margin:0"><?= e($sesi['objek_audit']) ?></h2>
+          <h2 style="margin:0"><?= e($sesi['kegiatan'] ?: $sesi['objek_audit']) ?></h2>
           <?= kka_status_badge($statusKka) ?>
         </div>
-        <p style="margin-top:6px"><?= e($sesi['desa_nama']) ?> · Kec. <?= e($sesi['kecamatan_nama']) ?> · Semester <?= (int)$sesi['semester'] ?> / <?= (int)$sesi['tahun_anggaran'] ?></p>
+        <p style="margin-top:6px"><?= e($sesi['objek_audit']) ?> · <?= e($sesi['desa_nama']) ?> · Kec. <?= e($sesi['kecamatan_nama']) ?> · Semester <?= (int)$sesi['semester'] ?> / <?= (int)$sesi['tahun_anggaran'] ?></p>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <a href="<?= url('sesi/edit?id='.$sesi['id']) ?>" class="btn btn-outline" data-testid="btn-edit-sesi"><i class="fa-solid fa-pen"></i> Edit Identitas</a>
@@ -306,6 +306,7 @@
       <div class="card">
         <h3 style="margin:0 0 12px;font-size:14px;font-weight:800;color:var(--slate-600);text-transform:uppercase;letter-spacing:1px">Identitas KKA</h3>
         <dl class="kv">
+          <dt>Objek Audit</dt> <dd><b><?= e($sesi['objek_audit']) ?></b></dd>
           <dt>No. KKA</dt>     <dd><?= e($sesi['no_kka'] ?: '-') ?></dd>
           <dt>Ref. PKA</dt>    <dd><?= e($sesi['ref_kka'] ?: '-') ?></dd>
           <dt>Bidang</dt>      <dd><?= e($sesi['bidang_nama']) ?></dd>

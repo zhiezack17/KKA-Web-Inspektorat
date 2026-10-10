@@ -203,13 +203,20 @@ $rawDalnisNip  = $dalnisUser['nip'] ?? '';
     </div>
   </div>
 
+  <?php
+    $displayObjek = !empty($sesi['objek_audit']) ? trim($sesi['objek_audit']) : ('Kepenghuluan ' . $sesi['desa_nama']);
+    if (stripos($displayObjek, 'Pemeriksaan Kepatuhan') !== false) {
+        $displayObjek = 'Kepenghuluan ' . $sesi['desa_nama'];
+    }
+    $cleanKegiatan = !empty($sesi['kegiatan']) ? trim($sesi['kegiatan'], " \t\n\r\0\x0B)-;") : '-';
+  ?>
   <table class="id-table">
     <tr>
       <td class="lbl">Kepenghuluan / Desa</td><td class="sep">:</td><td class="val-left"><?= e($sesi['desa_nama']) ?> (Kec. <?= e($sesi['kecamatan_nama']) ?>)</td>
       <td class="lbl-r">No. KKA</td><td class="sep">:</td><td class="val-right"><?= e($sesi['no_kka'] ?: '-') ?></td>
     </tr>
     <tr>
-      <td class="lbl">Objek Audit</td><td class="sep">:</td><td class="val-left"><?= e($sesi['objek_audit']) ?></td>
+      <td class="lbl">Objek Audit</td><td class="sep">:</td><td class="val-left"><?= e($displayObjek) ?></td>
       <td class="lbl-r">Ref. PKA</td><td class="sep">:</td><td class="val-right"><?= e($sesi['ref_kka'] ?: '-') ?></td>
     </tr>
     <tr>
@@ -221,8 +228,11 @@ $rawDalnisNip  = $dalnisUser['nip'] ?? '';
       <td class="lbl-r">Realisasi</td><td class="sep">:</td><td class="val-right">Rp <?= number_format((float)($totals['realisasi'] ?? 0),0,',','.') ?></td>
     </tr>
     <tr>
-      <td class="lbl">Kegiatan</td><td class="sep">:</td><td class="val-left"><?= e($sesi['kegiatan'] ?: '-') ?></td>
+      <td class="lbl">Sub Bidang</td><td class="sep">:</td><td class="val-left"><?= e($sesi['sub_bidang_nama'] ?: '-') ?></td>
       <td class="lbl-r">Selisih Belanja</td><td class="sep">:</td><td class="val-right" style="font-weight:bold">Rp <?= number_format((float)($totals['realisasi'] ?? 0) - (float)($totals['dikwitansi'] ?? 0),0,',','.') ?></td>
+    </tr>
+    <tr>
+      <td class="lbl">Kegiatan</td><td class="sep">:</td><td class="val-left" colspan="3"><?= e($cleanKegiatan) ?></td>
     </tr>
   </table>
 

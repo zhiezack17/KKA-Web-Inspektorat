@@ -5,15 +5,16 @@ class PrintController {
 
     public function sesi(): void {
         $id = (int) input('id');
-        $sesi = DB::one('
+        $sesi = DB::one("
             SELECT s.*, d.nama AS desa_nama, k.nama AS kecamatan_nama,
-                   b.nama AS bidang_nama, sb.nama AS sub_bidang_nama
+                   b.nama AS bidang_nama,
+                   COALESCE(NULLIF(s.sub_bidang_nama, ''), sb.nama) AS sub_bidang_nama
             FROM kka_sesi s
             JOIN kka_desa d ON d.id = s.desa_id
             JOIN kka_kecamatan k ON k.id = d.kecamatan_id
             JOIN kka_bidang b ON b.id = s.bidang_id
             LEFT JOIN kka_sub_bidang sb ON sb.id = s.sub_bidang_id
-            WHERE s.id = ?', [$id]);
+            WHERE s.id = ?", [$id]);
         if (!$sesi) { http_response_code(404); exit('Sesi tidak ditemukan'); }
         if (!sesi_is_owned($this->auth, $sesi)) { http_response_code(403); exit('Anda tidak memiliki akses ke data audit ini.'); }
         $rincian = DB::all('SELECT * FROM kka_rincian WHERE sesi_id = ? ORDER BY urutan, id', [$id]);
@@ -29,15 +30,16 @@ class PrintController {
 
     public function reviu(): void {
         $id = (int) input('id');
-        $sesi = DB::one('
+        $sesi = DB::one("
             SELECT s.*, d.nama AS desa_nama, k.nama AS kecamatan_nama,
-                   b.nama AS bidang_nama, sb.nama AS sub_bidang_nama
+                   b.nama AS bidang_nama,
+                   COALESCE(NULLIF(s.sub_bidang_nama, ''), sb.nama) AS sub_bidang_nama
             FROM kka_sesi s
             JOIN kka_desa d ON d.id = s.desa_id
             JOIN kka_kecamatan k ON k.id = d.kecamatan_id
             JOIN kka_bidang b ON b.id = s.bidang_id
             LEFT JOIN kka_sub_bidang sb ON sb.id = s.sub_bidang_id
-            WHERE s.id = ?', [$id]);
+            WHERE s.id = ?", [$id]);
         if (!$sesi) { http_response_code(404); exit('Sesi tidak ditemukan'); }
         if (!sesi_is_owned($this->auth, $sesi)) { http_response_code(403); exit('Anda tidak memiliki akses ke data audit ini.'); }
         $rincian = DB::all('SELECT * FROM kka_rincian WHERE sesi_id = ? ORDER BY urutan, id', [$id]);
@@ -59,15 +61,16 @@ class PrintController {
     /** Cetak Lembar Kendali Mutu LHA / Routing Slip Map Kuning */
     public function routingSlip(): void {
         $id = (int) input('id');
-        $sesi = DB::one('
+        $sesi = DB::one("
             SELECT s.*, d.nama AS desa_nama, k.nama AS kecamatan_nama,
-                   b.nama AS bidang_nama, sb.nama AS sub_bidang_nama
+                   b.nama AS bidang_nama,
+                   COALESCE(NULLIF(s.sub_bidang_nama, ''), sb.nama) AS sub_bidang_nama
             FROM kka_sesi s
             JOIN kka_desa d ON d.id = s.desa_id
             JOIN kka_kecamatan k ON k.id = d.kecamatan_id
             JOIN kka_bidang b ON b.id = s.bidang_id
             LEFT JOIN kka_sub_bidang sb ON sb.id = s.sub_bidang_id
-            WHERE s.id = ?', [$id]);
+            WHERE s.id = ?", [$id]);
         if (!$sesi) { http_response_code(404); exit('Sesi tidak ditemukan'); }
         if (!sesi_is_owned($this->auth, $sesi)) { http_response_code(403); exit('Anda tidak memiliki akses ke data audit ini.'); }
 
@@ -88,9 +91,10 @@ class PrintController {
 
     public function exportExcel(): void {
         $id = (int) input('id');
-        $sesi = DB::one('
+        $sesi = DB::one("
             SELECT s.*, d.nama AS desa_nama, k.nama AS kecamatan_nama,
-                   b.nama AS bidang_nama, sb.nama AS sub_bidang_nama,
+                   b.nama AS bidang_nama,
+                   COALESCE(NULLIF(s.sub_bidang_nama, ''), sb.nama) AS sub_bidang_nama,
                    uk.nama AS ketua_nama
             FROM kka_sesi s
             JOIN kka_desa d ON d.id = s.desa_id
@@ -98,7 +102,7 @@ class PrintController {
             JOIN kka_bidang b ON b.id = s.bidang_id
             LEFT JOIN kka_sub_bidang sb ON sb.id = s.sub_bidang_id
             LEFT JOIN kka_users uk ON uk.id = s.ketua_tim_id
-            WHERE s.id = ?', [$id]);
+            WHERE s.id = ?", [$id]);
         if (!$sesi) { http_response_code(404); exit('Sesi tidak ditemukan'); }
         if (!sesi_is_owned($this->auth, $sesi)) { http_response_code(403); exit('Anda tidak memiliki akses ke data audit ini.'); }
         // Lepaskan kunci sesi sebelum membangun & mengirim file Excel (operasi

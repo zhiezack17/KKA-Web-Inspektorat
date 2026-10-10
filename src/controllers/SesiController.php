@@ -251,12 +251,13 @@ class SesiController {
             }
             $grandTotalPagu += $totalPaguKegiatan;
 
-            $displayKegiatan = ($kegCode !== '' ? $kegCode . ' ' : '') . $kegName;
+            $displayKegiatan = ($kegCode !== '' ? $kegCode . ' ' : '') . trim($kegName, " \t\n\r\0\x0B)-;");
             $bShort = $bidangShortMap[$bId] ?? ($bidangMap[$bId] ?? "Bidang $bId");
 
+            // Objek Audit: nama desa/kepenghuluan saja sesuai standar KKA Inspektorat
             $sesiObjek = ($objekAudit !== '')
-                ? ($objekAudit . ' — ' . $displayKegiatan)
-                : ('Pemeriksaan Kepatuhan Keuangan dan Fisik Kepenghuluan ' . $desa['nama'] . ' — ' . $displayKegiatan . ' TA ' . $tahun);
+                ? $objekAudit
+                : ('Kepenghuluan ' . $desa['nama']);
 
             $sesiId = DB::insert('kka_sesi', [
                 'desa_id'         => $desaId,

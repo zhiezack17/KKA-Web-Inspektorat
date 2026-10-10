@@ -101,6 +101,11 @@
     [$pureReview] = split_nama_nip($sesi['direview_oleh'] ?? '');
     $nama_buat   = $pureBuat ?: '...........................';
     $nama_review = $pureReview ?: '...........................';
+    $displayObjek = !empty($sesi['objek_audit']) ? trim($sesi['objek_audit']) : ('Kepenghuluan ' . $sesi['desa_nama']);
+    if (stripos($displayObjek, 'Pemeriksaan Kepatuhan') !== false) {
+        $displayObjek = 'Kepenghuluan ' . $sesi['desa_nama'];
+    }
+    $cleanKegiatan = !empty($sesi['kegiatan']) ? trim($sesi['kegiatan'], " \t\n\r\0\x0B)-;") : '-';
   ?>
   <table class="id-table">
     <tr>
@@ -108,7 +113,7 @@
       <td class="lbl-r">No. KKA</td><td class="sep">:</td><td class="val-right"><?= e($sesi['no_kka'] ?: '-') ?></td>
     </tr>
     <tr>
-      <td class="lbl">Objek Audit</td><td class="sep">:</td><td class="val-left"><?= e($sesi['objek_audit']) ?></td>
+      <td class="lbl">Objek Audit</td><td class="sep">:</td><td class="val-left"><?= e($displayObjek) ?></td>
       <td class="lbl-r">Ref. PKA</td><td class="sep">:</td><td class="val-right"><?= e($sesi['ref_kka'] ?: '-') ?></td>
     </tr>
     <tr>
@@ -124,7 +129,7 @@
       <td class="lbl-r">Direview oleh <span class="sub-r">(Ketua Tim)</span></td><td class="sep">:</td><td class="val-right"><?= e($nama_review) ?></td>
     </tr>
     <tr>
-      <td class="lbl">Kegiatan</td><td class="sep">:</td><td class="val-left"><?= e($sesi['kegiatan'] ?: '-') ?></td>
+      <td class="lbl">Kegiatan</td><td class="sep">:</td><td class="val-left"><?= e($cleanKegiatan) ?></td>
       <td class="lbl-r">Tgl/Paraf</td><td class="sep">:</td><td class="val-right"><?= e($tgl_review) ?></td>
     </tr>
     <tr>
