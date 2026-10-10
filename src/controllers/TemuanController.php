@@ -408,9 +408,9 @@ class TemuanController {
         $ketuaUser   = $team['ketuaUser'];
         $anggotaList = $team['anggotaList'];
 
-        $pjPenghulu   = trim((string) input('penghulu', ''));
-        $sekdes       = trim((string) input('sekdes', ''));
-        $kaurKeuangan = trim((string) input('kaur', ''));
+        $pjPenghulu   = trim((string) input('penghulu', $spt['pj_penghulu'] ?? ''));
+        $sekdes       = trim((string) input('sekdes', $spt['sekdes'] ?? ''));
+        $kaurKeuangan = trim((string) input('kaur', $spt['kaur_keuangan'] ?? ''));
 
         view('print/p2hp', compact('desa', 'tahun', 'spt', 'daftarTemuan', 'totalTemuan', 'irbanUser', 'dalnisUser', 'ketuaUser', 'anggotaList', 'pjPenghulu', 'sekdes', 'kaurKeuangan'));
     }
@@ -448,9 +448,9 @@ class TemuanController {
         $ketuaUser   = $team['ketuaUser'];
         $anggotaList = $team['anggotaList'];
 
-        $pjPenghulu   = trim((string) input('penghulu', ''));
-        $sekdes       = trim((string) input('sekdes', ''));
-        $kaurKeuangan = trim((string) input('kaur', ''));
+        $pjPenghulu   = trim((string) input('penghulu', $spt['pj_penghulu'] ?? ''));
+        $sekdes       = trim((string) input('sekdes', $spt['sekdes'] ?? ''));
+        $kaurKeuangan = trim((string) input('kaur', $spt['kaur_keuangan'] ?? ''));
 
         view('print/ba_kesepakatan', compact('desa', 'tahun', 'spt', 'daftarTemuan', 'totalTemuan', 'irbanUser', 'dalnisUser', 'ketuaUser', 'anggotaList', 'pjPenghulu', 'sekdes', 'kaurKeuangan'));
     }
