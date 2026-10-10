@@ -418,16 +418,16 @@ $user = $auth->user();
             <?php endif; ?>
           </div>
 
-          <!-- Kolom 3: NHP Menunggu Telaah Pra-Ekspose -->
+          <!-- Kolom 3: P2HP / BA Kesepakatan Menunggu Telaah Pra-Ekspose -->
           <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
               <span style="font-size:11px;font-weight:700;color:#0284c7;text-transform:uppercase">
-                <i class="fa-solid fa-file-circle-check" style="margin-right:4px"></i> NHP Telaah Pra-Ekspose
+                <i class="fa-solid fa-file-circle-check" style="margin-right:4px"></i> P2HP / BA Pra-Ekspose
               </span>
-              <span class="badge" style="background:#e0f2fe;color:#0369a1;font-size:10px"><?= count($inspekturData['pending_nhp'] ?? []) ?> Menunggu</span>
+              <span class="badge" style="background:#e0f2fe;color:#0369a1;font-size:10px"><?= count($inspekturData['pending_nhp'] ?? []) ?> Usulan</span>
             </div>
             <?php if (empty($inspekturData['pending_nhp'])): ?>
-              <div style="font-size:12px;color:#059669;padding:12px 0;text-align:center"><i class="fa-solid fa-circle-check"></i> Seluruh NHP telah ditelaah.</div>
+              <div style="font-size:12px;color:#059669;padding:12px 0;text-align:center"><i class="fa-solid fa-circle-check"></i> Seluruh P2HP/BA telah ditelaah.</div>
             <?php else: ?>
               <div style="display:flex;flex-direction:column;gap:6px">
                 <?php foreach ($inspekturData['pending_nhp'] as $pnhp): ?>

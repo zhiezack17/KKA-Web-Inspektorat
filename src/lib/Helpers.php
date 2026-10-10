@@ -490,3 +490,21 @@ function user_avatar_url(?array $user): ?string {
     return null;
 }
 
+/**
+ * Nama hari dalam Bahasa Indonesia dari tanggal Y-m-d
+ */
+function nama_hari_id(?string $date = null): string {
+    $days = [
+        'Sunday'    => 'Minggu',
+        'Monday'    => 'Senin',
+        'Tuesday'   => 'Selasa',
+        'Wednesday' => 'Rabu',
+        'Thursday'  => 'Kamis',
+        'Friday'    => 'Jumat',
+        'Saturday'  => 'Sabtu',
+    ];
+    $ts = $date ? strtotime($date) : time();
+    $name = date('l', $ts);
+    return $days[$name] ?? $name;
+}
+

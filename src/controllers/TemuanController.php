@@ -379,13 +379,13 @@ class TemuanController {
         view('print/matriks_temuan', compact('desa', 'tahun', 'spt', 'daftarTemuan'));
     }
 
-    public function nhp(): void {
+    public function p2hp(): void {
         $desaId = (int) input('desa_id');
         $tahun  = (int) input('tahun', date('Y'));
 
         $desa = DB::one("SELECT d.*, k.nama AS kecamatan_nama FROM kka_desa d JOIN kka_kecamatan k ON k.id = d.kecamatan_id WHERE d.id = ?", [$desaId]);
         if (!$desa) {
-            flash('error', 'Pilih desa untuk mencetak Notisi Hasil Pemeriksaan (NHP).');
+            flash('error', 'Pilih desa untuk mencetak Pokok-Pokok Hasil Pemeriksaan (P2HP).');
             redirect('temuan');
         }
 
@@ -402,7 +402,102 @@ class TemuanController {
             $totalTemuan += (float)$t['nominal'];
         }
 
-        view('print/nhp', compact('desa', 'tahun', 'spt', 'daftarTemuan', 'totalTemuan'));
+        $team = $this->getTeamMembers($spt);
+        $irbanUser   = $team['irbanUser'];
+        $dalnisUser  = $team['dalnisUser'];
+        $ketuaUser   = $team['ketuaUser'];
+        $anggotaList = $team['anggotaList'];
+
+        $pjPenghulu   = trim((string) input('penghulu', ''));
+        $sekdes       = trim((string) input('sekdes', ''));
+        $kaurKeuangan = trim((string) input('kaur', ''));
+
+        view('print/p2hp', compact('desa', 'tahun', 'spt', 'daftarTemuan', 'totalTemuan', 'irbanUser', 'dalnisUser', 'ketuaUser', 'anggotaList', 'pjPenghulu', 'sekdes', 'kaurKeuangan'));
+    }
+
+    public function nhp(): void {
+        $this->p2hp();
+    }
+
+    public function baKesepakatan(): void {
+        $desaId = (int) input('desa_id');
+        $tahun  = (int) input('tahun', date('Y'));
+
+        $desa = DB::one("SELECT d.*, k.nama AS kecamatan_nama FROM kka_desa d JOIN kka_kecamatan k ON k.id = d.kecamatan_id WHERE d.id = ?", [$desaId]);
+        if (!$desa) {
+            flash('error', 'Pilih desa untuk mencetak Berita Acara Kesepakatan Temuan.');
+            redirect('temuan');
+        }
+
+        $spt = DB::one("SELECT * FROM kka_spt WHERE desa_id = ? AND tahun_anggaran LIKE ? ORDER BY id DESC LIMIT 1", [$desaId, "%$tahun%"]);
+
+        $daftarTemuan = DB::all("
+            SELECT * FROM kka_temuan 
+            WHERE desa_id = ? AND tahun_anggaran = ?
+            ORDER BY id ASC
+        ", [$desaId, $tahun]);
+
+        $totalTemuan = 0;
+        foreach ($daftarTemuan as $t) {
+            $totalTemuan += (float)$t['nominal'];
+        }
+
+        $team = $this->getTeamMembers($spt);
+        $irbanUser   = $team['irbanUser'];
+        $dalnisUser  = $team['dalnisUser'];
+        $ketuaUser   = $team['ketuaUser'];
+        $anggotaList = $team['anggotaList'];
+
+        $pjPenghulu   = trim((string) input('penghulu', ''));
+        $sekdes       = trim((string) input('sekdes', ''));
+        $kaurKeuangan = trim((string) input('kaur', ''));
+
+        view('print/ba_kesepakatan', compact('desa', 'tahun', 'spt', 'daftarTemuan', 'totalTemuan', 'irbanUser', 'dalnisUser', 'ketuaUser', 'anggotaList', 'pjPenghulu', 'sekdes', 'kaurKeuangan'));
+    }
+
+    private function getTeamMembers(?array $spt): array {
+        if (!$spt) {
+            return [
+                'irbanUser'   => null,
+                'dalnisUser'  => null,
+                'ketuaUser'   => null,
+                'anggotaList' => [],
+            ];
+        }
+
+        $irbanUser = !empty($spt['wakil_pj_id']) ? DB::one('SELECT * FROM kka_users WHERE id = ?', [$spt['wakil_pj_id']]) : null;
+        if (!$irbanUser && !empty($spt['wakil_pj_nama'])) {
+            $irbanUser = DB::one('SELECT * FROM kka_users WHERE nama LIKE ?', ['%' . $spt['wakil_pj_nama'] . '%']);
+        }
+        if (!$irbanUser) {
+            $irbanUser = DB::one("SELECT * FROM kka_users WHERE role = 'irban' LIMIT 1");
+        }
+
+        $dalnisUser = !empty($spt['dalnis_id']) ? DB::one('SELECT * FROM kka_users WHERE id = ?', [$spt['dalnis_id']]) : null;
+        if (!$dalnisUser && !empty($spt['dalnis_nama'])) {
+            $dalnisUser = DB::one('SELECT * FROM kka_users WHERE nama LIKE ?', ['%' . $spt['dalnis_nama'] . '%']);
+        }
+
+        $ketuaUser = !empty($spt['ketua_tim_id']) ? DB::one('SELECT * FROM kka_users WHERE id = ?', [$spt['ketua_tim_id']]) : null;
+        if (!$ketuaUser && !empty($spt['ketua_tim_nama'])) {
+            $ketuaUser = DB::one('SELECT * FROM kka_users WHERE nama LIKE ?', ['%' . $spt['ketua_tim_nama'] . '%']);
+        }
+
+        $rawAnggota = json_decode($spt['anggota_data'] ?? '[]', true) ?: [];
+        $anggotaList = [];
+        foreach ($rawAnggota as $ag) {
+            $agId = (int)($ag['id'] ?? 0);
+            $u = $agId > 0 ? DB::one('SELECT * FROM kka_users WHERE id = ?', [$agId]) : null;
+            $anggotaList[] = [
+                'id'      => $agId,
+                'nama'    => $u['nama'] ?? ($ag['nama'] ?? ''),
+                'nip'     => $u['nip'] ?? ($ag['nip'] ?? ''),
+                'pangkat' => $u['pangkat'] ?? ($ag['pangkat'] ?? 'Penata / III.c'),
+                'jabatan' => $u['jabatan'] ?? ($ag['jabatan'] ?? 'Auditor Ahli Pertama'),
+            ];
+        }
+
+        return compact('irbanUser', 'dalnisUser', 'ketuaUser', 'anggotaList');
     }
 
     public function ajukanNhp(): void {
@@ -421,14 +516,14 @@ class TemuanController {
             'diajukan_oleh_nhp' => $user['nama'] . ' (' . ($user['jabatan'] ?? 'Ketua Tim') . ')',
         ], ['id' => $sptId]);
 
-        flash('success', 'Naskah NHP atas Kepenghuluan ' . $spt['desa_nama'] . ' berhasil diajukan ke Inspektur untuk telaah & persetujuan ekspose.');
+        flash('success', 'Naskah P2HP & Berita Acara Kesepakatan atas Kepenghuluan ' . $spt['desa_nama'] . ' berhasil diajukan ke Inspektur untuk telaah & persetujuan ekspose.');
         redirect('temuan?desa_id=' . $spt['desa_id'] . '&tahun=' . $spt['tahun_anggaran']);
     }
 
     public function approveNhp(): void {
         only_post(); csrf_check();
         if (!$this->auth->isInspektur() && !$this->auth->isAdmin()) {
-            flash('error', 'Hanya Inspektur Daerah yang berwenang memberikan pengesahan / telaah NHP pra-ekspose.');
+            flash('error', 'Hanya Inspektur Daerah yang berwenang memberikan pengesahan / telaah P2HP pra-ekspose.');
             redirect('temuan');
         }
 
@@ -453,14 +548,14 @@ class TemuanController {
                 'tte_barcode_nhp'       => $tteBarcode,
             ], ['id' => $sptId]);
 
-            flash('success', 'NHP atas Kepenghuluan ' . $spt['desa_nama'] . ' telah DISAHKAN untuk ekspose ke auditi.');
+            flash('success', 'P2HP & Berita Acara Kesepakatan atas Kepenghuluan ' . $spt['desa_nama'] . ' telah DISAHKAN untuk ekspose ke auditi.');
         } else {
             DB::update('kka_spt', [
                 'status_nhp'            => 'PERBAIKAN',
                 'catatan_inspektur_nhp' => $catatan ?: 'Perlu perbaikan/penyempurnaan temuan sebelum ekspose.',
             ], ['id' => $sptId]);
 
-            flash('warning', 'NHP atas Kepenghuluan ' . $spt['desa_nama'] . ' dikembalikan ke Tim Pemeriksa dengan catatan perbaikan.');
+            flash('warning', 'P2HP atas Kepenghuluan ' . $spt['desa_nama'] . ' dikembalikan ke Tim Pemeriksa dengan catatan perbaikan.');
         }
 
         redirect('temuan?desa_id=' . $spt['desa_id'] . '&tahun=' . $spt['tahun_anggaran']);

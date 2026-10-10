@@ -46,15 +46,18 @@ partial('sidebar');
           <i class="fa-solid fa-file-circle-exclamation" style="color:#d97706"></i>
           Konsep Temuan Pemeriksaan (KTP 5 Unsur)
         </h2>
-        <p>Matriks Daftar Temuan Berdasarkan Standar SPKN BPK-RI &amp; Kendali Mutu BPKP (Kondisi, Kriteria, Sebab, Akibat, Rekomendasi).</p>
+        <p>Matriks Daftar Temuan Berdasarkan Standar SPKN BPK-RI &amp; Format P2HP Inspektorat Rokan Hilir (Kondisi, Kriteria, Sebab, Akibat, Rekomendasi).</p>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
         <?php if ($desaId > 0): ?>
-          <a href="<?= url('print/nhp?desa_id=' . $desaId . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-outline" style="border-color:#0284c7;color:#0284c7;background:#f0f9ff;font-weight:700">
-            <i class="fa-solid fa-file-contract"></i> Cetak NHP (Notisi)
+          <a href="<?= url('print/p2hp?desa_id=' . $desaId . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-outline" style="border-color:#0284c7;color:#0284c7;background:#f0f9ff;font-weight:700">
+            <i class="fa-solid fa-file-contract"></i> Cetak P2HP
+          </a>
+          <a href="<?= url('print/ba-kesepakatan?desa_id=' . $desaId . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-outline" style="border-color:#059669;color:#059669;background:#ecfdf5;font-weight:700">
+            <i class="fa-solid fa-handshake"></i> Cetak BA Kesepakatan
           </a>
           <a href="<?= url('print/matriks-temuan?desa_id=' . $desaId . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-outline" style="border-color:#d97706;color:#d97706">
-            <i class="fa-solid fa-print"></i> Cetak Matriks KTP
+            <i class="fa-solid fa-print"></i> Matriks KTP
           </a>
         <?php endif; ?>
         <a href="<?= url('temuan/create' . ($desaId > 0 ? '?desa_id=' . $desaId . '&tahun=' . $tahun : '')) ?>" class="btn btn-primary" style="background:#d97706;border-color:#d97706">
@@ -104,13 +107,13 @@ partial('sidebar');
       <?php 
         $stNhp = $spt['status_nhp'] ?? 'DRAFT';
       ?>
-      <!-- Banner Alur NHP Pra-Ekspose -->
+      <!-- Banner Alur P2HP & BA Kesepakatan Pra-Ekspose -->
       <div class="card" style="padding:16px 20px;margin-bottom:18px;border-radius:10px;<?= $stNhp === 'DISETUJUI_EKSPOSE' ? 'background:#f0fdf4;border:1px solid #bbf7d0;border-left:5px solid #16a34a' : ($stNhp === 'DIAJUKAN_INSPEKTUR' ? 'background:#eff6ff;border:1px solid #bfdbfe;border-left:5px solid #2563eb' : ($stNhp === 'PERBAIKAN' ? 'background:#fffbeb;border:1px solid #fde68a;border-left:5px solid #d97706' : 'background:#f8fafc;border:1px solid #e2e8f0;border-left:5px solid #64748b')) ?>">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
           <div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <span style="font-size:13px;font-weight:800;text-transform:uppercase;color:var(--slate-800)">
-                STATUS ALUR NOTISI HASIL PEMERIKSAAN (NHP PRA-EKSPOSE)
+                STATUS ALUR P2HP &amp; BERITA ACARA KESEPAKATAN (PRA-EKSPOSE)
               </span>
               <?php if ($stNhp === 'DISETUJUI_EKSPOSE'): ?>
                 <span class="badge" style="background:#dcfce7;color:#15803d;font-weight:800;font-size:11px"><i class="fa-solid fa-circle-check"></i> DISAHKAN UNTUK EKSPOSE (TTE SAH)</span>
@@ -127,14 +130,20 @@ partial('sidebar');
             </p>
           </div>
 
-          <div style="display:flex;gap:8px;align-items:center">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <?php if ($stNhp === 'DISETUJUI_EKSPOSE'): ?>
-              <a href="<?= url('print/nhp?desa_id=' . $desaId . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-sm" style="background:#16a34a;color:#fff;font-weight:700">
-                <i class="fa-solid fa-print"></i> Cetak NHP Sah (Barcode TTE)
+              <a href="<?= url('print/p2hp?desa_id=' . $desaId . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-sm" style="background:#16a34a;color:#fff;font-weight:700">
+                <i class="fa-solid fa-print"></i> Cetak P2HP Sah (TTE)
+              </a>
+              <a href="<?= url('print/ba-kesepakatan?desa_id=' . $desaId . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-sm" style="background:#059669;color:#fff;font-weight:700">
+                <i class="fa-solid fa-handshake"></i> Cetak BA Kesepakatan
               </a>
             <?php else: ?>
-              <a href="<?= url('print/nhp?desa_id=' . $desaId . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-sm btn-outline" style="border-color:#0284c7;color:#0284c7">
-                <i class="fa-solid fa-eye"></i> Pratinjau NHP
+              <a href="<?= url('print/p2hp?desa_id=' . $desaId . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-sm btn-outline" style="border-color:#0284c7;color:#0284c7">
+                <i class="fa-solid fa-eye"></i> Pratinjau P2HP
+              </a>
+              <a href="<?= url('print/ba-kesepakatan?desa_id=' . $desaId . '&tahun=' . $tahun) ?>" target="_blank" class="btn btn-sm btn-outline" style="border-color:#059669;color:#059669">
+                <i class="fa-solid fa-handshake"></i> Pratinjau BA
               </a>
             <?php endif; ?>
           </div>
@@ -178,29 +187,29 @@ partial('sidebar');
               <textarea name="catatan_inspektur" class="input" rows="2" style="font-size:12px" placeholder="Tuliskan arahan, pengurangan temuan, atau koreksi sebelum ekspose (opsional jika langsung disetujui)..."></textarea>
               <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
                 <button type="submit" name="action" value="setujui" class="btn" style="background:#16a34a;color:#fff;font-weight:700">
-                  <i class="fa-solid fa-stamp"></i> Setujui &amp; Sahkan NHP (TTE Barcode Otomatis)
+                  <i class="fa-solid fa-stamp"></i> Setujui &amp; Sahkan P2HP &amp; BA (TTE Barcode Otomatis)
                 </button>
-                <button type="submit" name="action" value="kembalikan" class="btn" style="background:#d97706;color:#fff;font-weight:700" onclick="return confirm('Kembalikan naskah NHP ini ke Tim Pemeriksa untuk perbaikan?')">
+                <button type="submit" name="action" value="kembalikan" class="btn" style="background:#d97706;color:#fff;font-weight:700" onclick="return confirm('Kembalikan naskah P2HP & BA Kesepakatan ini ke Tim Pemeriksa untuk perbaikan?')">
                   <i class="fa-solid fa-rotate-left"></i> Kembalikan untuk Perbaikan
                 </button>
               </div>
             </form>
           <?php else: ?>
             <div style="margin-top:8px;font-size:12px;color:#475569;font-style:italic">
-              <i class="fa-solid fa-hourglass-start"></i> Dokumen NHP sedang dalam proses telaah pimpinan. Harap tunggu persetujuan Inspektur sebelum menggelar Forum Ekspose dengan Pj. Penghulu/Desa.
+              <i class="fa-solid fa-hourglass-start"></i> Dokumen P2HP &amp; BA Kesepakatan sedang dalam proses telaah pimpinan. Harap tunggu persetujuan Inspektur sebelum menggelar Forum Ekspose dengan Pj. Penghulu/Desa.
             </div>
           <?php endif; ?>
         <?php else: ?>
           <!-- DRAFT BELUM DIAJUKAN -->
           <div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
             <div style="font-size:12px;color:#475569">
-              Kertas kerja dan daftar temuan di bawah siap diajukan kepada Inspektur Daerah untuk mendapatkan telaah dan persetujuan pra-ekspose.
+              Kertas kerja, daftar temuan, dan naskah P2HP di bawah siap diajukan kepada Inspektur Daerah untuk mendapatkan telaah dan persetujuan pra-ekspose.
             </div>
             <form method="post" action="<?= url('temuan/ajukan-nhp') ?>">
               <?= csrf_field() ?>
               <input type="hidden" name="spt_id" value="<?= $spt['id'] ?>">
               <button type="submit" class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700">
-                <i class="fa-solid fa-paper-plane"></i> Ajukan NHP ke Inspektur untuk Telaah Pra-Ekspose
+                <i class="fa-solid fa-paper-plane"></i> Ajukan P2HP &amp; BA ke Inspektur untuk Telaah Pra-Ekspose
               </button>
             </form>
           </div>

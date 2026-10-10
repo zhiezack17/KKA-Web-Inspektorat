@@ -279,7 +279,9 @@ $routes = [
     '/temuan/ajukan-nhp'              => ['TemuanController', 'ajukanNhp'],
     '/temuan/approve-nhp'             => ['TemuanController', 'approveNhp'],
     '/print/matriks-temuan'           => ['TemuanController', 'matriks'],
-    '/print/nhp'                      => ['TemuanController', 'nhp'],
+    '/print/nhp'                      => ['TemuanController', 'nhp'],
+    '/print/p2hp'                     => ['TemuanController', 'p2hp'],
+    '/print/ba-kesepakatan'           => ['TemuanController', 'baKesepakatan'],
 
     // Modul Laporan Hasil Pengawasan (LHP) Otomatis Desa
     '/lhp'                            => ['LhpController', 'index'],
