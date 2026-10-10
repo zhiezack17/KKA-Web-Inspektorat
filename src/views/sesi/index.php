@@ -106,16 +106,17 @@
                       <div class="list-card" data-testid="sesi-item-<?= $s['id'] ?>">
                         <div class="ico"><i class="fa-solid fa-file-lines"></i></div>
                         <div class="main" onclick="window.location='<?= url('sesi/show?id='.$s['id']) ?>'" style="cursor:pointer">
-                          <div class="title">
-                            <?= e($s['objek_audit']) ?>
                           <div class="title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                            <span><?= e($s['objek_audit']) ?></span>
+                            <span style="font-weight:700"><?= e($s['kegiatan'] ?: $s['objek_audit']) ?></span>
                             <span class="badge"><?= e($s['desa']) ?></span>
                             <?= kka_status_badge($s['status'] ?? 'DRAFT') ?>
                           </div>
                           <div class="meta">
                             <span><i class="fa-regular fa-calendar"></i> Semester <?= (int)$s['semester'] ?> / <?= (int)$s['tahun_anggaran'] ?></span>
                             <span><i class="fa-solid fa-hashtag"></i> No. KKA: <?= e($s['no_kka'] ?: '-') ?></span>
+                            <?php if (!empty($s['pagu_anggaran'])): ?>
+                              <span><i class="fa-solid fa-coins"></i> Pagu: Rp <?= number_format((float)$s['pagu_anggaran'], 0, ',', '.') ?></span>
+                            <?php endif; ?>
                             <span><i class="fa-solid fa-user-tie"></i> <?= e($s['dibuat_oleh'] ?: '-') ?></span>
                           </div>
                         </div>

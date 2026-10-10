@@ -31,14 +31,15 @@ class SesiController {
         $where .= $ow; $p = array_merge($p, $op);
 
         $sesi = DB::all("
-            SELECT s.id, s.objek_audit, s.semester, s.tahun_anggaran, s.no_kka, s.dibuat_oleh, s.tanggal_dibuat,
-                   s.bidang_id, s.sub_bidang_id, s.status,
-                   d.nama AS desa, b.nama AS bidang, b.urutan AS bidang_urutan, sb.nama AS sub_bidang
+            SELECT s.id, s.objek_audit, s.kegiatan, s.pagu_anggaran, s.semester, s.tahun_anggaran, s.no_kka, s.dibuat_oleh, s.tanggal_dibuat,
+                   s.bidang_id, s.sub_bidang_id, s.sub_bidang_nama, s.status,
+                   d.nama AS desa, b.nama AS bidang, b.urutan AS bidang_urutan,
+                   COALESCE(NULLIF(s.sub_bidang_nama, ''), sb.nama) AS sub_bidang
             FROM kka_sesi s
             JOIN kka_desa d ON d.id = s.desa_id
             JOIN kka_bidang b ON b.id = s.bidang_id
             LEFT JOIN kka_sub_bidang sb ON sb.id = s.sub_bidang_id
-            WHERE $where ORDER BY b.urutan, sb.nama, s.created_at DESC
+            WHERE $where ORDER BY b.urutan, COALESCE(NULLIF(s.sub_bidang_nama, ''), sb.nama), s.created_at DESC
         ", $p);
 
         $desa    = DB::all('SELECT id, nama FROM kka_desa ORDER BY nama');
@@ -184,106 +185,99 @@ class SesiController {
 
         $currUser = $this->auth->user();
 
-        // OPSI A: OTOMATIS PISAHKAN PER BIDANG (Semua Bidang dibuatkan sesi masing-masing)
-        if ($bidangInput === 'ALL' || empty($bidangInput) || $bidangInput === '0') {
-            $grouped = [];
-            foreach ($items as $it) {
-                $bId = (int)($it['bidang_id'] ?? 1);
-                if (!isset($bidangMap[$bId])) $bId = 1;
-                $grouped[$bId][] = $it;
-            }
-
-            $createdCount = 0;
-            $grandTotalPagu = 0.0;
-            $createdBidangs = [];
-
-            foreach ($grouped as $bId => $bItems) {
-                if (empty($bItems)) continue;
-
-                $totalPaguBidang = 0.0;
-                foreach ($bItems as $it) {
-                    $totalPaguBidang += (float)($it['pagu_anggaran'] ?? 0);
-                }
-                $grandTotalPagu += $totalPaguBidang;
-
-                $bShort = $bidangShortMap[$bId] ?? ($bidangMap[$bId] ?? "Bidang $bId");
-                $sesiObjek = ($objekAudit !== '') 
-                    ? ($objekAudit . ' — ' . $bShort) 
-                    : ('Pemeriksaan Kepatuhan Keuangan dan Fisik Kepenghuluan ' . $desa['nama'] . ' — ' . $bShort . ' TA ' . $tahun);
-
-                $sesiId = DB::insert('kka_sesi', [
-                    'desa_id'        => $desaId,
-                    'bidang_id'      => $bId,
-                    'sub_bidang_id'  => null,
-                    'objek_audit'    => $sesiObjek,
-                    'kegiatan'       => 'Pemeriksaan Dokumen LRA & SPJ Belanja (' . $bShort . ')',
-                    'pagu_anggaran'  => $totalPaguBidang,
-                    'semester'       => $semester,
-                    'tahun_anggaran' => $tahun,
-                    'dibuat_oleh'    => $currUser['nama'] ?? 'Auditor',
-                    'tanggal_dibuat' => date('Y-m-d'),
-                    'status'         => 'DRAFT',
-                    'created_by'     => $this->auth->id(),
-                ]);
-
-                $urutan = 1;
-                foreach ($bItems as $item) {
-                    DB::insert('kka_rincian', [
-                        'sesi_id'          => $sesiId,
-                        'urutan'           => $urutan++,
-                        'uraian'           => $item['uraian'],
-                        'pagu_anggaran'    => $item['pagu_anggaran'] ?? 0,
-                        'biaya_dikwitansi' => $item['biaya_dikwitansi'] ?? 0,
-                        'realisasi'        => $item['realisasi'] ?? 0,
-                        'penerima'         => $item['penerima'] ?? null,
-                        'keterangan'       => $item['keterangan'] ?? null,
-                    ]);
-                }
-
-                $createdCount++;
-                $createdBidangs[] = $bShort . ' (' . count($bItems) . ' rincian)';
-            }
-
-            flash('success', "Berhasil membuat {$createdCount} Sesi Audit KKA per Bidang untuk Kepenghuluan {$desa['nama']}! Total Pagu APBDes: Rp " . number_format($grandTotalPagu, 0, ',', '.') . " teralokasi rapi sesuai bidang ke: " . implode(', ', $createdBidangs) . ".");
-            redirect('sesi');
-        } else {
-            // OPSI B: HANYA BIDANG TERTENTU YANG DIPILIH
-            $targetBidangId = (int)$bidangInput;
+        // Filter bidang jika pengguna memilih bidang tertentu
+        $targetBidangId = ($bidangInput !== 'ALL' && !empty($bidangInput) && $bidangInput !== '0') ? (int)$bidangInput : null;
+        if ($targetBidangId) {
             $bShort = $bidangShortMap[$targetBidangId] ?? ($bidangMap[$targetBidangId] ?? "Bidang $targetBidangId");
-
-            $filtered = array_values(array_filter($items, function($it) use ($targetBidangId) {
+            $targetItems = array_values(array_filter($items, function($it) use ($targetBidangId) {
                 return (int)($it['bidang_id'] ?? 1) === $targetBidangId;
             }));
 
-            if (empty($filtered)) {
+            if (empty($targetItems)) {
                 flash('warning', "Dokumen LRA berhasil dibaca, namun tidak ditemukan kegiatan belanja untuk {$bShort}. Silakan pilih opsi '✨ Otomatis Pisahkan Per Bidang'.");
                 redirect('sesi');
             }
+        } else {
+            $targetItems = $items;
+        }
 
-            $totalPagu = 0.0;
-            foreach ($filtered as $it) {
-                $totalPagu += (float)($it['pagu_anggaran'] ?? 0);
+        // Kelompokkan item belanja per Kegiatan (hierarki Sub Bidang & Kegiatan)
+        $groupedByKegiatan = [];
+        foreach ($targetItems as $it) {
+            $bId = (int)($it['bidang_id'] ?? 1);
+            if (!isset($bidangMap[$bId])) $bId = 1;
+            $it['bidang_id'] = $bId;
+
+            $kegCode = trim((string)($it['kode_kegiatan'] ?? ''));
+            $kegName = trim((string)($it['kegiatan'] ?? ''));
+            if ($kegName === '') {
+                $kegName = trim((string)($it['uraian'] ?? 'Kegiatan Belanja'));
             }
+            $subName = trim((string)($it['sub_bidang'] ?? ''));
 
-            $sesiObjek = ($objekAudit !== '') ? $objekAudit : ('Pemeriksaan Kepatuhan Keuangan dan Fisik Kepenghuluan ' . $desa['nama'] . ' — ' . $bShort . ' TA ' . $tahun);
+            $groupKey = $bId . '_' . ($kegCode !== '' ? $kegCode : md5($kegName));
+            if (!isset($groupedByKegiatan[$groupKey])) {
+                $groupedByKegiatan[$groupKey] = [
+                    'bidang_id'     => $bId,
+                    'sub_bidang'    => $subName,
+                    'kode_kegiatan' => $kegCode,
+                    'kegiatan'      => $kegName,
+                    'items'         => [],
+                ];
+            }
+            if ($groupedByKegiatan[$groupKey]['sub_bidang'] === '' && $subName !== '') {
+                $groupedByKegiatan[$groupKey]['sub_bidang'] = $subName;
+            }
+            $groupedByKegiatan[$groupKey]['items'][] = $it;
+        }
+
+        $createdCount = 0;
+        $grandTotalPagu = 0.0;
+        $firstSesiId = null;
+        $createdKegiatans = [];
+
+        foreach ($groupedByKegiatan as $group) {
+            $bId     = $group['bidang_id'];
+            $subName = $group['sub_bidang'];
+            $kegCode = $group['kode_kegiatan'];
+            $kegName = $group['kegiatan'];
+            $kItems  = $group['items'];
+
+            if (empty($kItems)) continue;
+
+            $totalPaguKegiatan = 0.0;
+            foreach ($kItems as $it) {
+                $totalPaguKegiatan += (float)($it['pagu_anggaran'] ?? 0);
+            }
+            $grandTotalPagu += $totalPaguKegiatan;
+
+            $displayKegiatan = ($kegCode !== '' ? $kegCode . ' ' : '') . $kegName;
+            $bShort = $bidangShortMap[$bId] ?? ($bidangMap[$bId] ?? "Bidang $bId");
+
+            $sesiObjek = ($objekAudit !== '')
+                ? ($objekAudit . ' — ' . $displayKegiatan)
+                : ('Pemeriksaan Kepatuhan Keuangan dan Fisik Kepenghuluan ' . $desa['nama'] . ' — ' . $displayKegiatan . ' TA ' . $tahun);
 
             $sesiId = DB::insert('kka_sesi', [
-                'desa_id'        => $desaId,
-                'bidang_id'      => $targetBidangId,
-                'sub_bidang_id'  => null,
-                'objek_audit'    => $sesiObjek,
-                'kegiatan'       => 'Pemeriksaan Dokumen LRA & SPJ Belanja (' . $bShort . ')',
-                'pagu_anggaran'  => $totalPagu,
-                'semester'       => $semester,
-                'tahun_anggaran' => $tahun,
-                'dibuat_oleh'    => $currUser['nama'] ?? 'Auditor',
-                'tanggal_dibuat' => date('Y-m-d'),
-                'status'         => 'DRAFT',
-                'created_by'     => $this->auth->id(),
+                'desa_id'         => $desaId,
+                'bidang_id'       => $bId,
+                'sub_bidang_id'   => null,
+                'sub_bidang_nama' => $subName ?: null,
+                'objek_audit'     => $sesiObjek,
+                'kegiatan'        => $displayKegiatan,
+                'pagu_anggaran'   => $totalPaguKegiatan,
+                'semester'        => $semester,
+                'tahun_anggaran'  => $tahun,
+                'dibuat_oleh'     => $currUser['nama'] ?? 'Auditor',
+                'tanggal_dibuat'  => date('Y-m-d'),
+                'status'          => 'DRAFT',
+                'created_by'      => $this->auth->id(),
             ]);
 
+            if (!$firstSesiId) $firstSesiId = $sesiId;
+
             $urutan = 1;
-            foreach ($filtered as $item) {
+            foreach ($kItems as $item) {
                 DB::insert('kka_rincian', [
                     'sesi_id'          => $sesiId,
                     'urutan'           => $urutan++,
@@ -296,8 +290,17 @@ class SesiController {
                 ]);
             }
 
-            flash('success', "Sesi KKA {$bShort} untuk Kepenghuluan {$desa['nama']} berhasil dibuat! " . count($filtered) . " rincian belanja berhasil diekstrak dengan Pagu Rp " . number_format($totalPagu, 0, ',', '.') . ".");
-            redirect('sesi/show?id=' . $sesiId);
+            $createdCount++;
+            $createdKegiatans[] = $displayKegiatan . ' (' . count($kItems) . ' rincian)';
+        }
+
+        $scopeDesc = $targetBidangId ? ($bidangShortMap[$targetBidangId] ?? "Bidang $targetBidangId") : 'Seluruh Bidang APBDes';
+        flash('success', "Berhasil membuat {$createdCount} Sesi KKA per Kegiatan untuk Kepenghuluan {$desa['nama']} ({$scopeDesc})! Total Pagu APBDes: Rp " . number_format($grandTotalPagu, 0, ',', '.') . ".");
+
+        if ($createdCount === 1 && $firstSesiId) {
+            redirect('sesi/show?id=' . $firstSesiId);
+        } else {
+            redirect('sesi');
         }
     }
 
@@ -698,9 +701,10 @@ class SesiController {
     }
 
     private function loadSesi(int $id): ?array {
-        return DB::one('
+        return DB::one("
             SELECT s.*, d.nama AS desa_nama, k.nama AS kecamatan_nama,
-                   b.nama AS bidang_nama, sb.nama AS sub_bidang_nama,
+                   b.nama AS bidang_nama,
+                   COALESCE(NULLIF(s.sub_bidang_nama, ''), sb.nama) AS sub_bidang_nama,
                    uk.nama AS ketua_nama, uk.nip AS ketua_nip,
                    ud.nama AS dalnis_nama, ud.nip AS dalnis_nip,
                    ui.nama AS irban_pejabat_nama, ui.nip AS irban_pejabat_nip, ui.jabatan AS irban_jabatan
@@ -712,6 +716,6 @@ class SesiController {
             LEFT JOIN kka_users uk ON uk.id = s.ketua_tim_id
             LEFT JOIN kka_users ud ON ud.id = s.dalnis_id
             LEFT JOIN kka_users ui ON ui.id = s.irban_id
-            WHERE s.id = ?', [$id]);
+            WHERE s.id = ?", [$id]);
     }
 }

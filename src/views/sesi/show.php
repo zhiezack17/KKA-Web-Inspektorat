@@ -654,8 +654,8 @@
       <?php endif; ?>
     </div>
 
-    <!-- Kesimpulan & Sumber Data -->
-    <div class="section-title"><i class="fa-solid fa-pen-to-square"></i> Kesimpulan & Sumber Data</div>
+    <!-- Sumber Data & Kesimpulan -->
+    <div class="section-title"><i class="fa-solid fa-pen-to-square"></i> Sumber Data &amp; Kesimpulan Audit</div>
     <div class="card">
       <form method="post" action="<?= url('sesi/update') ?>" data-testid="form-kesimpulan">
         <?= csrf_field() ?>
@@ -678,12 +678,12 @@
         <input type="hidden" name="tanggal_evaluasi" value="<?= e((string)$sesi['tanggal_evaluasi']) ?>">
         <div class="row">
           <div class="field">
-            <label>Kesimpulan Audit</label>
-            <textarea name="kesimpulan" class="textarea" placeholder="Tuliskan kesimpulan audit..." data-testid="f-kesimpulan"><?= e((string)$sesi['kesimpulan']) ?></textarea>
+            <label>Sumber Data (Dokumen Pengujian)</label>
+            <textarea name="sumber_data" class="textarea" placeholder="cth: 1. Surat Pertanggung Jawaban (SPJ) TA 2025&#10;2. Laporan Realisasi Anggaran (LRA)&#10;3. Rekening Koran Kas Desa..."><?= e((string)$sesi['sumber_data']) ?></textarea>
           </div>
           <div class="field">
-            <label>Sumber Data</label>
-            <textarea name="sumber_data" class="textarea" placeholder="cth: SPP, kwitansi, daftar hadir..."><?= e((string)$sesi['sumber_data']) ?></textarea>
+            <label>Kesimpulan Audit</label>
+            <textarea name="kesimpulan" class="textarea" placeholder="Tuliskan kesimpulan audit atas kegiatan belanja ini..." data-testid="f-kesimpulan"><?= e((string)$sesi['kesimpulan']) ?></textarea>
           </div>
         </div>
 

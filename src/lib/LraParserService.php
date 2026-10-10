@@ -150,45 +150,29 @@ except Exception:
 
         $lines = explode("\n", $rawText);
         $items = [];
-        $fallbackKegiatans = [];
 
         $ignoreWords = [
             'laporan realisasi', 'pemerintah kabupaten', 'kepenghuluan', 'tahun anggaran',
             'kode rekening', 'uraian', 'anggaran (rp)', 'realisasi (rp)', 'lebih / (kurang)',
             'jumlah belanja', 'total belanja', 'surplus', 'defisit', 'sisa lebih',
             'pendapatan desa', 'pembiayaan', 'jumlah pendapatan', 'jumlah pembiayaan',
-            'halaman', 'lampiran', 'peraturan desa', 'bupati rokan hilir', 'inspektorat'
+            'halaman', 'lampiran', 'peraturan desa', 'bupati rokan hilir', 'inspektorat',
+            'printed by', 'realisasi s.d'
         ];
 
-        $isInBelanja = false;
         $currentBidang = null;
-        $currentKegiatan = '';
+        $currentSubBidang = null;
+        $currentKodeKegiatan = null;
+        $currentKegiatan = null;
+        $pendingKegiatanTitle = false;
 
         foreach ($lines as $line) {
             $lineTrim = trim($line);
             if ($lineTrim === '') continue;
 
-            // Lewatkan baris tanpa alfabet (header kolom seperti '2 3', atau angka kolom terpotong)
-            if (!preg_match('/[a-zA-Z]/', $lineTrim)) continue;
-
             $lLower = strtolower($lineTrim);
 
-            // Deteksi Akun Pendapatan (Akun 4)
-            if ((strpos($lLower, 'pendapatan desa') !== false || strpos($lLower, 'pendapatan transfer') !== false) && !$isInBelanja) {
-                continue;
-            }
-
-            // Batas Awal Belanja
-            if (strpos($lLower, 'belanja') !== false && !preg_match('/\d{1,3}(\.\d{3})+/', $lineTrim)) {
-                $isInBelanja = true;
-            }
-
-            // Batas Akhir Belanja (Pembiayaan / SILPA)
-            if ((strpos($lLower, 'pembiayaan') !== false || strpos($lLower, 'penerimaan pembiayaan') !== false || strpos($lLower, 'silpa') !== false) && !preg_match('/\d{1,3}(\.\d{3})+/', $lineTrim)) {
-                $isInBelanja = false;
-            }
-
-            // Abaikan kata kunci header
+            // Filter header halaman
             $isHeader = false;
             foreach ($ignoreWords as $iw) {
                 if (strpos($lLower, $iw) !== false && !preg_match('/\d{1,3}(\.\d{3})+/', $lineTrim)) {
@@ -198,65 +182,110 @@ except Exception:
             }
             if ($isHeader) continue;
 
-            // Deteksi Bidang dari judul Bidang Siskeudes
-            if (strpos($lLower, 'penyelenggaraan pemerintahan') !== false) {
-                $isInBelanja = true;
+            // 1. Deteksi Judul BIDANG (1 s.d 5)
+            if (preg_match('/^(?:[0-4]?[1-5])?\s*BIDANG\s+PENYELENGGARA(?:A?N)?\s+PEMERINTAH/i', $lineTrim)) {
                 $currentBidang = 1;
-            } elseif (strpos($lLower, 'pelaksanaan pembangunan') !== false) {
-                $isInBelanja = true;
+                $currentSubBidang = null;
+                $currentKegiatan = null;
+                continue;
+            } elseif (preg_match('/^(?:[0-4]?[1-5])?\s*BIDANG\s+PELAKSANAAN\s+PEMBANGUNAN/i', $lineTrim)) {
                 $currentBidang = 2;
-            } elseif (strpos($lLower, 'pembinaan kemasyarakatan') !== false || strpos($lLower, 'pembinaan kemasyaratan') !== false) {
-                $isInBelanja = true;
+                $currentSubBidang = null;
+                $currentKegiatan = null;
+                continue;
+            } elseif (preg_match('/^(?:[0-4]?[1-5])?\s*BIDANG\s+PEMBINAAN\s+KEMASYARAKAT/i', $lineTrim)) {
                 $currentBidang = 3;
-            } elseif (strpos($lLower, 'pemberdayaan masyarakat') !== false) {
-                $isInBelanja = true;
+                $currentSubBidang = null;
+                $currentKegiatan = null;
+                continue;
+            } elseif (preg_match('/^(?:[0-4]?[1-5])?\s*BIDANG\s+PEMBERDAYAAN\s+MASYARAKAT/i', $lineTrim)) {
                 $currentBidang = 4;
-            } elseif (strpos($lLower, 'penanggulangan bencana') !== false || strpos($lLower, 'keadaan darurat') !== false || strpos($lLower, 'mendesak desa') !== false) {
-                $isInBelanja = true;
+                $currentSubBidang = null;
+                $currentKegiatan = null;
+                continue;
+            } elseif (preg_match('/^(?:[0-4]?[1-5])?\s*BIDANG\s+PENANGGULANGAN\s+BENCANA/i', $lineTrim) || preg_match('/KEADAAN\s+DARURAT.*MENDESAK/i', $lineTrim)) {
                 $currentBidang = 5;
+                $currentSubBidang = null;
+                $currentKegiatan = null;
+                continue;
             }
 
-            // 1. Deteksi Baris Kode Rekening Belanja 5.x.x.xx (Leaf Belanja Rinci)
-            $cleanLine = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\xEF\xBF\xBD]/', ' ', $lineTrim);
-            
-            // Ekstrak kode kegiatan di awal baris jika ada (misal: "2.3.10", "1.1.01", "3.2.01")
-            // Catatan penting: Kode kegiatan tidak pernah diawali 5.x (5.x adalah kode akun belanja)
-            if (preg_match('/^\s*([0-4]?[1-5]\.[0-9\.]+)\s+(.*)$/', $cleanLine, $actCodeMatch)) {
-                $possibleActCode = trim($actCodeMatch[1], '. ');
-                if (strpos($possibleActCode, '5.') !== 0) {
-                    $firstDigit = (int) substr(ltrim($possibleActCode, '0'), 0, 1);
-                    if ($firstDigit >= 1 && $firstDigit <= 5) {
-                        $currentBidang = $firstDigit;
-                        $isInBelanja = true;
+            // 2. Deteksi SUB BIDANG (misal: "2.1 Sub Bidang Pendidikan", "1.1 Penyelenggaraan Belanja Siltap")
+            if (preg_match('/^\s*([1-5]\.[0-9]+)\s+(?:Sub\s+Bidang\s+)?(.*)$/i', $lineTrim, $mSub)) {
+                $subCode = $mSub[1];
+                $subText = trim($mSub[2]);
+                if (strpos($subCode, '5.') !== 0) {
+                    $fDigit = (int) substr($subCode, 0, 1);
+                    if ($fDigit >= 1 && $fDigit <= 5) {
+                        $currentBidang = $fDigit;
+                        $cleanSubName = preg_replace('/\s{2,}.*$/', '', $subText);
+                        $cleanSubName = trim(preg_replace('/[\d\.,\-]/', '', $cleanSubName));
+                        if (strlen($cleanSubName) > 3) {
+                            $currentSubBidang = (stripos($cleanSubName, 'Sub Bidang') === false ? 'Sub Bidang ' : '') . $cleanSubName;
+                            $currentKegiatan = null;
+                            continue;
+                        }
                     }
                 }
             }
 
-            // Normalisasi spasi angka rupiah
-            $normLine = self::normalizeMoneyString($cleanLine);
-
-            // Deteksi Akun 5 (Belanja)
-            $accCode = null;
-            $afterAcc = null;
-
-            if (preg_match('/(?:^|\s)(5\s*\.\s*\d+\s*\.\s*\d+\s*\.\s*\d{2}\.?)\s+(.*)$/', $normLine, $mAcc)) {
-                $accCode = preg_replace('/\s+/', '', rtrim($mAcc[1], '.'));
-                $afterAcc = $mAcc[2];
-            } elseif (preg_match('/(?:^|\s)(5\s*\.\s*\d+(?:\s*\.\s*\d+)*\.?)\s+(.*)$/', $normLine, $mAcc)) {
-                $accCode = preg_replace('/\s+/', '', rtrim($mAcc[1], '.'));
-                $afterAcc = $mAcc[2];
+            // 3. Deteksi BARIS JUDUL KEGIATAN (misal: "2.1.1 Penyelenggaraan 46.600.000,00", "2.1.8 Pengelolaan Perpustakaan...")
+            if (preg_match('/^\s*([1-5]\.[0-9]+\.[0-9]+)\s+(.*)$/', $lineTrim, $mAct)) {
+                $actCode = $mAct[1];
+                $restAct = trim($mAct[2]);
+                
+                // Cek jika baris ini BUKAN baris belanja leaf 5.x.x
+                if (!preg_match('/\b5\.\d+\./', $restAct)) {
+                    $fDigit = (int) substr($actCode, 0, 1);
+                    if ($fDigit >= 1 && $fDigit <= 5) {
+                        $currentBidang = $fDigit;
+                        $cleanActTitle = preg_replace('/\s{2,}[\d\.,\-]+.*$/', '', $restAct);
+                        $cleanActTitle = trim(preg_replace('/[\d\.,\-]+$/', '', $cleanActTitle));
+                        $currentKodeKegiatan = $actCode;
+                        $currentKegiatan = $cleanActTitle;
+                        $pendingKegiatanTitle = true;
+                        continue;
+                    }
+                }
             }
 
-            if ($accCode !== null && $afterAcc !== null) {
-                // Lewatkan jika level akun < 4 (misal 5.1 atau 5.1.1 adalah subtotal grup)
-                $accParts = explode('.', $accCode);
-                if (count($accParts) < 4) {
+            // Kelanjutan nama kegiatan jika terpotong 2 baris (misal "PAUD/TKITPATKAITPQM adrasah Non-Formal")
+            if ($pendingKegiatanTitle && !preg_match('/\b5\.\d+\./', $lineTrim) && !preg_match('/^\s*([0-9\.]+)\s+/', $lineTrim)) {
+                if (!preg_match('/[\d\.,\-]{4,}/', $lineTrim) && preg_match('/[a-zA-Z]/', $lineTrim)) {
+                    $currentKegiatan .= ' ' . trim($lineTrim);
+                    $pendingKegiatanTitle = false;
                     continue;
+                } else {
+                    $pendingKegiatanTitle = false;
+                }
+            }
+
+            // 4. Deteksi RINCIAN BELANJA LEAF (Akun 5.x.x.xx)
+            $cleanLine = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\xEF\xBF\xBD]/', ' ', $lineTrim);
+
+            // Cari kode rekening belanja 5.x
+            if (preg_match('/^(?:([0-5]\.[0-9\.]+)\s+)?.*?\b(5\.\d+(?:\.\d+)*\.?)\s+(.*)$/', $cleanLine, $mLeaf)) {
+                $inlineActCode = $mLeaf[1] ?: null;
+                $accCode = rtrim($mLeaf[2], '.');
+                $afterAcc = $mLeaf[3];
+
+                if ($inlineActCode && strpos($inlineActCode, '5.') !== 0) {
+                    $fDigit = (int) substr($inlineActCode, 0, 1);
+                    if ($fDigit >= 1 && $fDigit <= 5) {
+                        $currentBidang = $fDigit;
+                        $currentKodeKegiatan = $inlineActCode;
+                    }
                 }
 
-                // Ekstrak angka-angka di sebelah kanan uraian
-                // Cari seluruh token angka rupiah: bertitik ribuan atau berkoma desimal atau 0
-                if (preg_match_all('/(?<=\s|^)(?:[\/\\\])?(\-?\d{1,3}(?:\.\d{3})+(?:,\d{2})?|\-?\d+,\d{2}|\b0,00\b|\b0\b)(?=\s|$|[a-zA-Z\x80-\xFF])/u', $afterAcc, $numMatches, PREG_OFFSET_CAPTURE)) {
+                $accParts = explode('.', $accCode);
+                if (count($accParts) < 4) {
+                    continue; // Skip subtotal grup (5.1, 5.2, 5.2.1)
+                }
+
+                // Normalisasi format uang hanya pada bagian kanan ($afterAcc)
+                $normAfterAcc = self::normalizeMoneyString($afterAcc);
+
+                if (preg_match_all('/(?<=\s|^)(?:[\/\\\])?(\-?\d{1,3}(?:\.\d{3})+(?:,\d{2})?|\-?\d+,\d{2}|\b0,00\b|\b0\b)(?=\s|$|[a-zA-Z\x80-\xFF])/u', $normAfterAcc, $numMatches, PREG_OFFSET_CAPTURE)) {
                     $matchedTokens = $numMatches[1];
                     $firstOffset = null;
                     $validNums = [];
@@ -273,46 +302,34 @@ except Exception:
                     }
 
                     if ($firstOffset !== null && !empty($validNums)) {
-                        $cleanUraian = trim(substr($afterAcc, 0, $firstOffset));
+                        $cleanUraian = trim(substr($normAfterAcc, 0, $firstOffset));
                         $cleanUraian = trim($cleanUraian, " \t\n\r\0\x0B.-_=\\/\\:,;");
 
                         if (!empty($cleanUraian) && preg_match('/[a-zA-Z]/', $cleanUraian)) {
                             $pagu = $validNums[0] ?? 0.0;
                             $real = (count($validNums) >= 2) ? $validNums[1] : 0.0;
 
-                            // Jika pagu dan real keduanya 0, lewati
                             if ($pagu > 0 || $real > 0) {
-                                if (!$currentBidang) {
-                                    $currentBidang = 1;
-                                }
+                                $bId = $currentBidang ?: 1;
+                                $kegCode = $currentKodeKegiatan ?: "$bId.1.1";
+                                $kegTitle = $currentKegiatan ?: ($currentSubBidang ?: "Kegiatan $kegCode");
 
                                 $items[] = [
-                                    'bidang_id'        => $currentBidang,
+                                    'bidang_id'        => $bId,
+                                    'sub_bidang'       => $currentSubBidang,
+                                    'kode_kegiatan'    => $kegCode,
+                                    'kegiatan'         => $kegTitle,
                                     'kode_rekening'    => $accCode,
-                                    'kegiatan'         => $currentKegiatan,
                                     'uraian'           => $cleanUraian,
                                     'pagu_anggaran'    => $pagu,
                                     'realisasi'        => $real,
                                     'biaya_dikwitansi' => $real,
                                     'penerima'         => null,
-                                    'keterangan'       => "[$accCode] " . ($currentKegiatan ? "Kegiatan: $currentKegiatan" : 'Impor LRA Siskeudes')
+                                    'keterangan'       => "[$accCode] $kegTitle"
                                 ];
-                                continue;
                             }
                         }
                     }
-                }
-            }
-
-            // Jika bukan baris belanja 5.x.x.xx, cek apakah ini baris Judul Kegiatan (misal: "2.3.10  Pembangunan Gedung...")
-            if (preg_match('/^([0-9\.]+)\s+(.*?)\s{2,}([\d\.,\-]+)/', $lineTrim, $actMatch)) {
-                $codeK = trim($actMatch[1], '. ');
-                $actTitle = trim($actMatch[2]);
-                $fDigit = (int) substr(ltrim($codeK, '0'), 0, 1);
-                if ($fDigit >= 1 && $fDigit <= 5 && preg_match('/[a-zA-Z]/', $actTitle)) {
-                    $currentBidang = $fDigit;
-                    $isInBelanja = true;
-                    $currentKegiatan = $actTitle;
                 }
             }
         }

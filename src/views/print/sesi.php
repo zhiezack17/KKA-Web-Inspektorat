@@ -174,12 +174,12 @@
     <?php endif; ?>
   </table>
   <div class="sec">
-    <div class="ttl">KESIMPULAN AUDIT:</div>
-    <div class="isi"><?= nl2br(e($sesi['kesimpulan'] ?: '-')) ?></div>
-  </div>
-  <div class="sec">
     <div class="ttl">SUMBER DATA:</div>
     <div class="isi"><?= nl2br(e($sesi['sumber_data'] ?: '-')) ?></div>
+  </div>
+  <div class="sec">
+    <div class="ttl">KESIMPULAN AUDIT:</div>
+    <div class="isi"><?= nl2br(e($sesi['kesimpulan'] ?: '-')) ?></div>
   </div>
   <?php if (!empty($sesi['kendala_lapangan'])): ?>
   <div class="sec">
