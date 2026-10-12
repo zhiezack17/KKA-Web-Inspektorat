@@ -220,8 +220,10 @@ except Exception:
                         $currentBidang = $fDigit;
                         $cleanSubName = preg_replace('/\s{2,}.*$/', '', $subText);
                         $cleanSubName = trim(preg_replace('/[\d\.,\-]/', '', $cleanSubName));
+                        $cleanSubName = preg_replace('/^(?:Sub[\s_]*Bidan[gq]\s*)+/i', '', $cleanSubName);
+                        $cleanSubName = trim($cleanSubName);
                         if (strlen($cleanSubName) > 3) {
-                            $currentSubBidang = (stripos($cleanSubName, 'Sub Bidang') === false ? 'Sub Bidang ' : '') . $cleanSubName;
+                            $currentSubBidang = 'Sub Bidang ' . $cleanSubName;
                             $currentKegiatan = null;
                             continue;
                         }

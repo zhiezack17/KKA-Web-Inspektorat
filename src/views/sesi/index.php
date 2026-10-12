@@ -98,8 +98,17 @@
                 uksort($bySub, fn($a,$c)=> $a==='__none__' ? 1 : ($c==='__none__' ? -1 : strcmp($a,$c)));
               ?>
                 <?php foreach ($bySub as $subName => $subItems): ?>
-                  <?php if ($subName !== '__none__'): ?>
-                    <div class="sub-title"><i class="fa-solid fa-folder-tree"></i> <?= e($subName) ?></div>
+                  <?php if ($subName !== '__none__'): 
+                    $subTotalPagu = array_sum(array_column($subItems, 'pagu_anggaran'));
+                  ?>
+                    <div class="sub-title" style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;padding:7px 12px;border-radius:8px;margin:16px 0 8px;border:1px solid #e2e8f0;border-left:4px solid var(--emerald-600)">
+                      <span style="font-weight:800;color:#065f46;display:flex;align-items:center;gap:7px">
+                        <i class="fa-solid fa-folder-tree" style="color:var(--emerald-600)"></i> <?= e($subName) ?>
+                      </span>
+                      <span style="font-size:11.5px;font-weight:700;color:var(--slate-600);background:#fff;padding:2px 8px;border-radius:6px;border:1px solid #cbd5e1">
+                        Pagu Sub Bidang: <b style="color:#0f766e">Rp <?= number_format($subTotalPagu, 0, ',', '.') ?></b> (<?= count($subItems) ?> Kegiatan)
+                      </span>
+                    </div>
                   <?php endif; ?>
                   <div class="list-grid">
                     <?php foreach ($subItems as $s): ?>
