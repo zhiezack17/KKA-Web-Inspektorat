@@ -762,7 +762,7 @@
       <?= csrf_field() ?>
       <input type="hidden" name="id" id="er-id">
       <input type="hidden" name="sesi_id" value="<?= (int)$sesi['id'] ?>">
-      <div class="kka-modal__body" style="max-height:75vh">
+      <div class="kka-modal__body">
         
         <div style="font-weight:700;color:var(--slate-700);font-size:12px;border-bottom:1px solid #e2e8f0;padding-bottom:5px;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">
           1. Data Kegiatan &amp; Verifikasi Anggaran
@@ -1039,7 +1039,7 @@
     <form method="post" action="<?= url('sesi/update-routing-slip') ?>">
       <?= csrf_field() ?>
       <input type="hidden" name="id" value="<?= (int)$sesi['id'] ?>">
-      <div class="kka-modal__body" style="max-height:75vh">
+      <div class="kka-modal__body">
         <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:12px;margin-bottom:14px;color:#92400e;font-size:12.5px;line-height:1.5">
           <i class="fa-solid fa-circle-info"></i> <b>Routing Slip Kendali Mutu LHA:</b><br>
           Data SPT, penomoran LHA, dan lembar catatan hasil reviu (Review Sheet) berjenjang Dalnis &amp; Irban tersimpan di sini dan dicetak pada dokumen Routing Slip resmi.
@@ -1117,7 +1117,7 @@
 <!-- Modal Kelola Sub-Rincian & Pemeriksaan SPJ Rekening -->
 <div id="modalKelolaSubRincian" class="kka-modal" role="dialog" aria-modal="true" aria-labelledby="msrModalTitle" hidden>
   <div class="kka-modal__backdrop" data-close-modal></div>
-  <div class="kka-modal__box" style="max-width:1100px;width:96vw;max-height:94vh">
+  <div class="kka-modal__box" style="max-width:1100px;width:96vw;max-height:calc(100vh - 28px)">
     <div class="kka-modal__head" style="background:linear-gradient(90deg,#0f172a,#1e293b);color:#fff;padding:14px 20px">
       <div>
         <div style="font-size:11px;font-weight:700;color:#38bdf8;text-transform:uppercase;letter-spacing:0.8px;display:flex;align-items:center;gap:6px">
@@ -1131,7 +1131,7 @@
     </div>
 
     <!-- Sub-header bar: Ringkasan Nilai & Action Buttons -->
-    <div style="background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div style="background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;flex-shrink:0">
       <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;align-items:center">
         <div>
           <span style="color:#64748b">Pagu Rekening:</span>
@@ -1163,7 +1163,7 @@
     </div>
 
     <!-- Body: Tabel Rincian Bukti & Kwitansi -->
-    <div class="kka-modal__body" style="padding:0;overflow-y:auto;max-height:calc(94vh - 180px)">
+    <div class="kka-modal__body" style="padding:0">
       <table class="table" style="margin:0;font-size:12.5px;width:100%;border-collapse:collapse">
         <thead>
           <tr style="background:#f1f5f9;color:#334155;border-bottom:2px solid #cbd5e1">
@@ -1215,7 +1215,7 @@
       <?= csrf_field() ?>
       <input type="hidden" name="sesi_id" value="<?= (int)$sesi['id'] ?>">
       <input type="hidden" name="parent_id" id="asr-parent-id" value="">
-      <div class="kka-modal__body" style="max-height:75vh">
+      <div class="kka-modal__body">
         
         <div style="font-weight:700;color:var(--slate-700);font-size:12px;border-bottom:1px solid #e2e8f0;padding-bottom:5px;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">
           1. Identitas Kwitansi / Bukti Pengeluaran
@@ -1365,7 +1365,7 @@
       <input type="hidden" name="sesi_id" value="<?= (int)$sesi['id'] ?>">
       <input type="hidden" name="parent_id" id="esr-parent-id" value="">
       <input type="hidden" name="id" id="esr-id" value="">
-      <div class="kka-modal__body" style="max-height:75vh">
+      <div class="kka-modal__body">
         
         <div style="font-weight:700;color:var(--slate-700);font-size:12px;border-bottom:1px solid #e2e8f0;padding-bottom:5px;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">
           1. Identitas Kwitansi / Bukti Pengeluaran
@@ -1499,16 +1499,17 @@
 </div>
 
 <style>
-.kka-modal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px}
-.kka-modal[hidden]{display:none}
-.kka-modal__backdrop{position:absolute;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(3px)}
-.kka-modal__box{position:relative;background:#fff;border-radius:14px;box-shadow:0 30px 60px -20px rgba(0,0,0,.4);width:100%;max-width:640px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column}
-.kka-modal__head{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid #e2e8f0;background:linear-gradient(90deg,#f0fdf4,#ecfeff)}
-.kka-modal__head h3{margin:0;font-size:16px;color:var(--emerald-700);font-weight:700}
-.kka-modal__x{background:transparent;border:0;cursor:pointer;font-size:18px;color:#64748b;padding:6px}
+.kka-modal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:12px}
+.kka-modal[hidden]{display:none !important}
+.kka-modal__backdrop{position:absolute;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(3px)}
+.kka-modal__box{position:relative;background:#fff;border-radius:14px;box-shadow:0 30px 60px -20px rgba(0,0,0,.4);width:100%;max-width:680px;max-height:calc(100vh - 28px);height:auto;overflow:hidden;display:flex;flex-direction:column;margin:auto}
+.kka-modal__box>form{display:flex;flex-direction:column;flex:1;min-height:0;max-height:100%;overflow:hidden;margin:0}
+.kka-modal__head{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:13px 20px;border-bottom:1px solid #e2e8f0;background:linear-gradient(90deg,#f0fdf4,#ecfeff)}
+.kka-modal__head h3{margin:0;font-size:15px;color:var(--emerald-700);font-weight:700}
+.kka-modal__x{background:transparent;border:0;cursor:pointer;font-size:18px;color:#64748b;padding:6px;line-height:1}
 .kka-modal__x:hover{color:#0f172a}
-.kka-modal__body{padding:20px 22px;overflow-y:auto}
-.kka-modal__foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 22px;border-top:1px solid #e2e8f0;background:#f8fafc}
+.kka-modal__body{flex:1;min-height:0;padding:16px 20px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.kka-modal__foot{flex-shrink:0;display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid #e2e8f0;background:#f8fafc;position:sticky;bottom:0;z-index:10}
 @media (max-width: 992px){ .timeline-stepper{ grid-template-columns: repeat(2, 1fr) !important; } }
 @media (max-width: 540px){ .timeline-stepper{ grid-template-columns: 1fr !important; } }
 </style>
