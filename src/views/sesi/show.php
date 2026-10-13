@@ -447,19 +447,19 @@
     </div>
     <div class="card" style="padding:0">
       <div class="table-wrap" style="border:0">
-        <table class="table">
+        <table class="table" style="min-width:1050px;width:100%">
           <thead>
             <tr>
-              <th style="width:36px">No</th>
-              <th>Uraian / Rincian Belanja</th>
-              <th class="num">Pagu Anggaran</th>
-              <th class="num">Realisasi</th>
-              <th class="num">Biaya Dikwitansi</th>
-              <th class="num">Selisih</th>
-              <th style="text-align:center">Uji Pajak</th>
-              <th>TPK / Penerima</th>
-              <th>Keterangan</th>
-              <th style="width:110px;text-align:center">Aksi</th>
+              <th style="width:36px;text-align:center">No</th>
+              <th style="min-width:180px;max-width:240px">Uraian / Rincian Belanja</th>
+              <th class="num" style="min-width:105px">Pagu Anggaran</th>
+              <th class="num" style="min-width:105px">Realisasi</th>
+              <th class="num" style="min-width:105px">Biaya Dikwitansi</th>
+              <th class="num" style="min-width:85px">Selisih</th>
+              <th style="text-align:center;min-width:90px">Uji Pajak</th>
+              <th style="min-width:95px">TPK / Penerima</th>
+              <th style="min-width:130px;max-width:190px">Keterangan</th>
+              <th style="min-width:180px;width:180px;text-align:center;position:sticky;right:0;background:#f8fafc;z-index:3;box-shadow:-3px 0 6px rgba(0,0,0,0.05)">Aksi</th>
             </tr>
           </thead>
           <tbody data-testid="tbody-rincian">
@@ -509,23 +509,25 @@
                   data-nominal-pph="<?= (float)($r['nominal_pph'] ?? 0) ?>"
                   data-status-pajak="<?= e((string)($r['status_pajak'] ?? 'TIDAK_TERUTANG')) ?>"
                   data-ntpn="<?= e((string)($r['ntpn'] ?? '')) ?>">
-                <td><?= $no++ ?></td>
-                <td>
-                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+                <td style="text-align:center"><?= $no++ ?></td>
+                <td style="max-width:240px;word-break:break-word">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap">
                     <div>
-                      <strong style="color:var(--slate-800);font-size:13.5px"><?= e($r['uraian']) ?></strong>
+                      <strong style="color:var(--slate-800);font-size:13px;line-height:1.4"><?= e($r['uraian']) ?></strong>
                       <?php if (!empty($r['children'])): ?>
-                        <span class="badge" style="background:#e0f2fe;color:#0369a1;font-size:11px;font-weight:700;margin-left:6px;padding:3px 8px;border-radius:4px">
-                          <i class="fa-solid fa-receipt"></i> <?= count($r['children']) ?> Rincian SPJ
-                        </span>
+                        <div style="margin-top:3px">
+                          <span class="badge" style="background:#e0f2fe;color:#0369a1;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:4px;display:inline-block">
+                            <i class="fa-solid fa-receipt"></i> <?= count($r['children']) ?> Rincian SPJ
+                          </span>
+                        </div>
                       <?php endif; ?>
                     </div>
                   </div>
                 </td>
-                <td class="num" style="font-weight:600"><?= rupiah($r['pagu_anggaran']) ?></td>
-                <td class="num" style="font-weight:600"><?= rupiah($r['realisasi']) ?></td>
-                <td class="num" style="font-weight:600"><?= rupiah($r['biaya_dikwitansi']) ?></td>
-                <td class="num" style="color:<?= $sel<0?'var(--red-600)':'var(--emerald-700)' ?>;font-weight:700"><?= rupiah($sel) ?></td>
+                <td class="num" style="font-weight:600;font-size:12.5px"><?= rupiah($r['pagu_anggaran']) ?></td>
+                <td class="num" style="font-weight:600;font-size:12.5px"><?= rupiah($r['realisasi']) ?></td>
+                <td class="num" style="font-weight:600;font-size:12.5px"><?= rupiah($r['biaya_dikwitansi']) ?></td>
+                <td class="num" style="color:<?= $sel<0?'var(--red-600)':'var(--emerald-700)' ?>;font-weight:700;font-size:12.5px"><?= rupiah($sel) ?></td>
                 <td style="text-align:center">
                   <?= $pajakHtml ?>
                   <?php if ($totNomPajak > 0 && $stPajak === 'SUDAH_SETOR'): ?>
@@ -538,17 +540,19 @@
                   <?php endif; ?>
                   <?= e($r['penerima'] ?: '-') ?>
                 </td>
-                <td><?= e($r['keterangan'] ?: '-') ?></td>
-                <td style="white-space:nowrap;text-align:center">
-                  <button type="button" class="btn btn-sm js-buka-sub-rincian" data-parent-id="<?= (int)$r['id'] ?>" style="background:#0284c7;color:#fff;border:none;font-weight:700;font-size:11.5px;padding:5px 10px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:5px" title="Buka Rincian & Pemeriksaan Bukti SPJ">
-                    <i class="fa-solid fa-list-check"></i> Rinci &amp; Periksa SPJ
-                  </button>
-                  <a href="<?= url('temuan/create?sesi_id=' . $sesi['id'] . '&rincian_id=' . $r['id']) ?>" class="btn btn-ghost btn-sm" style="color:#d97706;padding:5px 6px" title="Jadikan Konsep Temuan (KTP)"><i class="fa-solid fa-file-circle-exclamation"></i></a>
-                  <button type="button" class="btn btn-ghost btn-sm js-edit-rincian" style="color:var(--emerald-700);padding:5px 6px" title="Edit Rekening Induk" data-testid="edit-rincian-<?= $r['id'] ?>" data-has-children="<?= !empty($r['children']) ? '1' : '0' ?>"><i class="fa-solid fa-pen-to-square"></i></button>
-                  <form method="post" action="<?= url('rincian/delete') ?>" onsubmit="return confirm('Hapus rekening belanja ini beserta seluruh bukti bonnya?')" style="display:inline">
-                    <?= csrf_field() ?><input type="hidden" name="id" value="<?= $r['id'] ?>"><input type="hidden" name="sesi_id" value="<?= $sesi['id'] ?>">
-                    <button class="btn btn-ghost btn-sm" style="color:var(--red-600);padding:5px 6px" title="Hapus" data-testid="del-rincian-<?= $r['id'] ?>"><i class="fa-solid fa-trash"></i></button>
-                  </form>
+                <td style="max-width:190px;font-size:11.5px;line-height:1.35;word-break:break-word;overflow-wrap:anywhere;color:#475569"><?= e($r['keterangan'] ?: '-') ?></td>
+                <td style="white-space:nowrap;text-align:center;padding:6px 8px;position:sticky;right:0;background:#fff;z-index:2;box-shadow:-3px 0 6px rgba(0,0,0,0.05)">
+                  <div style="display:inline-flex;align-items:center;justify-content:center;gap:3px">
+                    <button type="button" class="btn btn-sm js-buka-sub-rincian" data-parent-id="<?= (int)$r['id'] ?>" style="background:#0284c7;color:#fff;border:none;font-weight:700;font-size:11px;padding:5px 8px;border-radius:5px;cursor:pointer;display:inline-flex;align-items:center;gap:4px" title="Buka Rincian & Pemeriksaan Bukti SPJ">
+                      <i class="fa-solid fa-list-check"></i> Rinci &amp; Periksa SPJ
+                    </button>
+                    <a href="<?= url('temuan/create?sesi_id=' . $sesi['id'] . '&rincian_id=' . $r['id']) ?>" class="btn btn-ghost btn-sm" style="color:#d97706;padding:5px 5px;border-radius:4px" title="Jadikan Konsep Temuan (KTP)"><i class="fa-solid fa-file-circle-exclamation"></i></a>
+                    <button type="button" class="btn btn-ghost btn-sm js-edit-rincian" style="color:var(--emerald-700);padding:5px 5px;border-radius:4px" title="Edit Rekening Induk" data-testid="edit-rincian-<?= $r['id'] ?>" data-has-children="<?= !empty($r['children']) ? '1' : '0' ?>"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <form method="post" action="<?= url('rincian/delete') ?>" onsubmit="return confirm('Hapus rekening belanja ini beserta seluruh bukti bonnya?')" style="display:inline;margin:0">
+                      <?= csrf_field() ?><input type="hidden" name="id" value="<?= $r['id'] ?>"><input type="hidden" name="sesi_id" value="<?= $sesi['id'] ?>">
+                      <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--red-600);padding:5px 5px;border-radius:4px" title="Hapus" data-testid="del-rincian-<?= $r['id'] ?>"><i class="fa-solid fa-trash"></i></button>
+                    </form>
+                  </div>
                 </td>
               </tr>
             <?php endforeach; endif; ?>
@@ -557,11 +561,12 @@
           <tfoot>
             <tr>
               <td colspan="2">JUMLAH <span style="font-weight:500;color:var(--slate-500);font-size:12px">(Pagu Sesi: <?= rupiah($sesi['pagu_anggaran']) ?>)</span></td>
-              <td class="num"><?= rupiah($totPagu ?? 0) ?></td>
-              <td class="num"><?= rupiah($totals['realisasi']) ?></td>
-              <td class="num"><?= rupiah($totals['dikwitansi']) ?></td>
-              <td class="num" style="color:<?= $selTot<0?'var(--red-600)':'var(--emerald-700)' ?>"><?= rupiah($selTot) ?></td>
-              <td colspan="4"></td>
+              <td class="num" style="font-size:12.5px"><?= rupiah($totPagu ?? 0) ?></td>
+              <td class="num" style="font-size:12.5px"><?= rupiah($totals['realisasi']) ?></td>
+              <td class="num" style="font-size:12.5px"><?= rupiah($totals['dikwitansi']) ?></td>
+              <td class="num" style="color:<?= $selTot<0?'var(--red-600)':'var(--emerald-700)' ?>;font-size:12.5px"><?= rupiah($selTot) ?></td>
+              <td colspan="3"></td>
+              <td style="position:sticky;right:0;background:#f8fafc;z-index:2;box-shadow:-3px 0 6px rgba(0,0,0,0.05)"></td>
             </tr>
           </tfoot>
           <?php endif; ?>
@@ -1177,7 +1182,7 @@
             <th style="text-align:right;width:95px;padding:10px 8px">Selisih</th>
             <th style="text-align:center;width:115px;padding:10px 8px">Uji Pajak</th>
             <th style="text-align:center;width:75px;padding:10px 8px">Bukti File</th>
-            <th style="width:90px;text-align:center;padding:10px 8px">Aksi</th>
+            <th style="width:100px;min-width:100px;text-align:center;padding:10px 8px;position:sticky;right:0;background:#f1f5f9;z-index:3;box-shadow:-2px 0 4px rgba(0,0,0,0.05)">Aksi</th>
           </tr>
         </thead>
         <tbody id="msrTbody">
@@ -2136,7 +2141,7 @@
         '<td style="text-align:right;font-weight:700;color:' + (sel < 0 ? '#dc2626' : '#15803d') + '">' + fmt(sel) + '</td>' +
         '<td style="text-align:center">' + pajakHtml + '</td>' +
         '<td style="text-align:center">' + fileHtml + '</td>' +
-        '<td style="text-align:center;white-space:nowrap">';
+        '<td style="text-align:center;white-space:nowrap;position:sticky;right:0;background:#fff;z-index:2;box-shadow:-2px 0 4px rgba(0,0,0,0.05)">';
 
       if (canEdit) {
         html += '<button type="button" class="btn btn-ghost btn-sm js-sub-edit-btn" data-sub-id="' + ch.id + '" style="color:#15803d;padding:3px 5px" title="Edit Rincian"><i class="fa-solid fa-pen-to-square"></i></button>' +
