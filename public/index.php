@@ -188,9 +188,12 @@ $routes = [
     '/sesi/reviu-dalnis'      => ['SesiController', 'reviuDalnis'],
     '/sesi/update-routing-slip' => ['SesiController', 'updateRoutingSlip'],
 
-    '/rincian/store'          => ['RincianController', 'store'],
-    '/rincian/update'         => ['RincianController', 'update'],
-    '/rincian/delete'         => ['RincianController', 'delete'],
+    '/rincian/store'          => ['RincianController', 'store'],
+    '/rincian/store-sub'      => ['RincianController', 'storeSub'],
+    '/rincian/update'         => ['RincianController', 'update'],
+    '/rincian/update-sub'     => ['RincianController', 'updateSub'],
+    '/rincian/delete'         => ['RincianController', 'delete'],
+    '/rincian/lampiran'       => ['RincianController', 'downloadLampiran'],
     '/rincian/template'       => ['RincianController', 'downloadTemplate'],
     '/rincian/import'         => ['RincianController', 'importExcel'],
 

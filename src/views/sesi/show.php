@@ -511,7 +511,21 @@
                   data-ntpn="<?= e((string)($r['ntpn'] ?? '')) ?>">
                 <td><?= $no++ ?></td>
                 <td>
-                  <strong><?= e($r['uraian']) ?></strong>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+                    <div>
+                      <strong><?= e($r['uraian']) ?></strong>
+                      <?php if (!empty($r['children'])): ?>
+                        <span class="badge" style="background:#e0f2fe;color:#0369a1;font-size:10.5px;font-weight:700;margin-left:6px;padding:2px 7px;border-radius:4px">
+                          <i class="fa-solid fa-receipt"></i> <?= count($r['children']) ?> Bukti SPJ / Kwitansi
+                        </span>
+                      <?php endif; ?>
+                    </div>
+                    <?php if (!in_array($statusKka, ['REVIEW_KETUA', 'REVIEW_DALNIS', 'SELESAI_FINAL'])): ?>
+                      <button type="button" class="btn btn-outline btn-sm js-add-sub-rincian" style="border-color:#38bdf8;color:#0284c7;background:#f0f9ff;padding:3px 8px;font-size:11px;font-weight:700;border-radius:5px" data-parent-id="<?= (int)$r['id'] ?>" data-parent-uraian="<?= e($r['uraian']) ?>" title="Tambah rincian kwitansi / bon / amprah di bawah rekening ini">
+                        <i class="fa-solid fa-plus-circle"></i> + Bon / Kwitansi
+                      </button>
+                    <?php endif; ?>
+                  </div>
                 </td>
                 <td class="num"><?= rupiah($r['pagu_anggaran']) ?></td>
                 <td class="num"><?= rupiah($r['realisasi']) ?></td>
@@ -532,13 +546,104 @@
                 <td><?= e($r['keterangan'] ?: '-') ?></td>
                 <td style="white-space:nowrap;text-align:center">
                   <a href="<?= url('temuan/create?sesi_id=' . $sesi['id'] . '&rincian_id=' . $r['id']) ?>" class="btn btn-ghost btn-sm" style="color:#d97706;padding:5px 7px" title="Jadikan Konsep Temuan (KTP)"><i class="fa-solid fa-file-circle-exclamation"></i></a>
-                  <button type="button" class="btn btn-ghost btn-sm js-edit-rincian" style="color:var(--emerald-700);padding:5px 7px" title="Edit" data-testid="edit-rincian-<?= $r['id'] ?>"><i class="fa-solid fa-pen-to-square"></i></button>
-                  <form method="post" action="<?= url('rincian/delete') ?>" onsubmit="return confirm('Hapus rincian ini?')" style="display:inline">
+                  <button type="button" class="btn btn-ghost btn-sm js-edit-rincian" style="color:var(--emerald-700);padding:5px 7px" title="Edit Rekening Induk" data-testid="edit-rincian-<?= $r['id'] ?>" data-has-children="<?= !empty($r['children']) ? '1' : '0' ?>"><i class="fa-solid fa-pen-to-square"></i></button>
+                  <form method="post" action="<?= url('rincian/delete') ?>" onsubmit="return confirm('Hapus rekening belanja ini beserta seluruh bukti bonnya?')" style="display:inline">
                     <?= csrf_field() ?><input type="hidden" name="id" value="<?= $r['id'] ?>"><input type="hidden" name="sesi_id" value="<?= $sesi['id'] ?>">
                     <button class="btn btn-ghost btn-sm" style="color:var(--red-600);padding:5px 7px" title="Hapus" data-testid="del-rincian-<?= $r['id'] ?>"><i class="fa-solid fa-trash"></i></button>
                   </form>
                 </td>
               </tr>
+              <?php if (!empty($r['children'])): ?>
+                <?php foreach ($r['children'] as $cIdx => $c): 
+                  $cSel = (float)$c['realisasi'] - (float)$c['biaya_dikwitansi'];
+                  $cStPajak = $c['status_pajak'] ?? 'TIDAK_TERUTANG';
+                  $cTotNomPajak = (float)($c['nominal_ppn'] ?? 0) + (float)($c['nominal_pph'] ?? 0);
+                  $cPajakHtml = '<span style="color:#94a3b8;font-size:11px">-</span>';
+                  if ($cStPajak === 'BELUM_SETOR') {
+                      $cPajakHtml = '<span class="badge" style="background:#fee2e2;color:#dc2626;font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:4px" title="Kewajiban pajak belum disetor">' .
+                                    '<i class="fa-solid fa-triangle-exclamation"></i> Belum Setor ' . ($cTotNomPajak > 0 ? rupiah($cTotNomPajak) : '') . '</span>';
+                  } elseif ($cStPajak === 'SUDAH_SETOR') {
+                      $cPajakHtml = '<span class="badge" style="background:#dcfce7;color:#15803d;font-size:10.5px;font-weight:600;padding:2px 6px;border-radius:4px" title="NTPN: ' . e((string)($c['ntpn'] ?? '-')) . '">' .
+                                    '<i class="fa-solid fa-circle-check"></i> Setor (' . ($c['potong_pph'] ?: 'PPN') . ')</span>';
+                  }
+                ?>
+                  <tr style="background:#f8fafc;font-size:12.5px"
+                      data-sub-rincian-id="<?= (int)$c['id'] ?>"
+                      data-parent-id="<?= (int)$r['id'] ?>"
+                      data-parent-uraian="<?= e($r['uraian']) ?>"
+                      data-uraian="<?= e($c['uraian']) ?>"
+                      data-no-bukti="<?= e((string)($c['no_bukti'] ?? '')) ?>"
+                      data-tgl-bukti="<?= e((string)($c['tgl_bukti'] ?? '')) ?>"
+                      data-kwi="<?= (float)$c['biaya_dikwitansi'] ?>"
+                      data-real="<?= (float)$c['realisasi'] ?>"
+                      data-penerima="<?= e((string)$c['penerima']) ?>"
+                      data-jenis-penerima="<?= e((string)($c['jenis_penerima'] ?? 'PENERIMA')) ?>"
+                      data-keterangan="<?= e((string)$c['keterangan']) ?>"
+                      data-potong-ppn="<?= (int)($c['potong_ppn'] ?? 0) ?>"
+                      data-nominal-ppn="<?= (float)($c['nominal_ppn'] ?? 0) ?>"
+                      data-potong-pph="<?= e((string)($c['potong_pph'] ?? '')) ?>"
+                      data-nominal-pph="<?= (float)($c['nominal_pph'] ?? 0) ?>"
+                      data-status-pajak="<?= e((string)($c['status_pajak'] ?? 'TIDAK_TERUTANG')) ?>"
+                      data-ntpn="<?= e((string)($c['ntpn'] ?? '')) ?>"
+                      data-lampiran="<?= e((string)($c['file_lampiran'] ?? '')) ?>">
+                    <td style="text-align:right;color:#94a3b8;font-size:11px">
+                      <i class="fa-solid fa-angle-right" style="color:#0284c7"></i>
+                    </td>
+                    <td style="padding-left:18px">
+                      <div style="display:flex;align-items:flex-start;gap:6px">
+                        <span style="color:#0284c7;font-weight:700;font-size:13px;line-height:1">↳</span>
+                        <div>
+                          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                            <?php if (!empty($c['no_bukti'])): ?>
+                              <span class="badge" style="background:#e0f2fe;color:#0369a1;font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:4px">
+                                <i class="fa-solid fa-receipt"></i> <?= e($c['no_bukti']) ?>
+                              </span>
+                            <?php endif; ?>
+                            <?php if (!empty($c['tgl_bukti'])): ?>
+                              <span style="font-size:11px;color:#64748b"><i class="fa-regular fa-calendar"></i> <?= tgl_id($c['tgl_bukti']) ?></span>
+                            <?php endif; ?>
+                          </div>
+                          <div style="color:var(--slate-800);margin-top:2px;font-weight:500"><?= e($c['uraian']) ?></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="num" style="color:#94a3b8;font-size:11px">-</td>
+                    <td class="num" style="color:var(--slate-700)"><?= rupiah($c['realisasi']) ?></td>
+                    <td class="num" style="color:var(--slate-700);font-weight:600"><?= rupiah($c['biaya_dikwitansi']) ?></td>
+                    <td class="num" style="color:<?= $cSel<0?'var(--red-600)':'var(--emerald-700)' ?>;font-weight:600"><?= rupiah($cSel) ?></td>
+                    <td style="text-align:center">
+                      <?= $cPajakHtml ?>
+                      <?php if ($cTotNomPajak > 0 && $cStPajak === 'SUDAH_SETOR'): ?>
+                        <div style="font-size:10.5px;color:#15803d;margin-top:2px;font-weight:600"><?= rupiah($cTotNomPajak) ?></div>
+                      <?php endif; ?>
+                    </td>
+                    <td>
+                      <?php if (!empty($c['jenis_penerima']) && strtoupper($c['jenis_penerima']) === 'TPK'): ?>
+                        <span class="badge" style="background:#e0e7ff;color:#3730a3;font-size:10px;padding:2px 5px;border-radius:4px;font-weight:700;margin-right:3px">TPK</span>
+                      <?php endif; ?>
+                      <?= e($c['penerima'] ?: '-') ?>
+                    </td>
+                    <td>
+                      <div><?= e($c['keterangan'] ?: '-') ?></div>
+                      <?php if (!empty($c['file_lampiran'])): ?>
+                        <div style="margin-top:3px">
+                          <a href="<?= url('rincian/lampiran?id=' . $c['id']) ?>" target="_blank" class="badge" style="background:#fef3c7;color:#92400e;text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:2px 6px;border-radius:4px">
+                            <i class="fa-solid fa-paperclip"></i> Bukti Kwitansi / Bon
+                          </a>
+                        </div>
+                      <?php endif; ?>
+                    </td>
+                    <td style="white-space:nowrap;text-align:center">
+                      <a href="<?= url('temuan/create?sesi_id=' . $sesi['id'] . '&rincian_id=' . $c['id']) ?>" class="btn btn-ghost btn-sm" style="color:#d97706;padding:4px 6px" title="Jadikan Konsep Temuan (KTP)"><i class="fa-solid fa-file-circle-exclamation"></i></a>
+                      <button type="button" class="btn btn-ghost btn-sm js-edit-sub-rincian" style="color:var(--emerald-700);padding:4px 6px" title="Edit Bukti Kwitansi / Bon"><i class="fa-solid fa-pen-to-square"></i></button>
+                      <form method="post" action="<?= url('rincian/delete') ?>" onsubmit="return confirm('Hapus bukti kwitansi / bon ini?')" style="display:inline">
+                        <?= csrf_field() ?><input type="hidden" name="id" value="<?= $c['id'] ?>"><input type="hidden" name="sesi_id" value="<?= $sesi['id'] ?>">
+                        <button class="btn btn-ghost btn-sm" style="color:var(--red-600);padding:4px 6px" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                      </form>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              <?php endif; ?>
             <?php endforeach; endif; ?>
           </tbody>
           <?php if (!empty($rincian)): $selTot = (float)$totals['realisasi']-(float)$totals['dikwitansi']; ?>
@@ -1102,6 +1207,298 @@
   </div>
 </div>
 
+<!-- Modal Tambah Sub-Rincian Kwitansi / Bon SPJ -->
+<div id="modalAddSubRincian" class="kka-modal" role="dialog" aria-modal="true" aria-labelledby="modalAddSubTitle" hidden>
+  <div class="kka-modal__backdrop" data-close-modal></div>
+  <div class="kka-modal__box" style="max-width:720px">
+    <div class="kka-modal__head" style="background:linear-gradient(90deg,#eff6ff,#ecfeff)">
+      <div>
+        <h3 id="modalAddSubTitle" style="color:#0369a1;display:flex;align-items:center;gap:8px">
+          <i class="fa-solid fa-receipt"></i> Tambah Bukti Kwitansi / Bon SPJ
+        </h3>
+        <div id="addSubParentLabel" style="font-size:12px;color:#0284c7;margin-top:2px;font-weight:600"></div>
+      </div>
+      <button type="button" class="kka-modal__x" data-close-modal aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form method="post" enctype="multipart/form-data" action="<?= url('rincian/store-sub') ?>" id="formAddSubRincian">
+      <?= csrf_field() ?>
+      <input type="hidden" name="sesi_id" value="<?= (int)$sesi['id'] ?>">
+      <input type="hidden" name="parent_id" id="asr-parent-id" value="">
+      <div class="kka-modal__body" style="max-height:75vh">
+        
+        <div style="font-weight:700;color:var(--slate-700);font-size:12px;border-bottom:1px solid #e2e8f0;padding-bottom:5px;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">
+          1. Identitas Kwitansi / Bukti Pengeluaran
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:12px;margin-bottom:10px">
+          <div class="field" style="margin:0">
+            <label>No. Kwitansi / No. Bon / Bukti Kas</label>
+            <input type="text" name="no_bukti" id="asr-no-bukti" class="input" placeholder="Cth: 01/KW/PKM/2025 atau Bon Toko #12">
+          </div>
+          <div class="field" style="margin:0">
+            <label>Tanggal Kwitansi / Bon</label>
+            <input type="date" name="tgl_bukti" id="asr-tgl-bukti" class="input">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Uraian Kwitansi / Belanja <span class="req">*</span></label>
+          <input type="text" name="uraian" id="asr-uraian" required class="input" placeholder="Cth: Honor Pengawas Lapangan (1 Org x Rp 1.100.000) atau Semen 150 Sak">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field">
+            <label>Biaya di Kwitansi / SPJ (Rp) <span class="req">*</span></label>
+            <input type="text" name="biaya_dikwitansi" id="asr-kwi" class="input" data-money placeholder="0" style="border-color:#0284c7;background:#f0f9ff;font-weight:700" required>
+          </div>
+          <div class="field">
+            <label>Realisasi Fisik (Rp)</label>
+            <input type="text" name="realisasi" id="asr-real" class="input" data-money placeholder="0">
+            <small style="color:var(--slate-500);font-size:11px">Kosongkan jika sama dengan biaya kwitansi.</small>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:120px 1.5fr;gap:12px;margin-top:6px">
+          <div class="field">
+            <label>Pilihan</label>
+            <select name="jenis_penerima" id="asr-jenis-penerima" class="input" style="font-size:12.5px">
+              <option value="PENERIMA">Penerima</option>
+              <option value="TPK">TPK</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Nama Penerima / Toko Rekanan</label>
+            <input type="text" name="penerima" id="asr-penerima" class="input" placeholder="Cth: Sudirman (Ketua TPK) / Toko Bangunan Berkah Mandiri">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Upload Foto / Scan Kwitansi / Bon (PDF / JPG / PNG)</label>
+          <input type="file" name="file_bukti" class="input" accept=".pdf,.jpg,.jpeg,.png,.webp" style="padding:6px">
+          <small style="color:var(--slate-500);font-size:11px">Lampirkan foto fisik kwitansi, nota belanja, atau daftar tanda terima amprah.</small>
+        </div>
+
+        <div style="font-weight:700;color:var(--slate-700);font-size:12px;border-bottom:1px solid #e2e8f0;padding-bottom:5px;margin:18px 0 12px;text-transform:uppercase;letter-spacing:0.5px">
+          2. Uji Kepatuhan Pajak Bon Ini
+        </div>
+
+        <!-- Smart Tax Suggestion Banner (Add Sub Modal) -->
+        <div id="asrSmartTaxBanner" style="display:none;background:#ecfdf5;border:1px solid #10b981;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12.5px;color:#065f46;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:10px">
+            <i class="fa-solid fa-wand-magic-sparkles" style="color:#059669;font-size:16px"></i>
+            <div>
+              <span id="asrSmartTaxTitle" style="font-weight:700">Rekomendasi Pajak:</span>
+              <span id="asrSmartTaxDesc" style="color:#047857;margin-left:4px"></span>
+            </div>
+          </div>
+          <button type="button" id="btnApplyAsrSmartTax" class="btn btn-sm" style="background:#059669;color:#fff;border:none;padding:5px 12px;font-size:11.5px;font-weight:600;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:5px">
+            <i class="fa-solid fa-check-double"></i> Terapkan Otomatis
+          </button>
+        </div>
+
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:14px;border-radius:8px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div class="field" style="margin:0">
+              <label style="font-size:12px;font-weight:600">Status Setor Pajak</label>
+              <select name="status_pajak" id="asr-status-pajak" class="input">
+                <option value="TIDAK_TERUTANG">Tidak Terutang</option>
+                <option value="BELUM_SETOR">⚠️ Belum Disetor (Temuan Pajak)</option>
+                <option value="SUDAH_SETOR">✓ Sudah Disetor</option>
+              </select>
+            </div>
+            <div class="field" style="margin:0">
+              <label style="font-size:12px;font-weight:600">Nomor Bukti Setor NTPN / Kode Billing</label>
+              <input type="text" name="ntpn" id="asr-ntpn" class="input" placeholder="Masukkan No. NTPN valid">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1.3fr 1.3fr 1.3fr;gap:10px;align-items:end">
+            <div class="field" style="margin:0">
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;height:36px;font-weight:600">
+                <input type="checkbox" name="potong_ppn" id="asr-potong-ppn" value="1"> PPN (11%)
+              </label>
+            </div>
+            <div class="field" style="margin:0">
+              <label style="font-size:11.5px">Nominal PPN (Rp)</label>
+              <input type="text" name="nominal_ppn" id="asr-nom-ppn" class="input" data-money placeholder="0">
+            </div>
+            <div class="field" style="margin:0">
+              <label style="font-size:11.5px">Jenis PPh</label>
+              <select name="potong_pph" id="asr-potong-pph" class="input">
+                <option value="">- Tanpa PPh -</option>
+                <option value="PPh 21">PPh 21 (Honor/Upah 5%)</option>
+                <option value="PPh 22">PPh 22 (Barang 1.5%)</option>
+                <option value="PPh 23">PPh 23 (Sewa/Jasa 2%)</option>
+                <option value="PPh 4(2)">PPh Final 4(2) (Konstruksi 2%)</option>
+              </select>
+            </div>
+            <div class="field" style="margin:0">
+              <label style="font-size:11.5px">Nominal PPh (Rp)</label>
+              <input type="text" name="nominal_pph" id="asr-nom-pph" class="input" data-money placeholder="0">
+            </div>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:12px">
+          <label>Keterangan Tambahan Bukti</label>
+          <input type="text" name="keterangan" id="asr-keterangan" class="input" placeholder="Cth: Dilampirkan foto barang, kuitansi bermaterai cukup">
+        </div>
+
+      </div>
+      <div class="kka-modal__foot">
+        <button type="button" class="btn btn-ghost" data-close-modal>Batal</button>
+        <button type="submit" class="btn btn-primary" style="background:#0284c7;border-color:#0284c7"><i class="fa-solid fa-plus-circle"></i> Simpan Kwitansi / Bon</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Edit Sub-Rincian Kwitansi / Bon SPJ -->
+<div id="modalEditSubRincian" class="kka-modal" role="dialog" aria-modal="true" aria-labelledby="modalEditSubTitle" hidden>
+  <div class="kka-modal__backdrop" data-close-modal></div>
+  <div class="kka-modal__box" style="max-width:720px">
+    <div class="kka-modal__head" style="background:linear-gradient(90deg,#eff6ff,#ecfeff)">
+      <div>
+        <h3 id="modalEditSubTitle" style="color:#0369a1;display:flex;align-items:center;gap:8px">
+          <i class="fa-solid fa-pen-to-square"></i> Edit Bukti Kwitansi / Bon SPJ
+        </h3>
+        <div id="esrParentLabel" style="font-size:12px;color:#0284c7;margin-top:2px;font-weight:600"></div>
+      </div>
+      <button type="button" class="kka-modal__x" data-close-modal aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form method="post" enctype="multipart/form-data" action="<?= url('rincian/update-sub') ?>" id="formEditSubRincian">
+      <?= csrf_field() ?>
+      <input type="hidden" name="sesi_id" value="<?= (int)$sesi['id'] ?>">
+      <input type="hidden" name="parent_id" id="esr-parent-id" value="">
+      <input type="hidden" name="id" id="esr-id" value="">
+      <div class="kka-modal__body" style="max-height:75vh">
+        
+        <div style="font-weight:700;color:var(--slate-700);font-size:12px;border-bottom:1px solid #e2e8f0;padding-bottom:5px;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">
+          1. Identitas Kwitansi / Bukti Pengeluaran
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:12px;margin-bottom:10px">
+          <div class="field" style="margin:0">
+            <label>No. Kwitansi / No. Bon / Bukti Kas</label>
+            <input type="text" name="no_bukti" id="esr-no-bukti" class="input" placeholder="Cth: 01/KW/PKM/2025 atau Bon Toko #12">
+          </div>
+          <div class="field" style="margin:0">
+            <label>Tanggal Kwitansi / Bon</label>
+            <input type="date" name="tgl_bukti" id="esr-tgl-bukti" class="input">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Uraian Kwitansi / Belanja <span class="req">*</span></label>
+          <input type="text" name="uraian" id="esr-uraian" required class="input" placeholder="Cth: Honor Pengawas Lapangan (1 Org x Rp 1.100.000) atau Semen 150 Sak">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field">
+            <label>Biaya di Kwitansi / SPJ (Rp) <span class="req">*</span></label>
+            <input type="text" name="biaya_dikwitansi" id="esr-kwi" class="input" data-money placeholder="0" style="border-color:#0284c7;background:#f0f9ff;font-weight:700" required>
+          </div>
+          <div class="field">
+            <label>Realisasi Fisik (Rp)</label>
+            <input type="text" name="realisasi" id="esr-real" class="input" data-money placeholder="0">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:120px 1.5fr;gap:12px;margin-top:6px">
+          <div class="field">
+            <label>Pilihan</label>
+            <select name="jenis_penerima" id="esr-jenis-penerima" class="input" style="font-size:12.5px">
+              <option value="PENERIMA">Penerima</option>
+              <option value="TPK">TPK</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Nama Penerima / Toko Rekanan</label>
+            <input type="text" name="penerima" id="esr-penerima" class="input" placeholder="Cth: Sudirman (Ketua TPK) / Toko Bangunan Berkah Mandiri">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Ganti File Foto / Scan Bukti (Opsional)</label>
+          <input type="file" name="file_bukti" class="input" accept=".pdf,.jpg,.jpeg,.png,.webp" style="padding:6px">
+          <div id="esrCurrentFileBox" style="font-size:11.5px;color:#0284c7;margin-top:4px;display:none">
+            <i class="fa-solid fa-paperclip"></i> File saat ini terlampir. Unggah file baru untuk menggantinya.
+          </div>
+        </div>
+
+        <div style="font-weight:700;color:var(--slate-700);font-size:12px;border-bottom:1px solid #e2e8f0;padding-bottom:5px;margin:18px 0 12px;text-transform:uppercase;letter-spacing:0.5px">
+          2. Uji Kepatuhan Pajak Bon Ini
+        </div>
+
+        <!-- Smart Tax Suggestion Banner (Edit Sub Modal) -->
+        <div id="esrSmartTaxBanner" style="display:none;background:#ecfdf5;border:1px solid #10b981;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12.5px;color:#065f46;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:10px">
+            <i class="fa-solid fa-wand-magic-sparkles" style="color:#059669;font-size:16px"></i>
+            <div>
+              <span id="esrSmartTaxTitle" style="font-weight:700">Rekomendasi Pajak:</span>
+              <span id="esrSmartTaxDesc" style="color:#047857;margin-left:4px"></span>
+            </div>
+          </div>
+          <button type="button" id="btnApplyEsrSmartTax" class="btn btn-sm" style="background:#059669;color:#fff;border:none;padding:5px 12px;font-size:11.5px;font-weight:600;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:5px">
+            <i class="fa-solid fa-check-double"></i> Terapkan Otomatis
+          </button>
+        </div>
+
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:14px;border-radius:8px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div class="field" style="margin:0">
+              <label style="font-size:12px;font-weight:600">Status Setor Pajak</label>
+              <select name="status_pajak" id="esr-status-pajak" class="input">
+                <option value="TIDAK_TERUTANG">Tidak Terutang</option>
+                <option value="BELUM_SETOR">⚠️ Belum Disetor (Temuan Pajak)</option>
+                <option value="SUDAH_SETOR">✓ Sudah Disetor</option>
+              </select>
+            </div>
+            <div class="field" style="margin:0">
+              <label style="font-size:12px;font-weight:600">Nomor Bukti Setor NTPN / Kode Billing</label>
+              <input type="text" name="ntpn" id="esr-ntpn" class="input" placeholder="Masukkan No. NTPN valid">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1.3fr 1.3fr 1.3fr;gap:10px;align-items:end">
+            <div class="field" style="margin:0">
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;height:36px;font-weight:600">
+                <input type="checkbox" name="potong_ppn" id="esr-potong-ppn" value="1"> PPN (11%)
+              </label>
+            </div>
+            <div class="field" style="margin:0">
+              <label style="font-size:11.5px">Nominal PPN (Rp)</label>
+              <input type="text" name="nominal_ppn" id="esr-nom-ppn" class="input" data-money placeholder="0">
+            </div>
+            <div class="field" style="margin:0">
+              <label style="font-size:11.5px">Jenis PPh</label>
+              <select name="potong_pph" id="esr-potong-pph" class="input">
+                <option value="">- Tanpa PPh -</option>
+                <option value="PPh 21">PPh 21 (Honor/Upah 5%)</option>
+                <option value="PPh 22">PPh 22 (Barang 1.5%)</option>
+                <option value="PPh 23">PPh 23 (Sewa/Jasa 2%)</option>
+                <option value="PPh 4(2)">PPh Final 4(2) (Konstruksi 2%)</option>
+              </select>
+            </div>
+            <div class="field" style="margin:0">
+              <label style="font-size:11.5px">Nominal PPh (Rp)</label>
+              <input type="text" name="nominal_pph" id="esr-nom-pph" class="input" data-money placeholder="0">
+            </div>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:12px">
+          <label>Keterangan Tambahan Bukti</label>
+          <input type="text" name="keterangan" id="esr-keterangan" class="input" placeholder="Cth: Dilampirkan foto barang, kuitansi bermaterai cukup">
+        </div>
+
+      </div>
+      <div class="kka-modal__foot">
+        <button type="button" class="btn btn-ghost" data-close-modal>Batal</button>
+        <button type="submit" class="btn btn-primary" style="background:#0284c7;border-color:#0284c7"><i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <style>
 .kka-modal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px}
 .kka-modal[hidden]{display:none}
@@ -1439,6 +1836,175 @@
       showModal('modalEditRincian');
     });
   });
+
+  // ========================================================
+  // SUB-RINCIAN: ADD & EDIT KWITANSI / BON SPJ HANDLERS
+  // ========================================================
+
+  // 1. Add Sub-Rincian (Buka Modal Tambah Bon)
+  document.querySelectorAll('.js-add-sub-rincian').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var parentId = btn.dataset.parentId || '';
+      var parentUraian = btn.dataset.parentUraian || '';
+      
+      var form = document.getElementById('formAddSubRincian');
+      if (form) form.reset();
+
+      document.getElementById('asr-parent-id').value = parentId;
+      var lbl = document.getElementById('addSubParentLabel');
+      if (lbl) lbl.textContent = 'Rekening Belanja Induk: ' + parentUraian;
+
+      var banner = document.getElementById('asrSmartTaxBanner');
+      if (banner) banner.style.display = 'none';
+
+      showModal('modalAddSubRincian');
+      setTimeout(function(){
+        var inp = document.getElementById('asr-no-bukti');
+        if (inp) inp.focus();
+      }, 50);
+    });
+  });
+
+  // Smart Tax Handler untuk Add Sub-Rincian
+  var asrUraian = document.getElementById('asr-uraian');
+  var asrKwi = document.getElementById('asr-kwi');
+  var asrTaxBanner = document.getElementById('asrSmartTaxBanner');
+  var asrTaxTitle = document.getElementById('asrSmartTaxTitle');
+  var asrTaxDesc = document.getElementById('asrSmartTaxDesc');
+  var btnApplyAsrTax = document.getElementById('btnApplyAsrSmartTax');
+  var lastAsrTax = null;
+
+  function checkAsrTax() {
+    if (!asrUraian || !asrKwi || !asrTaxBanner) return;
+    var tax = detectTax(asrUraian.value, asrKwi.value);
+    if (tax && tax.detected) {
+      lastAsrTax = tax;
+      asrTaxTitle.textContent = tax.title + ':';
+      asrTaxDesc.textContent = tax.desc;
+      asrTaxBanner.style.display = 'flex';
+    } else {
+      asrTaxBanner.style.display = 'none';
+      lastAsrTax = null;
+    }
+  }
+
+  if (asrUraian) asrUraian.addEventListener('input', checkAsrTax);
+  if (asrKwi) asrKwi.addEventListener('input', checkAsrTax);
+
+  if (btnApplyAsrTax) {
+    btnApplyAsrTax.addEventListener('click', function(){
+      if (!lastAsrTax) return;
+      var elStatus = document.getElementById('asr-status-pajak');
+      if (elStatus) elStatus.value = lastAsrTax.statusPajak;
+      var elPpn = document.getElementById('asr-potong-ppn');
+      if (elPpn) elPpn.checked = lastAsrTax.potongPpn;
+      var elNomPpn = document.getElementById('asr-nom-ppn');
+      if (elNomPpn) elNomPpn.value = lastAsrTax.nomPpn ? fmt(lastAsrTax.nomPpn) : '0';
+      var elPph = document.getElementById('asr-potong-pph');
+      if (elPph) elPph.value = lastAsrTax.potongPph;
+      var elNomPph = document.getElementById('asr-nom-pph');
+      if (elNomPph) elNomPph.value = lastAsrTax.nomPph ? fmt(lastAsrTax.nomPph) : '0';
+      var elKet = document.getElementById('asr-keterangan');
+      if (elKet && !elKet.value) elKet.value = lastAsrTax.keterangan;
+    });
+  }
+
+  // 2. Edit Sub-Rincian (Buka Modal Edit Bon)
+  document.querySelectorAll('.js-edit-sub-rincian').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var tr = btn.closest('tr');
+      if (!tr) return;
+
+      document.getElementById('esr-id').value         = tr.dataset.subRincianId || '';
+      document.getElementById('esr-parent-id').value  = tr.dataset.parentId || '';
+      var parentUraian = tr.dataset.parentUraian || '';
+      var lbl = document.getElementById('esrParentLabel');
+      if (lbl) lbl.textContent = 'Rekening Belanja Induk: ' + parentUraian;
+
+      document.getElementById('esr-no-bukti').value   = tr.dataset.noBukti || '';
+      document.getElementById('esr-tgl-bukti').value  = tr.dataset.tglBukti || '';
+      document.getElementById('esr-uraian').value     = tr.dataset.uraian || '';
+      document.getElementById('esr-kwi').value        = fmt(tr.dataset.kwi);
+      document.getElementById('esr-real').value       = fmt(tr.dataset.real);
+      document.getElementById('esr-penerima').value   = tr.dataset.penerima || '';
+      var elJp = document.getElementById('esr-jenis-penerima');
+      if (elJp) elJp.value = tr.dataset.jenisPenerima || 'PENERIMA';
+      document.getElementById('esr-keterangan').value = tr.dataset.keterangan || '';
+
+      var elStatusPajak = document.getElementById('esr-status-pajak');
+      if (elStatusPajak) elStatusPajak.value = tr.dataset.statusPajak || 'TIDAK_TERUTANG';
+      var elNtpn = document.getElementById('esr-ntpn');
+      if (elNtpn) elNtpn.value = tr.dataset.ntpn || '';
+      var elPotongPpn = document.getElementById('esr-potong-ppn');
+      if (elPotongPpn) elPotongPpn.checked = (tr.dataset.potongPpn === '1');
+      var elNomPpn = document.getElementById('esr-nom-ppn');
+      if (elNomPpn) elNomPpn.value = fmt(tr.dataset.nominalPpn);
+      var elPotongPph = document.getElementById('esr-potong-pph');
+      if (elPotongPph) elPotongPph.value = tr.dataset.potongPph || '';
+      var elNomPph = document.getElementById('esr-nom-pph');
+      if (elNomPph) elNomPph.value = fmt(tr.dataset.nominalPph);
+
+      var boxFile = document.getElementById('esrCurrentFileBox');
+      if (boxFile) {
+        if (tr.dataset.lampiran) {
+          boxFile.style.display = 'block';
+        } else {
+          boxFile.style.display = 'none';
+        }
+      }
+
+      checkEsrTax();
+      showModal('modalEditSubRincian');
+      setTimeout(function(){
+        var inp = document.getElementById('esr-uraian');
+        if (inp) inp.focus();
+      }, 50);
+    });
+  });
+
+  // Smart Tax Handler untuk Edit Sub-Rincian
+  var esrUraian = document.getElementById('esr-uraian');
+  var esrKwi = document.getElementById('esr-kwi');
+  var esrTaxBanner = document.getElementById('esrSmartTaxBanner');
+  var esrTaxTitle = document.getElementById('esrSmartTaxTitle');
+  var esrTaxDesc = document.getElementById('esrSmartTaxDesc');
+  var btnApplyEsrTax = document.getElementById('btnApplyEsrSmartTax');
+  var lastEsrTax = null;
+
+  function checkEsrTax() {
+    if (!esrUraian || !esrKwi || !esrTaxBanner) return;
+    var tax = detectTax(esrUraian.value, esrKwi.value);
+    if (tax && tax.detected) {
+      lastEsrTax = tax;
+      esrTaxTitle.textContent = tax.title + ':';
+      esrTaxDesc.textContent = tax.desc;
+      esrTaxBanner.style.display = 'flex';
+    } else {
+      esrTaxBanner.style.display = 'none';
+      lastEsrTax = null;
+    }
+  }
+
+  if (esrUraian) esrUraian.addEventListener('input', checkEsrTax);
+  if (esrKwi) esrKwi.addEventListener('input', checkEsrTax);
+
+  if (btnApplyEsrTax) {
+    btnApplyEsrTax.addEventListener('click', function(){
+      if (!lastEsrTax) return;
+      var elStatus = document.getElementById('esr-status-pajak');
+      if (elStatus) elStatus.value = lastEsrTax.statusPajak;
+      var elPpn = document.getElementById('esr-potong-ppn');
+      if (elPpn) elPpn.checked = lastEsrTax.potongPpn;
+      var elNomPpn = document.getElementById('esr-nom-ppn');
+      if (elNomPpn) elNomPpn.value = lastEsrTax.nomPpn ? fmt(lastEsrTax.nomPpn) : '0';
+      var elPph = document.getElementById('esr-potong-pph');
+      if (elPph) elPph.value = lastEsrTax.potongPph;
+      var elNomPph = document.getElementById('esr-nom-pph');
+      if (elNomPph) elNomPph.value = lastEsrTax.nomPph ? fmt(lastEsrTax.nomPph) : '0';
+      var elKet = document.getElementById('esr-keterangan');
+      if (elKet && !elKet.value) elKet.value = lastEsrTax.keterangan;
+    });
+  }
 
   modal.querySelectorAll('[data-close-modal]').forEach(function(el){
     el.addEventListener('click', closeModal);

@@ -17,7 +17,21 @@ class PrintController {
             WHERE s.id = ?", [$id]);
         if (!$sesi) { http_response_code(404); exit('Sesi tidak ditemukan'); }
         if (!sesi_is_owned($this->auth, $sesi)) { http_response_code(403); exit('Anda tidak memiliki akses ke data audit ini.'); }
-        $rincian = DB::all('SELECT * FROM kka_rincian WHERE sesi_id = ? ORDER BY urutan, id', [$id]);
+        $rawRincian = DB::all('SELECT * FROM kka_rincian WHERE sesi_id = ? ORDER BY urutan ASC, id ASC', [$id]);
+        $rincian = [];
+        $childrenMap = [];
+        foreach ($rawRincian as $r) {
+            if (!empty($r['parent_id'])) {
+                $childrenMap[(int)$r['parent_id']][] = $r;
+            } else {
+                $rincian[] = $r;
+            }
+        }
+        foreach ($rincian as &$p) {
+            $p['children'] = $childrenMap[(int)$p['id']] ?? [];
+        }
+        unset($p);
+
         $totals = [
             'pagu'      => (float) $sesi['pagu_anggaran'],
             'pagu_rinci'=> array_sum(array_column($rincian, 'pagu_anggaran')),
@@ -42,7 +56,21 @@ class PrintController {
             WHERE s.id = ?", [$id]);
         if (!$sesi) { http_response_code(404); exit('Sesi tidak ditemukan'); }
         if (!sesi_is_owned($this->auth, $sesi)) { http_response_code(403); exit('Anda tidak memiliki akses ke data audit ini.'); }
-        $rincian = DB::all('SELECT * FROM kka_rincian WHERE sesi_id = ? ORDER BY urutan, id', [$id]);
+        $rawRincian = DB::all('SELECT * FROM kka_rincian WHERE sesi_id = ? ORDER BY urutan ASC, id ASC', [$id]);
+        $rincian = [];
+        $childrenMap = [];
+        foreach ($rawRincian as $r) {
+            if (!empty($r['parent_id'])) {
+                $childrenMap[(int)$r['parent_id']][] = $r;
+            } else {
+                $rincian[] = $r;
+            }
+        }
+        foreach ($rincian as &$p) {
+            $p['children'] = $childrenMap[(int)$p['id']] ?? [];
+        }
+        unset($p);
+
         $totals = [
             'pagu'      => (float) $sesi['pagu_anggaran'],
             'pagu_rinci'=> array_sum(array_column($rincian, 'pagu_anggaran')),

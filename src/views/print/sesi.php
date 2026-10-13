@@ -154,15 +154,35 @@
         <tr><td colspan="8" style="text-align:center;padding:20px;color:#666">- Belum ada rincian -</td></tr>
       <?php else: $no=1; $totPagu=0; foreach ($rincian as $r): $sel=(float)$r['realisasi']-(float)$r['biaya_dikwitansi']; $totPagu += (float)$r['pagu_anggaran']; ?>
         <tr>
-          <td style="text-align:center"><?= $no++ ?></td>
-          <td><?= e($r['uraian']) ?></td>
-          <td class="num"><?= number_format($r['pagu_anggaran'],0,',','.') ?></td>
-          <td class="num"><?= number_format($r['realisasi'],0,',','.') ?></td>
-          <td class="num"><?= number_format($r['biaya_dikwitansi'],0,',','.') ?></td>
-          <td class="num"><?= number_format($sel,0,',','.') ?></td>
+          <td style="text-align:center;font-weight:<?= !empty($r['children'])?'bold':'normal' ?>"><?= $no++ ?></td>
+          <td style="font-weight:<?= !empty($r['children'])?'bold':'normal' ?>"><?= e($r['uraian']) ?></td>
+          <td class="num" style="font-weight:<?= !empty($r['children'])?'bold':'normal' ?>"><?= number_format($r['pagu_anggaran'],0,',','.') ?></td>
+          <td class="num" style="font-weight:<?= !empty($r['children'])?'bold':'normal' ?>"><?= number_format($r['realisasi'],0,',','.') ?></td>
+          <td class="num" style="font-weight:<?= !empty($r['children'])?'bold':'normal' ?>"><?= number_format($r['biaya_dikwitansi'],0,',','.') ?></td>
+          <td class="num" style="font-weight:<?= !empty($r['children'])?'bold':'normal' ?>"><?= number_format($sel,0,',','.') ?></td>
           <td><?= (!empty($r['jenis_penerima']) && $r['jenis_penerima'] === 'TPK' ? '<b>[TPK]</b> ' : '') . e($r['penerima'] ?: '-') ?></td>
           <td><?= e($r['keterangan'] ?: '-') ?></td>
         </tr>
+        <?php if (!empty($r['children'])): ?>
+          <?php foreach ($r['children'] as $cIdx => $c): 
+            $cSel = (float)$c['realisasi'] - (float)$c['biaya_dikwitansi'];
+            $buktiLabel = trim(($c['no_bukti'] ? 'No. ' . $c['no_bukti'] : '') . ($c['tgl_bukti'] ? ' (' . date('d/m/Y', strtotime($c['tgl_bukti'])) . ')' : ''));
+          ?>
+            <tr style="background:#fafafa">
+              <td style="text-align:center;color:#777;font-size:7.5pt">↳</td>
+              <td style="padding-left:14px;font-size:8pt">
+                <?php if ($buktiLabel): ?><b>[<?= e($buktiLabel) ?>]</b> <?php endif; ?>
+                <?= e($c['uraian']) ?>
+              </td>
+              <td class="num" style="color:#888;font-size:7.5pt">-</td>
+              <td class="num" style="font-size:8pt"><?= number_format($c['realisasi'],0,',','.') ?></td>
+              <td class="num" style="font-size:8pt"><?= number_format($c['biaya_dikwitansi'],0,',','.') ?></td>
+              <td class="num" style="font-size:8pt"><?= number_format($cSel,0,',','.') ?></td>
+              <td style="font-size:8pt"><?= (!empty($c['jenis_penerima']) && $c['jenis_penerima'] === 'TPK' ? '<b>[TPK]</b> ' : '') . e($c['penerima'] ?: '-') ?></td>
+              <td style="font-size:8pt"><?= e($c['keterangan'] ?: '-') ?></td>
+            </tr>
+          <?php endforeach; ?>
+        <?php endif; ?>
       <?php endforeach; endif; ?>
     </tbody>
     <?php if (!empty($rincian)): ?>

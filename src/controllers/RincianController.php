@@ -89,22 +89,224 @@ class RincianController {
             $jenisPenerima = 'PENERIMA';
         }
 
-        DB::update('kka_rincian', [
-            'uraian'          => $uraian,
-            'pagu_anggaran'   => parse_money(input('pagu_anggaran', 0)),
-            'biaya_dikwitansi'=> parse_money(input('biaya_dikwitansi', 0)),
-            'realisasi'       => parse_money(input('realisasi', 0)),
-            'jenis_penerima'  => $jenisPenerima,
-            'penerima'        => trim((string) input('penerima')) ?: null,
-            'keterangan'      => trim((string) input('keterangan')) ?: null,
-            'potong_ppn'      => $potongPpn,
-            'nominal_ppn'     => $nomPpn,
-            'potong_pph'      => $potongPph,
-            'nominal_pph'     => $nomPph,
-            'status_pajak'    => $statusPajak,
-            'ntpn'            => $ntpn,
-        ], ['id' => $id]);
+        // Jika parent memiliki anak, jangan timpa biaya_dikwitansi dan realisasi dari input form parent
+        $childCount = (int) DB::scalar('SELECT COUNT(*) FROM kka_rincian WHERE parent_id = ?', [$id]);
+        if ($childCount > 0) {
+            DB::update('kka_rincian', [
+                'uraian'          => $uraian,
+                'pagu_anggaran'   => parse_money(input('pagu_anggaran', 0)),
+                'jenis_penerima'  => $jenisPenerima,
+                'penerima'        => trim((string) input('penerima')) ?: null,
+                'keterangan'      => trim((string) input('keterangan')) ?: null,
+                'potong_ppn'      => $potongPpn,
+                'nominal_ppn'     => $nomPpn,
+                'potong_pph'      => $potongPph,
+                'nominal_pph'     => $nomPph,
+                'status_pajak'    => $statusPajak,
+                'ntpn'            => $ntpn,
+            ], ['id' => $id]);
+            $this->syncParentTotals($id);
+        } else {
+            DB::update('kka_rincian', [
+                'uraian'          => $uraian,
+                'pagu_anggaran'   => parse_money(input('pagu_anggaran', 0)),
+                'biaya_dikwitansi'=> parse_money(input('biaya_dikwitansi', 0)),
+                'realisasi'       => parse_money(input('realisasi', 0)),
+                'jenis_penerima'  => $jenisPenerima,
+                'penerima'        => trim((string) input('penerima')) ?: null,
+                'keterangan'      => trim((string) input('keterangan')) ?: null,
+                'potong_ppn'      => $potongPpn,
+                'nominal_ppn'     => $nomPpn,
+                'potong_pph'      => $potongPph,
+                'nominal_pph'     => $nomPph,
+                'status_pajak'    => $statusPajak,
+                'ntpn'            => $ntpn,
+            ], ['id' => $id]);
+        }
         flash('success', 'Rincian diperbarui.');
+        redirect('sesi/show?id=' . $sesiId);
+    }
+
+    /** Simpan Sub-Uraian Kwitansi / Bon SPJ di bawah Rekening Induk */
+    public function storeSub(): void {
+        only_post(); csrf_check();
+        $parentId = (int) input('parent_id');
+        $sesiId   = (int) input('sesi_id');
+        $this->assertSesiCanEdit($sesiId);
+
+        $parent = DB::one('SELECT id, sesi_id FROM kka_rincian WHERE id = ? AND sesi_id = ?', [$parentId, $sesiId]);
+        if (!$parent) {
+            flash('error', 'Rekening belanja induk tidak ditemukan.');
+            redirect('sesi/show?id=' . $sesiId);
+        }
+
+        $uraian = trim((string) input('uraian'));
+        if ($uraian === '') {
+            flash('error', 'Uraian rincian bon / kwitansi wajib diisi.');
+            redirect('sesi/show?id=' . $sesiId);
+        }
+
+        $noBukti  = trim((string) input('no_bukti')) ?: null;
+        $tglBukti = trim((string) input('tgl_bukti')) ?: null;
+        if ($tglBukti && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $tglBukti)) {
+            $tglBukti = null;
+        }
+
+        $biayaDikwitansi = parse_money(input('biaya_dikwitansi', 0));
+        $realisasi       = parse_money(input('realisasi', 0));
+        if ($realisasi == 0 && $biayaDikwitansi > 0) {
+            $realisasi = $biayaDikwitansi;
+        }
+
+        $potongPpn = !empty(input('potong_ppn')) ? 1 : 0;
+        $nomPpn    = parse_money(input('nominal_ppn', 0));
+        $potongPph = trim((string) input('potong_pph')) ?: null;
+        $nomPph    = parse_money(input('nominal_pph', 0));
+        $statusPajak = trim((string) input('status_pajak', 'TIDAK_TERUTANG'));
+        if (!in_array($statusPajak, ['TIDAK_TERUTANG', 'SUDAH_SETOR', 'BELUM_SETOR'])) {
+            $statusPajak = 'TIDAK_TERUTANG';
+        }
+        $ntpn = trim((string) input('ntpn')) ?: null;
+        $jenisPenerima = strtoupper(trim((string) input('jenis_penerima', 'PENERIMA')));
+        if (!in_array($jenisPenerima, ['TPK', 'PENERIMA'])) {
+            $jenisPenerima = 'PENERIMA';
+        }
+        $penerima   = trim((string) input('penerima')) ?: null;
+        $keterangan = trim((string) input('keterangan')) ?: null;
+
+        // Upload File Bukti Bon / Amprah jika ada
+        $fileLampiran = null;
+        if (!empty($_FILES['file_bukti']['name']) && !empty($_FILES['file_bukti']['tmp_name']) && $_FILES['file_bukti']['error'] === UPLOAD_ERR_OK) {
+            $f = $_FILES['file_bukti'];
+            $uploadDir = $GLOBALS['cfg']['upload_dir'] ?? (__DIR__ . '/../../uploads');
+            if (!is_dir($uploadDir)) @mkdir($uploadDir, 0775, true);
+            $ext = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
+            $allowedExts = ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
+            if (in_array($ext, $allowedExts)) {
+                $savedName = 'bon_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+                if (move_uploaded_file($f['tmp_name'], $uploadDir . '/' . $savedName)) {
+                    $fileLampiran = $savedName;
+                }
+            }
+        }
+
+        $nextUrutan = (int) DB::scalar('SELECT COALESCE(MAX(urutan),0)+1 FROM kka_rincian WHERE sesi_id = ?', [$sesiId]);
+
+        DB::insert('kka_rincian', [
+            'sesi_id'          => $sesiId,
+            'parent_id'        => $parentId,
+            'urutan'           => $nextUrutan,
+            'uraian'           => $uraian,
+            'no_bukti'         => $noBukti,
+            'tgl_bukti'        => $tglBukti,
+            'pagu_anggaran'    => 0,
+            'biaya_dikwitansi' => $biayaDikwitansi,
+            'realisasi'        => $realisasi,
+            'jenis_penerima'   => $jenisPenerima,
+            'penerima'         => $penerima,
+            'keterangan'       => $keterangan,
+            'potong_ppn'       => $potongPpn,
+            'nominal_ppn'      => $nomPpn,
+            'potong_pph'       => $potongPph,
+            'nominal_pph'      => $nomPph,
+            'status_pajak'     => $statusPajak,
+            'ntpn'             => $ntpn,
+            'file_lampiran'    => $fileLampiran,
+        ]);
+
+        $this->syncParentTotals($parentId);
+
+        flash('success', 'Rincian bukti bon / kwitansi berhasil ditambahkan.');
+        redirect('sesi/show?id=' . $sesiId);
+    }
+
+    /** Update Sub-Uraian Kwitansi / Bon SPJ */
+    public function updateSub(): void {
+        only_post(); csrf_check();
+        $id       = (int) input('id');
+        $parentId = (int) input('parent_id');
+        $sesiId   = (int) input('sesi_id');
+        $this->assertSesiCanEdit($sesiId);
+
+        $row = DB::one('SELECT * FROM kka_rincian WHERE id = ? AND sesi_id = ? AND parent_id = ?', [$id, $sesiId, $parentId]);
+        if (!$row) {
+            flash('error', 'Data rincian bon tidak ditemukan.');
+            redirect('sesi/show?id=' . $sesiId);
+        }
+
+        $uraian = trim((string) input('uraian'));
+        if ($uraian === '') {
+            flash('error', 'Uraian rincian bon / kwitansi wajib diisi.');
+            redirect('sesi/show?id=' . $sesiId);
+        }
+
+        $noBukti  = trim((string) input('no_bukti')) ?: null;
+        $tglBukti = trim((string) input('tgl_bukti')) ?: null;
+        if ($tglBukti && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $tglBukti)) {
+            $tglBukti = null;
+        }
+
+        $biayaDikwitansi = parse_money(input('biaya_dikwitansi', 0));
+        $realisasi       = parse_money(input('realisasi', 0));
+        if ($realisasi == 0 && $biayaDikwitansi > 0) {
+            $realisasi = $biayaDikwitansi;
+        }
+
+        $potongPpn = !empty(input('potong_ppn')) ? 1 : 0;
+        $nomPpn    = parse_money(input('nominal_ppn', 0));
+        $potongPph = trim((string) input('potong_pph')) ?: null;
+        $nomPph    = parse_money(input('nominal_pph', 0));
+        $statusPajak = trim((string) input('status_pajak', 'TIDAK_TERUTANG'));
+        if (!in_array($statusPajak, ['TIDAK_TERUTANG', 'SUDAH_SETOR', 'BELUM_SETOR'])) {
+            $statusPajak = 'TIDAK_TERUTANG';
+        }
+        $ntpn = trim((string) input('ntpn')) ?: null;
+        $jenisPenerima = strtoupper(trim((string) input('jenis_penerima', 'PENERIMA')));
+        if (!in_array($jenisPenerima, ['TPK', 'PENERIMA'])) {
+            $jenisPenerima = 'PENERIMA';
+        }
+        $penerima   = trim((string) input('penerima')) ?: null;
+        $keterangan = trim((string) input('keterangan')) ?: null;
+
+        $fileLampiran = $row['file_lampiran'];
+        if (!empty($_FILES['file_bukti']['name']) && !empty($_FILES['file_bukti']['tmp_name']) && $_FILES['file_bukti']['error'] === UPLOAD_ERR_OK) {
+            $f = $_FILES['file_bukti'];
+            $uploadDir = $GLOBALS['cfg']['upload_dir'] ?? (__DIR__ . '/../../uploads');
+            if (!is_dir($uploadDir)) @mkdir($uploadDir, 0775, true);
+            $ext = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
+            $allowedExts = ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
+            if (in_array($ext, $allowedExts)) {
+                $savedName = 'bon_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+                if (move_uploaded_file($f['tmp_name'], $uploadDir . '/' . $savedName)) {
+                    if ($fileLampiran && is_file($uploadDir . '/' . $fileLampiran)) {
+                        @unlink($uploadDir . '/' . $fileLampiran);
+                    }
+                    $fileLampiran = $savedName;
+                }
+            }
+        }
+
+        DB::update('kka_rincian', [
+            'uraian'           => $uraian,
+            'no_bukti'         => $noBukti,
+            'tgl_bukti'        => $tglBukti,
+            'biaya_dikwitansi' => $biayaDikwitansi,
+            'realisasi'        => $realisasi,
+            'jenis_penerima'   => $jenisPenerima,
+            'penerima'         => $penerima,
+            'keterangan'       => $keterangan,
+            'potong_ppn'       => $potongPpn,
+            'nominal_ppn'      => $nomPpn,
+            'potong_pph'       => $potongPph,
+            'nominal_pph'      => $nomPph,
+            'status_pajak'     => $statusPajak,
+            'ntpn'             => $ntpn,
+            'file_lampiran'    => $fileLampiran,
+        ], ['id' => $id]);
+
+        $this->syncParentTotals($parentId);
+
+        flash('success', 'Rincian bon / kwitansi berhasil diperbarui.');
         redirect('sesi/show?id=' . $sesiId);
     }
 
@@ -113,12 +315,87 @@ class RincianController {
         $id = (int) input('id');
         $sesiId = (int) input('sesi_id');
         $this->assertSesiCanEdit($sesiId);
-        // Pastikan rincian milik sesi yang sesuai (cegah delete arbitrary)
-        $row = DB::one('SELECT id FROM kka_rincian WHERE id = ? AND sesi_id = ?', [$id, $sesiId]);
+
+        $row = DB::one('SELECT * FROM kka_rincian WHERE id = ? AND sesi_id = ?', [$id, $sesiId]);
         if (!$row) { flash('error', 'Rincian tidak ditemukan.'); redirect('sesi/show?id=' . $sesiId); }
+
+        $uploadDir = $GLOBALS['cfg']['upload_dir'] ?? (__DIR__ . '/../../uploads');
+
+        if (!empty($row['parent_id'])) {
+            $parentId = (int) $row['parent_id'];
+            if (!empty($row['file_lampiran']) && is_file($uploadDir . '/' . $row['file_lampiran'])) {
+                @unlink($uploadDir . '/' . $row['file_lampiran']);
+            }
+            DB::delete('kka_rincian', ['id' => $id]);
+            $this->syncParentTotals($parentId);
+            flash('success', 'Rincian bon / kwitansi berhasil dihapus.');
+            redirect('sesi/show?id=' . $sesiId);
+        }
+
+        // Jika baris adalah induk, hapus file lampiran anak-anaknya terlebih dahulu
+        $children = DB::all('SELECT id, file_lampiran FROM kka_rincian WHERE parent_id = ?', [$id]);
+        foreach ($children as $ch) {
+            if (!empty($ch['file_lampiran']) && is_file($uploadDir . '/' . $ch['file_lampiran'])) {
+                @unlink($uploadDir . '/' . $ch['file_lampiran']);
+            }
+        }
+        DB::delete('kka_rincian', ['parent_id' => $id]);
         DB::delete('kka_rincian', ['id' => $id]);
-        flash('success', 'Rincian dihapus.');
+        flash('success', 'Rincian belanja beserta seluruh sub-kwitansi berhasil dihapus.');
         redirect('sesi/show?id=' . $sesiId);
+    }
+
+    /** Unduh / Tampilkan Lampiran Bon Bukti SPJ */
+    public function downloadLampiran(): void {
+        $id = (int) input('id');
+        $row = DB::one('SELECT r.*, s.created_by
+                        FROM kka_rincian r
+                        JOIN kka_sesi s ON s.id = r.sesi_id
+                        WHERE r.id = ?', [$id]);
+        if (!$row || empty($row['file_lampiran'])) {
+            http_response_code(404);
+            exit('File bukti lampiran tidak ditemukan.');
+        }
+        if (!sesi_is_owned($this->auth, $row)) {
+            http_response_code(403);
+            exit('Anda tidak memiliki akses ke berkas ini.');
+        }
+        $uploadDir = $GLOBALS['cfg']['upload_dir'] ?? (__DIR__ . '/../../uploads');
+        $path = $uploadDir . '/' . $row['file_lampiran'];
+        if (!is_file($path)) {
+            http_response_code(404);
+            exit('File fisik tidak ditemukan di server.');
+        }
+        if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $mime = match($ext) {
+            'pdf' => 'application/pdf',
+            'png' => 'image/png',
+            'webp' => 'image/webp',
+            'gif' => 'image/gif',
+            default => 'image/jpeg',
+        };
+        header('Content-Type: ' . $mime);
+        header('Content-Disposition: inline; filename="' . addslashes(basename($row['file_lampiran'])) . '"');
+        header('Content-Length: ' . filesize($path));
+        readfile($path);
+        exit;
+    }
+
+    /** Sinkronkan Biaya Dikwitansi dan Realisasi Parent dari SUM Children */
+    private function syncParentTotals(int $parentId): void {
+        $stat = DB::one('
+            SELECT COUNT(*) AS cnt,
+                   COALESCE(SUM(biaya_dikwitansi), 0) AS tot_kwi,
+                   COALESCE(SUM(realisasi), 0) AS tot_real
+            FROM kka_rincian
+            WHERE parent_id = ?', [$parentId]);
+        if ($stat && (int)$stat['cnt'] > 0) {
+            DB::update('kka_rincian', [
+                'biaya_dikwitansi' => (float)$stat['tot_kwi'],
+                'realisasi'        => (float)$stat['tot_real']
+            ], ['id' => $parentId]);
+        }
     }
 
     /** Unduh template CSV/Excel baku untuk pengisian audit offline di lapangan */

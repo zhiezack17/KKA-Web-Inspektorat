@@ -310,7 +310,21 @@ class SesiController {
         $sesi = $this->loadSesi($id);
         guard_sesi($this->auth, $sesi);
 
-        $rincian = DB::all('SELECT * FROM kka_rincian WHERE sesi_id = ? ORDER BY urutan, id', [$id]);
+        $rawRincian = DB::all('SELECT * FROM kka_rincian WHERE sesi_id = ? ORDER BY urutan ASC, id ASC', [$id]);
+        $rincian = [];
+        $childrenMap = [];
+        foreach ($rawRincian as $r) {
+            if (!empty($r['parent_id'])) {
+                $childrenMap[(int)$r['parent_id']][] = $r;
+            } else {
+                $rincian[] = $r;
+            }
+        }
+        foreach ($rincian as &$p) {
+            $p['children'] = $childrenMap[(int)$p['id']] ?? [];
+        }
+        unset($p);
+
         $lampiran = DB::all('SELECT * FROM kka_lampiran WHERE sesi_id = ? ORDER BY created_at DESC', [$id]);
         $sharedWith = DB::all('SELECT u.nama, u.jabatan FROM kka_sesi_share sh
                                JOIN kka_users u ON u.id = sh.user_id
