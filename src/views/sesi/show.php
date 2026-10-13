@@ -1758,8 +1758,6 @@
       if (elPph) elPph.value = lastAddTax.potongPph;
       var elNomPph = document.getElementById('add-nominal-pph');
       if (elNomPph) elNomPph.value = lastAddTax.nomPph ? fmt(lastAddTax.nomPph) : '0';
-      var elKet = document.getElementById('add-keterangan');
-      if (elKet && !elKet.value) elKet.value = lastAddTax.keterangan;
     });
   }
 
@@ -1802,8 +1800,6 @@
       if (elPph) elPph.value = lastErTax.potongPph;
       var elNomPph = document.getElementById('er-nom-pph');
       if (elNomPph) elNomPph.value = lastErTax.nomPph ? fmt(lastErTax.nomPph) : '0';
-      var elKet = document.getElementById('er-keterangan');
-      if (elKet && !elKet.value) elKet.value = lastErTax.keterangan;
     });
   }
 
@@ -1904,8 +1900,6 @@
       if (elPph) elPph.value = lastAsrTax.potongPph;
       var elNomPph = document.getElementById('asr-nom-pph');
       if (elNomPph) elNomPph.value = lastAsrTax.nomPph ? fmt(lastAsrTax.nomPph) : '0';
-      var elKet = document.getElementById('asr-keterangan');
-      if (elKet && !elKet.value) elKet.value = lastAsrTax.keterangan;
     });
   }
 
@@ -1993,8 +1987,6 @@
       if (elPph) elPph.value = lastEsrTax.potongPph;
       var elNomPph = document.getElementById('esr-nom-pph');
       if (elNomPph) elNomPph.value = lastEsrTax.nomPph ? fmt(lastEsrTax.nomPph) : '0';
-      var elKet = document.getElementById('esr-keterangan');
-      if (elKet && !elKet.value) elKet.value = lastEsrTax.keterangan;
     });
   }
 

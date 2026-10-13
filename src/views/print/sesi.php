@@ -247,24 +247,7 @@
   </div>
   <?php endif; ?>
 
-  <table style="width:100%;margin-top:14px;border-collapse:collapse;font-size:9.5pt">
-    <tr>
-      <td style="width:50%;text-align:center;vertical-align:top">
-        <div>Disusun oleh,</div>
-        <div style="font-weight:bold;font-size:8.5pt">Tim Pemeriksa / Auditor</div>
-        <div style="height:44px"></div>
-        <div style="font-weight:bold;text-decoration:underline"><?= e($pureBuat ?: 'Auditor') ?></div>
-        <div style="font-size:8pt">Tgl: <?= e($tgl_buat) ?></div>
-      </td>
-      <td style="width:50%;text-align:center;vertical-align:top">
-        <div>Direview oleh,</div>
-        <div style="font-weight:bold;font-size:8.5pt">Ketua Tim</div>
-        <div style="height:44px"></div>
-        <div style="font-weight:bold;text-decoration:underline"><?= e($pureReview ?: 'Ketua Tim') ?></div>
-        <div style="font-size:8pt">Tgl: <?= e($tgl_review) ?></div>
-      </td>
-    </tr>
-  </table>
+
 
   <div class="page-footer">
     <div>Portal E-LHP · Inspektorat Kab. Rokan Hilir</div>
