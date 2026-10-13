@@ -32,14 +32,20 @@ class PrintController {
         }
         unset($p);
 
+        $rekeningId = (int) input('rekening_id', 0);
+        if ($rekeningId > 0) {
+            $rincian = array_values(array_filter($rincian, fn($r) => (int)$r['id'] === $rekeningId));
+        }
+
         $totals = [
-            'pagu'      => (float) $sesi['pagu_anggaran'],
-            'pagu_rinci'=> array_sum(array_column($rincian, 'pagu_anggaran')),
-            'dikwitansi'=> array_sum(array_column($rincian, 'biaya_dikwitansi')),
-            'realisasi' => array_sum(array_column($rincian, 'realisasi')),
+            'pagu'       => (float) $sesi['pagu_anggaran'],
+            'pagu_rinci' => array_sum(array_column($rincian, 'pagu_anggaran')),
+            'dikwitansi' => array_sum(array_column($rincian, 'biaya_dikwitansi')),
+            'realisasi'  => array_sum(array_column($rincian, 'realisasi')),
         ];
         $totals['selisih'] = $totals['realisasi'] - $totals['dikwitansi'];
-        view('print/sesi', compact('sesi','rincian','totals'));
+
+        view('print/sesi', compact('sesi','rincian','totals','rekeningId'));
     }
 
     public function reviu(): void {

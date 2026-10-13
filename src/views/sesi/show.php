@@ -513,23 +513,18 @@
                 <td>
                   <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
                     <div>
-                      <strong><?= e($r['uraian']) ?></strong>
+                      <strong style="color:var(--slate-800);font-size:13.5px"><?= e($r['uraian']) ?></strong>
                       <?php if (!empty($r['children'])): ?>
-                        <span class="badge" style="background:#e0f2fe;color:#0369a1;font-size:10.5px;font-weight:700;margin-left:6px;padding:2px 7px;border-radius:4px">
-                          <i class="fa-solid fa-receipt"></i> <?= count($r['children']) ?> Bukti SPJ / Kwitansi
+                        <span class="badge" style="background:#e0f2fe;color:#0369a1;font-size:11px;font-weight:700;margin-left:6px;padding:3px 8px;border-radius:4px">
+                          <i class="fa-solid fa-receipt"></i> <?= count($r['children']) ?> Rincian SPJ
                         </span>
                       <?php endif; ?>
                     </div>
-                    <?php if (!in_array($statusKka, ['REVIEW_KETUA', 'REVIEW_DALNIS', 'SELESAI_FINAL'])): ?>
-                      <button type="button" class="btn btn-outline btn-sm js-add-sub-rincian" style="border-color:#38bdf8;color:#0284c7;background:#f0f9ff;padding:3px 8px;font-size:11px;font-weight:700;border-radius:5px" data-parent-id="<?= (int)$r['id'] ?>" data-parent-uraian="<?= e($r['uraian']) ?>" title="Tambah rincian kwitansi / bon / amprah di bawah rekening ini">
-                        <i class="fa-solid fa-plus-circle"></i> + Bon / Kwitansi
-                      </button>
-                    <?php endif; ?>
                   </div>
                 </td>
-                <td class="num"><?= rupiah($r['pagu_anggaran']) ?></td>
-                <td class="num"><?= rupiah($r['realisasi']) ?></td>
-                <td class="num"><?= rupiah($r['biaya_dikwitansi']) ?></td>
+                <td class="num" style="font-weight:600"><?= rupiah($r['pagu_anggaran']) ?></td>
+                <td class="num" style="font-weight:600"><?= rupiah($r['realisasi']) ?></td>
+                <td class="num" style="font-weight:600"><?= rupiah($r['biaya_dikwitansi']) ?></td>
                 <td class="num" style="color:<?= $sel<0?'var(--red-600)':'var(--emerald-700)' ?>;font-weight:700"><?= rupiah($sel) ?></td>
                 <td style="text-align:center">
                   <?= $pajakHtml ?>
@@ -545,105 +540,17 @@
                 </td>
                 <td><?= e($r['keterangan'] ?: '-') ?></td>
                 <td style="white-space:nowrap;text-align:center">
-                  <a href="<?= url('temuan/create?sesi_id=' . $sesi['id'] . '&rincian_id=' . $r['id']) ?>" class="btn btn-ghost btn-sm" style="color:#d97706;padding:5px 7px" title="Jadikan Konsep Temuan (KTP)"><i class="fa-solid fa-file-circle-exclamation"></i></a>
-                  <button type="button" class="btn btn-ghost btn-sm js-edit-rincian" style="color:var(--emerald-700);padding:5px 7px" title="Edit Rekening Induk" data-testid="edit-rincian-<?= $r['id'] ?>" data-has-children="<?= !empty($r['children']) ? '1' : '0' ?>"><i class="fa-solid fa-pen-to-square"></i></button>
+                  <button type="button" class="btn btn-sm js-buka-sub-rincian" data-parent-id="<?= (int)$r['id'] ?>" style="background:#0284c7;color:#fff;border:none;font-weight:700;font-size:11.5px;padding:5px 10px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:5px" title="Buka Rincian & Pemeriksaan Bukti SPJ">
+                    <i class="fa-solid fa-list-check"></i> Rinci &amp; Periksa SPJ
+                  </button>
+                  <a href="<?= url('temuan/create?sesi_id=' . $sesi['id'] . '&rincian_id=' . $r['id']) ?>" class="btn btn-ghost btn-sm" style="color:#d97706;padding:5px 6px" title="Jadikan Konsep Temuan (KTP)"><i class="fa-solid fa-file-circle-exclamation"></i></a>
+                  <button type="button" class="btn btn-ghost btn-sm js-edit-rincian" style="color:var(--emerald-700);padding:5px 6px" title="Edit Rekening Induk" data-testid="edit-rincian-<?= $r['id'] ?>" data-has-children="<?= !empty($r['children']) ? '1' : '0' ?>"><i class="fa-solid fa-pen-to-square"></i></button>
                   <form method="post" action="<?= url('rincian/delete') ?>" onsubmit="return confirm('Hapus rekening belanja ini beserta seluruh bukti bonnya?')" style="display:inline">
                     <?= csrf_field() ?><input type="hidden" name="id" value="<?= $r['id'] ?>"><input type="hidden" name="sesi_id" value="<?= $sesi['id'] ?>">
-                    <button class="btn btn-ghost btn-sm" style="color:var(--red-600);padding:5px 7px" title="Hapus" data-testid="del-rincian-<?= $r['id'] ?>"><i class="fa-solid fa-trash"></i></button>
+                    <button class="btn btn-ghost btn-sm" style="color:var(--red-600);padding:5px 6px" title="Hapus" data-testid="del-rincian-<?= $r['id'] ?>"><i class="fa-solid fa-trash"></i></button>
                   </form>
                 </td>
               </tr>
-              <?php if (!empty($r['children'])): ?>
-                <?php foreach ($r['children'] as $cIdx => $c): 
-                  $cSel = (float)$c['realisasi'] - (float)$c['biaya_dikwitansi'];
-                  $cStPajak = $c['status_pajak'] ?? 'TIDAK_TERUTANG';
-                  $cTotNomPajak = (float)($c['nominal_ppn'] ?? 0) + (float)($c['nominal_pph'] ?? 0);
-                  $cPajakHtml = '<span style="color:#94a3b8;font-size:11px">-</span>';
-                  if ($cStPajak === 'BELUM_SETOR') {
-                      $cPajakHtml = '<span class="badge" style="background:#fee2e2;color:#dc2626;font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:4px" title="Kewajiban pajak belum disetor">' .
-                                    '<i class="fa-solid fa-triangle-exclamation"></i> Belum Setor ' . ($cTotNomPajak > 0 ? rupiah($cTotNomPajak) : '') . '</span>';
-                  } elseif ($cStPajak === 'SUDAH_SETOR') {
-                      $cPajakHtml = '<span class="badge" style="background:#dcfce7;color:#15803d;font-size:10.5px;font-weight:600;padding:2px 6px;border-radius:4px" title="NTPN: ' . e((string)($c['ntpn'] ?? '-')) . '">' .
-                                    '<i class="fa-solid fa-circle-check"></i> Setor (' . ($c['potong_pph'] ?: 'PPN') . ')</span>';
-                  }
-                ?>
-                  <tr style="background:#f8fafc;font-size:12.5px"
-                      data-sub-rincian-id="<?= (int)$c['id'] ?>"
-                      data-parent-id="<?= (int)$r['id'] ?>"
-                      data-parent-uraian="<?= e($r['uraian']) ?>"
-                      data-uraian="<?= e($c['uraian']) ?>"
-                      data-no-bukti="<?= e((string)($c['no_bukti'] ?? '')) ?>"
-                      data-tgl-bukti="<?= e((string)($c['tgl_bukti'] ?? '')) ?>"
-                      data-kwi="<?= (float)$c['biaya_dikwitansi'] ?>"
-                      data-real="<?= (float)$c['realisasi'] ?>"
-                      data-penerima="<?= e((string)$c['penerima']) ?>"
-                      data-jenis-penerima="<?= e((string)($c['jenis_penerima'] ?? 'PENERIMA')) ?>"
-                      data-keterangan="<?= e((string)$c['keterangan']) ?>"
-                      data-potong-ppn="<?= (int)($c['potong_ppn'] ?? 0) ?>"
-                      data-nominal-ppn="<?= (float)($c['nominal_ppn'] ?? 0) ?>"
-                      data-potong-pph="<?= e((string)($c['potong_pph'] ?? '')) ?>"
-                      data-nominal-pph="<?= (float)($c['nominal_pph'] ?? 0) ?>"
-                      data-status-pajak="<?= e((string)($c['status_pajak'] ?? 'TIDAK_TERUTANG')) ?>"
-                      data-ntpn="<?= e((string)($c['ntpn'] ?? '')) ?>"
-                      data-lampiran="<?= e((string)($c['file_lampiran'] ?? '')) ?>">
-                    <td style="text-align:right;color:#94a3b8;font-size:11px">
-                      <i class="fa-solid fa-angle-right" style="color:#0284c7"></i>
-                    </td>
-                    <td style="padding-left:18px">
-                      <div style="display:flex;align-items:flex-start;gap:6px">
-                        <span style="color:#0284c7;font-weight:700;font-size:13px;line-height:1">↳</span>
-                        <div>
-                          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-                            <?php if (!empty($c['no_bukti'])): ?>
-                              <span class="badge" style="background:#e0f2fe;color:#0369a1;font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:4px">
-                                <i class="fa-solid fa-receipt"></i> <?= e($c['no_bukti']) ?>
-                              </span>
-                            <?php endif; ?>
-                            <?php if (!empty($c['tgl_bukti'])): ?>
-                              <span style="font-size:11px;color:#64748b"><i class="fa-regular fa-calendar"></i> <?= tgl_id($c['tgl_bukti']) ?></span>
-                            <?php endif; ?>
-                          </div>
-                          <div style="color:var(--slate-800);margin-top:2px;font-weight:500"><?= e($c['uraian']) ?></div>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="num" style="color:#94a3b8;font-size:11px">-</td>
-                    <td class="num" style="color:var(--slate-700)"><?= rupiah($c['realisasi']) ?></td>
-                    <td class="num" style="color:var(--slate-700);font-weight:600"><?= rupiah($c['biaya_dikwitansi']) ?></td>
-                    <td class="num" style="color:<?= $cSel<0?'var(--red-600)':'var(--emerald-700)' ?>;font-weight:600"><?= rupiah($cSel) ?></td>
-                    <td style="text-align:center">
-                      <?= $cPajakHtml ?>
-                      <?php if ($cTotNomPajak > 0 && $cStPajak === 'SUDAH_SETOR'): ?>
-                        <div style="font-size:10.5px;color:#15803d;margin-top:2px;font-weight:600"><?= rupiah($cTotNomPajak) ?></div>
-                      <?php endif; ?>
-                    </td>
-                    <td>
-                      <?php if (!empty($c['jenis_penerima']) && strtoupper($c['jenis_penerima']) === 'TPK'): ?>
-                        <span class="badge" style="background:#e0e7ff;color:#3730a3;font-size:10px;padding:2px 5px;border-radius:4px;font-weight:700;margin-right:3px">TPK</span>
-                      <?php endif; ?>
-                      <?= e($c['penerima'] ?: '-') ?>
-                    </td>
-                    <td>
-                      <div><?= e($c['keterangan'] ?: '-') ?></div>
-                      <?php if (!empty($c['file_lampiran'])): ?>
-                        <div style="margin-top:3px">
-                          <a href="<?= url('rincian/lampiran?id=' . $c['id']) ?>" target="_blank" class="badge" style="background:#fef3c7;color:#92400e;text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:2px 6px;border-radius:4px">
-                            <i class="fa-solid fa-paperclip"></i> Bukti Kwitansi / Bon
-                          </a>
-                        </div>
-                      <?php endif; ?>
-                    </td>
-                    <td style="white-space:nowrap;text-align:center">
-                      <a href="<?= url('temuan/create?sesi_id=' . $sesi['id'] . '&rincian_id=' . $c['id']) ?>" class="btn btn-ghost btn-sm" style="color:#d97706;padding:4px 6px" title="Jadikan Konsep Temuan (KTP)"><i class="fa-solid fa-file-circle-exclamation"></i></a>
-                      <button type="button" class="btn btn-ghost btn-sm js-edit-sub-rincian" style="color:var(--emerald-700);padding:4px 6px" title="Edit Bukti Kwitansi / Bon"><i class="fa-solid fa-pen-to-square"></i></button>
-                      <form method="post" action="<?= url('rincian/delete') ?>" onsubmit="return confirm('Hapus bukti kwitansi / bon ini?')" style="display:inline">
-                        <?= csrf_field() ?><input type="hidden" name="id" value="<?= $c['id'] ?>"><input type="hidden" name="sesi_id" value="<?= $sesi['id'] ?>">
-                        <button class="btn btn-ghost btn-sm" style="color:var(--red-600);padding:4px 6px" title="Hapus"><i class="fa-solid fa-trash"></i></button>
-                      </form>
-                    </td>
-                  </tr>
-                <?php endforeach; ?>
-              <?php endif; ?>
             <?php endforeach; endif; ?>
           </tbody>
           <?php if (!empty($rincian)): $selTot = (float)$totals['realisasi']-(float)$totals['dikwitansi']; ?>
@@ -1207,6 +1114,90 @@
   </div>
 </div>
 
+<!-- Modal Kelola Sub-Rincian & Pemeriksaan SPJ Rekening -->
+<div id="modalKelolaSubRincian" class="kka-modal" role="dialog" aria-modal="true" aria-labelledby="msrModalTitle" hidden>
+  <div class="kka-modal__backdrop" data-close-modal></div>
+  <div class="kka-modal__box" style="max-width:1100px;width:96vw;max-height:94vh">
+    <div class="kka-modal__head" style="background:linear-gradient(90deg,#0f172a,#1e293b);color:#fff;padding:14px 20px">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#38bdf8;text-transform:uppercase;letter-spacing:0.8px;display:flex;align-items:center;gap:6px">
+          <i class="fa-solid fa-list-check"></i> Pemeriksaan Bukti SPJ &amp; Penerima Per Rekening
+        </div>
+        <h3 id="msrModalTitle" style="color:#fff;margin:3px 0 0;font-size:16px;display:flex;align-items:center;gap:8px">
+          <span id="msrParentUraian">Rekening Belanja</span>
+        </h3>
+      </div>
+      <button type="button" class="kka-modal__x" data-close-modal aria-label="Tutup" style="color:#94a3b8"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- Sub-header bar: Ringkasan Nilai & Action Buttons -->
+    <div style="background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;align-items:center">
+        <div>
+          <span style="color:#64748b">Pagu Rekening:</span>
+          <b id="msrPagu" style="color:#0f172a;margin-left:4px">Rp 0</b>
+        </div>
+        <div style="border-left:1px solid #cbd5e1;padding-left:16px">
+          <span style="color:#64748b">Realisasi:</span>
+          <b id="msrReal" style="color:#0f172a;margin-left:4px">Rp 0</b>
+        </div>
+        <div style="border-left:1px solid #cbd5e1;padding-left:16px">
+          <span style="color:#64748b">Total Kwitansi:</span>
+          <b id="msrKwi" style="color:#0284c7;margin-left:4px">Rp 0</b>
+        </div>
+        <div style="border-left:1px solid #cbd5e1;padding-left:16px">
+          <span style="color:#64748b">Selisih:</span>
+          <b id="msrSelisih" style="margin-left:4px">Rp 0</b>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <a id="msrBtnCetakLembar" href="#" target="_blank" class="btn btn-sm" style="background:#475569;color:#fff;text-decoration:none;font-weight:600;font-size:12px;padding:6px 12px;border-radius:6px;display:inline-flex;align-items:center;gap:5px" title="Cetak 1 Lembar KKA Khusus Rekening Ini">
+          <i class="fa-solid fa-print"></i> Cetak Lembar Rekening Ini
+        </a>
+        <?php if (!in_array($statusKka, ['REVIEW_KETUA', 'REVIEW_DALNIS', 'SELESAI_FINAL'])): ?>
+        <button type="button" id="msrBtnTambahUraian" class="btn btn-primary btn-sm" style="background:#0284c7;border-color:#0284c7;font-weight:600;font-size:12px;padding:6px 14px;border-radius:6px;display:inline-flex;align-items:center;gap:6px">
+          <i class="fa-solid fa-plus-circle"></i> + Tambah Uraian Bukti / Penerima
+        </button>
+        <?php endif; ?>
+      </div>
+    </div>
+
+    <!-- Body: Tabel Rincian Bukti & Kwitansi -->
+    <div class="kka-modal__body" style="padding:0;overflow-y:auto;max-height:calc(94vh - 180px)">
+      <table class="table" style="margin:0;font-size:12.5px;width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="background:#f1f5f9;color:#334155;border-bottom:2px solid #cbd5e1">
+            <th style="width:34px;text-align:center;padding:10px 8px">No</th>
+            <th style="min-width:120px;padding:10px 8px">No &amp; Tgl Bukti</th>
+            <th style="min-width:180px;padding:10px 8px">Uraian / Rincian SPJ</th>
+            <th style="min-width:130px;padding:10px 8px">TPK / Penerima</th>
+            <th style="text-align:right;width:105px;padding:10px 8px">Anggaran</th>
+            <th style="text-align:right;width:105px;padding:10px 8px">Realisasi</th>
+            <th style="text-align:right;width:105px;padding:10px 8px">Kwitansi</th>
+            <th style="text-align:right;width:95px;padding:10px 8px">Selisih</th>
+            <th style="text-align:center;width:115px;padding:10px 8px">Uji Pajak</th>
+            <th style="text-align:center;width:75px;padding:10px 8px">Bukti File</th>
+            <th style="width:90px;text-align:center;padding:10px 8px">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="msrTbody">
+          <!-- Diisi via JavaScript renderSubRincianTable -->
+        </tbody>
+        <tfoot id="msrTfoot" style="background:#f8fafc;font-weight:700;border-top:2px solid #cbd5e1">
+          <!-- Total agregat baris anak -->
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="kka-modal__foot" style="background:#f8fafc;justify-content:space-between;align-items:center;padding:12px 20px">
+      <div style="font-size:11.5px;color:#64748b">
+        <i class="fa-solid fa-circle-info" style="color:#0284c7"></i> Rincian pengeluaran per orang / per bon otomatis diakumulasikan ke rekening belanja induk dan lembar cetak KKA.
+      </div>
+      <button type="button" class="btn btn-ghost" data-close-modal>Tutup</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Tambah Sub-Rincian Kwitansi / Bon SPJ -->
 <div id="modalAddSubRincian" class="kka-modal" role="dialog" aria-modal="true" aria-labelledby="modalAddSubTitle" hidden>
   <div class="kka-modal__backdrop" data-close-modal></div>
@@ -1246,15 +1237,19 @@
           <input type="text" name="uraian" id="asr-uraian" required class="input" placeholder="Cth: Honor Pengawas Lapangan (1 Org x Rp 1.100.000) atau Semen 150 Sak">
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
           <div class="field">
-            <label>Biaya di Kwitansi / SPJ (Rp) <span class="req">*</span></label>
-            <input type="text" name="biaya_dikwitansi" id="asr-kwi" class="input" data-money placeholder="0" style="border-color:#0284c7;background:#f0f9ff;font-weight:700" required>
+            <label>Anggaran / Pagu (Rp)</label>
+            <input type="text" name="pagu_anggaran" id="asr-pagu" class="input" data-money placeholder="0">
           </div>
           <div class="field">
             <label>Realisasi Fisik (Rp)</label>
             <input type="text" name="realisasi" id="asr-real" class="input" data-money placeholder="0">
-            <small style="color:var(--slate-500);font-size:11px">Kosongkan jika sama dengan biaya kwitansi.</small>
+            <small style="color:var(--slate-500);font-size:11px">Kosongkan jika sama dg kwitansi.</small>
+          </div>
+          <div class="field">
+            <label>Biaya di Kwitansi / SPJ (Rp) <span class="req">*</span></label>
+            <input type="text" name="biaya_dikwitansi" id="asr-kwi" class="input" data-money placeholder="0" style="border-color:#0284c7;background:#f0f9ff;font-weight:700" required>
           </div>
         </div>
 
@@ -1392,14 +1387,18 @@
           <input type="text" name="uraian" id="esr-uraian" required class="input" placeholder="Cth: Honor Pengawas Lapangan (1 Org x Rp 1.100.000) atau Semen 150 Sak">
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
           <div class="field">
-            <label>Biaya di Kwitansi / SPJ (Rp) <span class="req">*</span></label>
-            <input type="text" name="biaya_dikwitansi" id="esr-kwi" class="input" data-money placeholder="0" style="border-color:#0284c7;background:#f0f9ff;font-weight:700" required>
+            <label>Anggaran / Pagu (Rp)</label>
+            <input type="text" name="pagu_anggaran" id="esr-pagu" class="input" data-money placeholder="0">
           </div>
           <div class="field">
             <label>Realisasi Fisik (Rp)</label>
             <input type="text" name="realisasi" id="esr-real" class="input" data-money placeholder="0">
+          </div>
+          <div class="field">
+            <label>Biaya di Kwitansi / SPJ (Rp) <span class="req">*</span></label>
+            <input type="text" name="biaya_dikwitansi" id="esr-kwi" class="input" data-money placeholder="0" style="border-color:#0284c7;background:#f0f9ff;font-weight:700" required>
           </div>
         </div>
 
@@ -1841,29 +1840,24 @@
   // SUB-RINCIAN: ADD & EDIT KWITANSI / BON SPJ HANDLERS
   // ========================================================
 
-  // 1. Add Sub-Rincian (Buka Modal Tambah Bon)
-  document.querySelectorAll('.js-add-sub-rincian').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var parentId = btn.dataset.parentId || '';
-      var parentUraian = btn.dataset.parentUraian || '';
-      
-      var form = document.getElementById('formAddSubRincian');
-      if (form) form.reset();
+  // 1. Add Sub-Rincian Helper
+  function openAddSubModal(parentId, parentUraian) {
+    var form = document.getElementById('formAddSubRincian');
+    if (form) form.reset();
 
-      document.getElementById('asr-parent-id').value = parentId;
-      var lbl = document.getElementById('addSubParentLabel');
-      if (lbl) lbl.textContent = 'Rekening Belanja Induk: ' + parentUraian;
+    document.getElementById('asr-parent-id').value = parentId;
+    var lbl = document.getElementById('addSubParentLabel');
+    if (lbl) lbl.textContent = 'Rekening Belanja Induk: ' + parentUraian;
 
-      var banner = document.getElementById('asrSmartTaxBanner');
-      if (banner) banner.style.display = 'none';
+    var banner = document.getElementById('asrSmartTaxBanner');
+    if (banner) banner.style.display = 'none';
 
-      showModal('modalAddSubRincian');
-      setTimeout(function(){
-        var inp = document.getElementById('asr-no-bukti');
-        if (inp) inp.focus();
-      }, 50);
-    });
-  });
+    showModal('modalAddSubRincian');
+    setTimeout(function(){
+      var inp = document.getElementById('asr-no-bukti');
+      if (inp) inp.focus();
+    }, 50);
+  }
 
   // Smart Tax Handler untuk Add Sub-Rincian
   var asrUraian = document.getElementById('asr-uraian');
@@ -1909,58 +1903,50 @@
     });
   }
 
-  // 2. Edit Sub-Rincian (Buka Modal Edit Bon)
-  document.querySelectorAll('.js-edit-sub-rincian').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var tr = btn.closest('tr');
-      if (!tr) return;
+  // 2. Edit Sub-Rincian Helper
+  function openEditSubModal(ch, parentUraian) {
+    document.getElementById('esr-id').value         = ch.id || '';
+    document.getElementById('esr-parent-id').value  = ch.parent_id || '';
+    var lbl = document.getElementById('esrParentLabel');
+    if (lbl) lbl.textContent = 'Rekening Belanja Induk: ' + parentUraian;
 
-      document.getElementById('esr-id').value         = tr.dataset.subRincianId || '';
-      document.getElementById('esr-parent-id').value  = tr.dataset.parentId || '';
-      var parentUraian = tr.dataset.parentUraian || '';
-      var lbl = document.getElementById('esrParentLabel');
-      if (lbl) lbl.textContent = 'Rekening Belanja Induk: ' + parentUraian;
+    document.getElementById('esr-no-bukti').value   = ch.no_bukti || '';
+    document.getElementById('esr-tgl-bukti').value  = ch.tgl_bukti || '';
+    document.getElementById('esr-uraian').value     = ch.uraian || '';
+    var elPagu = document.getElementById('esr-pagu');
+    if (elPagu) elPagu.value = fmt(ch.pagu_anggaran);
+    document.getElementById('esr-kwi').value        = fmt(ch.biaya_dikwitansi);
+    document.getElementById('esr-real').value       = fmt(ch.realisasi);
+    document.getElementById('esr-penerima').value   = ch.penerima || '';
+    var elJp = document.getElementById('esr-jenis-penerima');
+    if (elJp) elJp.value = ch.jenis_penerima || 'PENERIMA';
+    document.getElementById('esr-keterangan').value = ch.keterangan || '';
 
-      document.getElementById('esr-no-bukti').value   = tr.dataset.noBukti || '';
-      document.getElementById('esr-tgl-bukti').value  = tr.dataset.tglBukti || '';
-      document.getElementById('esr-uraian').value     = tr.dataset.uraian || '';
-      document.getElementById('esr-kwi').value        = fmt(tr.dataset.kwi);
-      document.getElementById('esr-real').value       = fmt(tr.dataset.real);
-      document.getElementById('esr-penerima').value   = tr.dataset.penerima || '';
-      var elJp = document.getElementById('esr-jenis-penerima');
-      if (elJp) elJp.value = tr.dataset.jenisPenerima || 'PENERIMA';
-      document.getElementById('esr-keterangan').value = tr.dataset.keterangan || '';
+    var elStatusPajak = document.getElementById('esr-status-pajak');
+    if (elStatusPajak) elStatusPajak.value = ch.status_pajak || 'TIDAK_TERUTANG';
+    var elNtpn = document.getElementById('esr-ntpn');
+    if (elNtpn) elNtpn.value = ch.ntpn || '';
+    var elPotongPpn = document.getElementById('esr-potong-ppn');
+    if (elPotongPpn) elPotongPpn.checked = (String(ch.potong_ppn) === '1');
+    var elNomPpn = document.getElementById('esr-nom-ppn');
+    if (elNomPpn) elNomPpn.value = fmt(ch.nominal_ppn);
+    var elPotongPph = document.getElementById('esr-potong-pph');
+    if (elPotongPph) elPotongPph.value = ch.potong_pph || '';
+    var elNomPph = document.getElementById('esr-nom-pph');
+    if (elNomPph) elNomPph.value = fmt(ch.nominal_pph);
 
-      var elStatusPajak = document.getElementById('esr-status-pajak');
-      if (elStatusPajak) elStatusPajak.value = tr.dataset.statusPajak || 'TIDAK_TERUTANG';
-      var elNtpn = document.getElementById('esr-ntpn');
-      if (elNtpn) elNtpn.value = tr.dataset.ntpn || '';
-      var elPotongPpn = document.getElementById('esr-potong-ppn');
-      if (elPotongPpn) elPotongPpn.checked = (tr.dataset.potongPpn === '1');
-      var elNomPpn = document.getElementById('esr-nom-ppn');
-      if (elNomPpn) elNomPpn.value = fmt(tr.dataset.nominalPpn);
-      var elPotongPph = document.getElementById('esr-potong-pph');
-      if (elPotongPph) elPotongPph.value = tr.dataset.potongPph || '';
-      var elNomPph = document.getElementById('esr-nom-pph');
-      if (elNomPph) elNomPph.value = fmt(tr.dataset.nominalPph);
+    var boxFile = document.getElementById('esrCurrentFileBox');
+    if (boxFile) {
+      boxFile.style.display = ch.file_lampiran ? 'block' : 'none';
+    }
 
-      var boxFile = document.getElementById('esrCurrentFileBox');
-      if (boxFile) {
-        if (tr.dataset.lampiran) {
-          boxFile.style.display = 'block';
-        } else {
-          boxFile.style.display = 'none';
-        }
-      }
-
-      checkEsrTax();
-      showModal('modalEditSubRincian');
-      setTimeout(function(){
-        var inp = document.getElementById('esr-uraian');
-        if (inp) inp.focus();
-      }, 50);
-    });
-  });
+    checkEsrTax();
+    showModal('modalEditSubRincian');
+    setTimeout(function(){
+      var inp = document.getElementById('esr-uraian');
+      if (inp) inp.focus();
+    }, 50);
+  }
 
   // Smart Tax Handler untuk Edit Sub-Rincian
   var esrUraian = document.getElementById('esr-uraian');
@@ -2004,6 +1990,209 @@
       var elKet = document.getElementById('esr-keterangan');
       if (elKet && !elKet.value) elKet.value = lastEsrTax.keterangan;
     });
+  }
+
+  // ========================================================
+  // SUB-RINCIAN: KELOLA POPUP & TABEL PEMERIKSAAN BUKTI SPJ
+  // ========================================================
+  var rincianData = <?= json_encode($rincian, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+  var sesiId      = <?= (int)$sesi['id'] ?>;
+  var csrfToken   = <?= json_encode(csrf_token()) ?>;
+  var baseUrl     = <?= json_encode(rtrim($GLOBALS['app_base_url'] ?? '', '/')) ?>;
+  var canEdit     = <?= !in_array($statusKka, ['REVIEW_KETUA', 'REVIEW_DALNIS', 'SELESAI_FINAL']) ? 'true' : 'false' ?>;
+
+  function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function formatTgl(tglStr) {
+    if (!tglStr) return '';
+    var parts = tglStr.split('-');
+    if (parts.length === 3) return parts[2] + '/' + parts[1] + '/' + parts[0];
+    return tglStr;
+  }
+
+  var currentParent = null;
+
+  function openSubRincianModal(parentId) {
+    currentParent = rincianData.find(function(r){ return parseInt(r.id, 10) === parseInt(parentId, 10); });
+    if (!currentParent) return;
+
+    var elTitle = document.getElementById('msrParentUraian');
+    if (elTitle) elTitle.textContent = currentParent.uraian || 'Rekening Belanja';
+
+    var elPagu = document.getElementById('msrPagu');
+    if (elPagu) elPagu.textContent = 'Rp ' + fmt(currentParent.pagu_anggaran);
+
+    var elReal = document.getElementById('msrReal');
+    if (elReal) elReal.textContent = 'Rp ' + fmt(currentParent.realisasi);
+
+    var elKwi = document.getElementById('msrKwi');
+    if (elKwi) elKwi.textContent = 'Rp ' + fmt(currentParent.biaya_dikwitansi);
+
+    var selisihParent = (Number(currentParent.realisasi) || 0) - (Number(currentParent.biaya_dikwitansi) || 0);
+    var elSelParent = document.getElementById('msrSelisih');
+    if (elSelParent) {
+      elSelParent.textContent = 'Rp ' + fmt(selisihParent);
+      elSelParent.style.color = selisihParent < 0 ? '#dc2626' : '#15803d';
+    }
+
+    var btnCetak = document.getElementById('msrBtnCetakLembar');
+    if (btnCetak) {
+      btnCetak.href = baseUrl + '/print/sesi?id=' + sesiId + '&rekening_id=' + currentParent.id;
+    }
+
+    var btnTambah = document.getElementById('msrBtnTambahUraian');
+    if (btnTambah) {
+      btnTambah.onclick = function() {
+        openAddSubModal(currentParent.id, currentParent.uraian);
+      };
+    }
+
+    renderSubRincianTable(currentParent);
+    showModal('modalKelolaSubRincian');
+  }
+
+  function renderSubRincianTable(parent) {
+    var tbody = document.getElementById('msrTbody');
+    var tfoot = document.getElementById('msrTfoot');
+    if (!tbody) return;
+
+    var children = parent.children || [];
+    if (children.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:36px 16px;color:#64748b;background:#f8fafc">' +
+        '<div style="font-size:32px;color:#0284c7;margin-bottom:8px"><i class="fa-solid fa-receipt"></i></div>' +
+        '<div style="font-weight:700;font-size:14px;color:#1e293b;margin-bottom:4px">Belum Ada Rincian Bukti SPJ / Penerima</div>' +
+        '<div style="font-size:12px;color:#64748b;margin-bottom:14px">Klik tombol <b>+ Tambah Uraian Bukti / Penerima</b> di atas untuk mencatat rincian per orang (Ketua, Sekretaris, Anggota, Pengawas) atau bon/nota belanja barang.</div>' +
+        (canEdit ? '<button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById(\'msrBtnTambahUraian\').click()" style="background:#0284c7;border-color:#0284c7"><i class="fa-solid fa-plus-circle"></i> Tambah Uraian Pertama</button>' : '') +
+        '</td></tr>';
+      if (tfoot) tfoot.innerHTML = '';
+      return;
+    }
+
+    var html = '';
+    var totPagu = 0, totReal = 0, totKwi = 0;
+
+    children.forEach(function(ch, idx){
+      var pagu = Number(ch.pagu_anggaran) || 0;
+      var real = Number(ch.realisasi) || 0;
+      var kwi  = Number(ch.biaya_dikwitansi) || 0;
+      var sel  = real - kwi;
+
+      totPagu += pagu;
+      totReal += real;
+      totKwi  += kwi;
+
+      // Badge Pajak
+      var pajakHtml = '<span style="color:#94a3b8;font-size:11px">-</span>';
+      var stPajak = ch.status_pajak || 'TIDAK_TERUTANG';
+      var totNomPajak = (Number(ch.nominal_ppn)||0) + (Number(ch.nominal_pph)||0);
+      if (stPajak === 'BELUM_SETOR') {
+        pajakHtml = '<span class="badge" style="background:#fee2e2;color:#dc2626;font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:4px" title="Belum setor">' +
+          '<i class="fa-solid fa-triangle-exclamation"></i> Belum Setor ' + (totNomPajak > 0 ? fmt(totNomPajak) : '') + '</span>';
+      } else if (stPajak === 'SUDAH_SETOR') {
+        pajakHtml = '<span class="badge" style="background:#dcfce7;color:#15803d;font-size:10.5px;font-weight:600;padding:2px 6px;border-radius:4px" title="NTPN: ' + escapeHtml(ch.ntpn || '-') + '">' +
+          '<i class="fa-solid fa-circle-check"></i> Setor (' + escapeHtml(ch.potong_pph || 'PPN') + ')</span>';
+      }
+
+      // File bukti
+      var fileHtml = '<span style="color:#94a3b8;font-size:11px">-</span>';
+      if (ch.file_lampiran) {
+        fileHtml = '<a href="' + baseUrl + '/rincian/lampiran?id=' + ch.id + '" target="_blank" class="btn btn-ghost btn-sm" style="color:#0284c7;font-size:11.5px;padding:2px 6px;display:inline-flex;align-items:center;gap:3px" title="Lihat Foto/Scan Bon SPJ">' +
+          '<i class="fa-solid fa-file-lines"></i> Lihat</a>';
+      }
+
+      // Penerima
+      var penerimaHtml = '';
+      if (ch.jenis_penerima && ch.jenis_penerima.toUpperCase() === 'TPK') {
+        penerimaHtml += '<span class="badge" style="background:#e0e7ff;color:#3730a3;font-size:10px;padding:2px 5px;border-radius:4px;font-weight:700;margin-right:4px">TPK</span>';
+      }
+      penerimaHtml += escapeHtml(ch.penerima || '-');
+
+      // Bukti Info
+      var buktiInfo = '';
+      if (ch.no_bukti) buktiInfo += '<div style="font-weight:600;color:#0f172a">' + escapeHtml(ch.no_bukti) + '</div>';
+      if (ch.tgl_bukti) buktiInfo += '<div style="font-size:11px;color:#64748b">' + formatTgl(ch.tgl_bukti) + '</div>';
+      if (!buktiInfo) buktiInfo = '<span style="color:#94a3b8;font-size:11px">-</span>';
+
+      html += '<tr style="border-bottom:1px solid #f1f5f9">' +
+        '<td style="text-align:center;color:#64748b">' + (idx + 1) + '</td>' +
+        '<td>' + buktiInfo + '</td>' +
+        '<td>' +
+          '<div style="font-weight:600;color:#1e293b">' + escapeHtml(ch.uraian) + '</div>' +
+          (ch.keterangan ? '<div style="font-size:11px;color:#64748b;margin-top:2px">' + escapeHtml(ch.keterangan) + '</div>' : '') +
+        '</td>' +
+        '<td>' + penerimaHtml + '</td>' +
+        '<td style="text-align:right;font-weight:600">' + fmt(pagu) + '</td>' +
+        '<td style="text-align:right;font-weight:600">' + fmt(real) + '</td>' +
+        '<td style="text-align:right;font-weight:600;color:#0284c7">' + fmt(kwi) + '</td>' +
+        '<td style="text-align:right;font-weight:700;color:' + (sel < 0 ? '#dc2626' : '#15803d') + '">' + fmt(sel) + '</td>' +
+        '<td style="text-align:center">' + pajakHtml + '</td>' +
+        '<td style="text-align:center">' + fileHtml + '</td>' +
+        '<td style="text-align:center;white-space:nowrap">';
+
+      if (canEdit) {
+        html += '<button type="button" class="btn btn-ghost btn-sm js-sub-edit-btn" data-sub-id="' + ch.id + '" style="color:#15803d;padding:3px 5px" title="Edit Rincian"><i class="fa-solid fa-pen-to-square"></i></button>' +
+          '<a href="' + baseUrl + '/temuan/create?sesi_id=' + sesiId + '&rincian_id=' + ch.id + '" class="btn btn-ghost btn-sm" style="color:#d97706;padding:3px 5px" title="Jadikan Konsep Temuan (KTP)"><i class="fa-solid fa-file-circle-exclamation"></i></a>' +
+          '<form method="post" action="' + baseUrl + '/rincian/delete" onsubmit="return confirm(\'Hapus rincian bukti bon ini?\')" style="display:inline">' +
+          '<input type="hidden" name="_csrf" value="' + csrfToken + '">' +
+          '<input type="hidden" name="id" value="' + ch.id + '">' +
+          '<input type="hidden" name="sesi_id" value="' + sesiId + '">' +
+          '<button type="submit" class="btn btn-ghost btn-sm" style="color:#dc2626;padding:3px 5px" title="Hapus"><i class="fa-solid fa-trash"></i></button>' +
+          '</form>';
+      } else {
+        html += '<span style="color:#94a3b8;font-size:11px">-</span>';
+      }
+
+      html += '</td></tr>';
+    });
+
+    tbody.innerHTML = html;
+
+    // Attach click listeners to edit buttons inside the dynamic table
+    tbody.querySelectorAll('.js-sub-edit-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var subId = parseInt(btn.dataset.subId, 10);
+        var subItem = children.find(function(c){ return parseInt(c.id, 10) === subId; });
+        if (subItem) {
+          openEditSubModal(subItem, parent.uraian);
+        }
+      });
+    });
+
+    // Render Tfoot
+    if (tfoot) {
+      var totSel = totReal - totKwi;
+      tfoot.innerHTML = '<tr>' +
+        '<td colspan="4" style="padding:10px 8px;text-align:right">JUMLAH RINCIAN:</td>' +
+        '<td style="text-align:right;padding:10px 8px">' + fmt(totPagu) + '</td>' +
+        '<td style="text-align:right;padding:10px 8px">' + fmt(totReal) + '</td>' +
+        '<td style="text-align:right;padding:10px 8px;color:#0284c7">' + fmt(totKwi) + '</td>' +
+        '<td style="text-align:right;padding:10px 8px;color:' + (totSel < 0 ? '#dc2626' : '#15803d') + '">' + fmt(totSel) + '</td>' +
+        '<td colspan="3"></td>' +
+        '</tr>';
+    }
+  }
+
+  // Bind click on main table buttons (.js-buka-sub-rincian)
+  document.querySelectorAll('.js-buka-sub-rincian').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var parentId = parseInt(btn.dataset.parentId, 10);
+      openSubRincianModal(parentId);
+    });
+  });
+
+  // Check URL query param open_rekening on page load
+  var urlParams = new URLSearchParams(window.location.search);
+  var openRek = urlParams.get('open_rekening');
+  if (openRek) {
+    openSubRincianModal(parseInt(openRek, 10));
   }
 
   modal.querySelectorAll('[data-close-modal]').forEach(function(el){

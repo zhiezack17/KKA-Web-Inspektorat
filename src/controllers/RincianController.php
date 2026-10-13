@@ -152,6 +152,7 @@ class RincianController {
             $tglBukti = null;
         }
 
+        $paguAnggaran    = parse_money(input('pagu_anggaran', 0));
         $biayaDikwitansi = parse_money(input('biaya_dikwitansi', 0));
         $realisasi       = parse_money(input('realisasi', 0));
         if ($realisasi == 0 && $biayaDikwitansi > 0) {
@@ -199,7 +200,7 @@ class RincianController {
             'uraian'           => $uraian,
             'no_bukti'         => $noBukti,
             'tgl_bukti'        => $tglBukti,
-            'pagu_anggaran'    => 0,
+            'pagu_anggaran'    => $paguAnggaran,
             'biaya_dikwitansi' => $biayaDikwitansi,
             'realisasi'        => $realisasi,
             'jenis_penerima'   => $jenisPenerima,
@@ -216,8 +217,8 @@ class RincianController {
 
         $this->syncParentTotals($parentId);
 
-        flash('success', 'Rincian bukti bon / kwitansi berhasil ditambahkan.');
-        redirect('sesi/show?id=' . $sesiId);
+        flash('success', 'Rincian bukti pengeluaran / penerima berhasil ditambahkan.');
+        redirect('sesi/show?id=' . $sesiId . '&open_rekening=' . $parentId);
     }
 
     /** Update Sub-Uraian Kwitansi / Bon SPJ */
@@ -237,7 +238,7 @@ class RincianController {
         $uraian = trim((string) input('uraian'));
         if ($uraian === '') {
             flash('error', 'Uraian rincian bon / kwitansi wajib diisi.');
-            redirect('sesi/show?id=' . $sesiId);
+            redirect('sesi/show?id=' . $sesiId . '&open_rekening=' . $parentId);
         }
 
         $noBukti  = trim((string) input('no_bukti')) ?: null;
@@ -246,6 +247,7 @@ class RincianController {
             $tglBukti = null;
         }
 
+        $paguAnggaran    = parse_money(input('pagu_anggaran', 0));
         $biayaDikwitansi = parse_money(input('biaya_dikwitansi', 0));
         $realisasi       = parse_money(input('realisasi', 0));
         if ($realisasi == 0 && $biayaDikwitansi > 0) {
@@ -290,6 +292,7 @@ class RincianController {
             'uraian'           => $uraian,
             'no_bukti'         => $noBukti,
             'tgl_bukti'        => $tglBukti,
+            'pagu_anggaran'    => $paguAnggaran,
             'biaya_dikwitansi' => $biayaDikwitansi,
             'realisasi'        => $realisasi,
             'jenis_penerima'   => $jenisPenerima,
@@ -306,8 +309,8 @@ class RincianController {
 
         $this->syncParentTotals($parentId);
 
-        flash('success', 'Rincian bon / kwitansi berhasil diperbarui.');
-        redirect('sesi/show?id=' . $sesiId);
+        flash('success', 'Rincian bukti pengeluaran / penerima berhasil diperbarui.');
+        redirect('sesi/show?id=' . $sesiId . '&open_rekening=' . $parentId);
     }
 
     public function delete(): void {
@@ -328,8 +331,8 @@ class RincianController {
             }
             DB::delete('kka_rincian', ['id' => $id]);
             $this->syncParentTotals($parentId);
-            flash('success', 'Rincian bon / kwitansi berhasil dihapus.');
-            redirect('sesi/show?id=' . $sesiId);
+            flash('success', 'Rincian bukti pengeluaran / penerima berhasil dihapus.');
+            redirect('sesi/show?id=' . $sesiId . '&open_rekening=' . $parentId);
         }
 
         // Jika baris adalah induk, hapus file lampiran anak-anaknya terlebih dahulu
